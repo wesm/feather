@@ -18,11 +18,25 @@ enum Type : byte {
 
   UTF8 = 11,
 
-  CATEGORY = 12,
+  BINARY = 12,
 
-  TIMESTAMP = 13,
-  DATE = 14,
-  TIME = 15
+  CATEGORY = 13,
+
+  TIMESTAMP = 14,
+  DATE = 15,
+  TIME = 16
+}
+
+enum Encoding : byte {
+  PLAIN = 0,
+
+  /// Data is stored dictionary-encoded
+  /// dictionary size: <INT32 Dictionary size>
+  /// dictionary data: <TYPE primitive array>
+  /// dictionary index: <INT32 primitive array>
+  ///
+  /// TODO: do we care about storing the index values in a smaller typeclass
+  DICTIONARY = 1
 }
 
 enum TimeUnit : byte {
@@ -34,6 +48,8 @@ enum TimeUnit : byte {
 
 table PrimitiveArray {
   type: Type;
+
+  encoding: Encoding = PLAIN;
 
   /// Relative memory offset of the start of the array data excluding the size
   /// of the metadata
@@ -48,7 +64,7 @@ table PrimitiveArray {
   /// The total size of the actual data in the file
   total_bytes: long;
 
-  /// TODO: Compression & Encoding
+  /// TODO: Compression
 }
 
 table CategoryMetadata {
