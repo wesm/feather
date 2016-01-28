@@ -1,4 +1,4 @@
-namespace feather;
+namespace feather.metadata;
 
 enum Type : byte {
   BOOL = 0,
