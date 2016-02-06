@@ -1,4 +1,4 @@
-# Copyright 2012 Feather Developers
+# Copyright 2016 Feather Developers
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -161,6 +161,7 @@ endif (UNIX)
 
 set(FEATHER_MIN_TEST_LIBS
   feather_test_main
+  flatbuffers
   feather)
 set(FEATHER_TEST_LINK_LIBS ${FEATHER_MIN_TEST_LIBS})
 
@@ -168,6 +169,7 @@ set(FEATHER_TEST_LINK_LIBS ${FEATHER_MIN_TEST_LIBS})
 # Library config
 
 set(LIBFEATHER_SRCS
+  src/feather/metadata.cc
 )
 
 set(LIBFEATHER_LINK_LIBS

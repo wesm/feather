@@ -1,0 +1,261 @@
+// Copyright 2016 Feather Developers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef FEATHER_METADATA_H
+#define FEATHER_METADATA_H
+
+#include "feather/metadata_generated.h"
+
+namespace feather {
+
+// Feather enums, decoupled from some of the unpleasantness of
+// flatbuffers. This is also here so we can choose later to hide the
+// flatbuffers dependency to C++ users of libfeather (otherwise they have to
+// include/link libflatbuffers.a)
+struct PrimitiveType {
+  enum type {
+    BOOL = 0,
+
+    INT8 = 1,
+    INT16 = 2,
+    INT32 = 3,
+    INT64 = 4,
+
+    UINT8 = 5,
+    UINT16 = 6,
+    UINT32 = 7,
+    UINT64 = 8,
+
+    FLOAT = 9,
+    DOUBLE = 10,
+
+    UTF8 = 11,
+
+    BINARY = 12,
+
+    CATEGORY = 13,
+
+    TIMESTAMP = 14,
+    DATE = 15,
+    TIME = 16
+  };
+};
+
+struct ColumnType {
+  enum type {
+    PRIMITIVE,
+    CATEGORY,
+    TIMESTAMP,
+    DATE,
+    TIME
+  };
+};
+
+struct Encoding {
+  enum type {
+    PLAIN = 0,
+    /// Data is stored dictionary-encoded
+    /// dictionary size: <INT32 Dictionary size>
+    /// dictionary data: <TYPE primitive array>
+    /// dictionary index: <INT32 primitive array>
+    ///
+    /// TODO: do we care about storing the index values in a smaller typeclass
+    DICTIONARY = 1
+  };
+};
+
+struct TimeUnit {
+  enum type {
+    SECOND = 0,
+    MILLISECOND = 1,
+    MICROSECOND = 2,
+    NANOSECOND = 3
+  };
+};
+
+namespace metadata {
+
+// Flatbuffers conveniences
+typedef std::vector<flatbuffers::Offset<fbs::Column> > ColumnVector;
+typedef std::vector<flatbuffers::Offset<fbs::CTable> > TableVector;
+
+struct PrimitiveArray {
+  PrimitiveType::type type;
+  Encoding::type encoding;
+  int64_t offset;
+  int64_t null_count;
+  int64_t total_bytes;
+};
+
+struct CategoryMetadata {
+};
+
+struct TimestampMetadata {
+};
+
+struct DateMetadata {
+};
+
+struct TimeMetadata {
+};
+
+class FileBuilder;
+class TableBuilder;
+
+class ColumnBuilder {
+ public:
+  void SetName(const std::string& name);
+
+  void SetValues(const PrimitiveArray& values);
+
+  void SetCategory(const CategoryMetadata& meta);
+  void SetTimestamp(const TimestampMetadata& meta);
+  void SetDate(const DateMetadata& meta);
+  void SetTime(const TimeMetadata& meta);
+
+  void Finish();
+
+ private:
+  friend class TableBuilder;
+
+  std::string name_;
+  PrimitiveArray values_;
+  TableBuilder* parent_;
+};
+
+class TableBuilder {
+ public:
+  void AddColumn(const ColumnBuilder& table);
+
+ private:
+  friend class FileBuilder;
+
+  std::string name_;
+  int64_t num_rows_;
+  ColumnVector columns_;
+};
+
+class FileBuilder {
+ public:
+  FileBuilder() {}
+
+  void AddTable(const TableBuilder& table);
+
+  // These are accessible after calling Finish
+  const void* GetBuffer() const;
+  size_t BufferSize() const;
+
+ private:
+  flatbuffers::FlatBufferBuilder fbb_;
+  TableVector tables_;
+};
+
+// ----------------------------------------------------------------------
+// Metadata reader interface classes
+
+class File;
+class Table;
+
+class Column {
+ public:
+  Column(const fbs::Column*);
+
+  std::string name() const;
+  ColumnType::type type() const;
+
+  std::string user_metadata() const;
+
+  const fbs::PrimitiveArray* values() const {
+    return column_->values();
+  }
+
+ protected:
+  const fbs::Column* column_;
+  ColumnType::type type_;
+};
+
+class CategoryColumn : public Column {
+ public:
+  CategoryColumn(const fbs::Column* column);
+
+  const fbs::PrimitiveArray* levels() const {
+    return metadata_->levels();
+  }
+
+  bool ordered() const {
+    return metadata_->ordered();
+  }
+
+ private:
+  const fbs::CategoryMetadata* metadata_;
+};
+
+class TimestampColumn : public Column {
+ public:
+  TimestampColumn(const fbs::Column* column);
+
+  std::string timezone() const;
+
+ private:
+  const fbs::TimestampMetadata* metadata_;
+};
+
+class DateColumn : public Column {
+ public:
+  DateColumn(const fbs::Column* column);
+
+ private:
+  const fbs::DateMetadata* metadata_;
+};
+
+class TimeColumn : public Column {
+ public:
+  TimeColumn(const fbs::Column* column);
+
+ private:
+  const fbs::TimeMetadata* metadata_;
+};
+
+class Table {
+ public:
+
+  std::string name() const;
+  int64_t nrows() const;
+
+  size_t num_columns() const;
+  std::shared_ptr<Column> GetColumn(size_t i);
+  std::shared_ptr<Column> GetColumnNamed(const std::string& name);
+ private:
+  const fbs::CTable* table_;
+};
+
+class File {
+ public:
+  File() : buffer_(nullptr), file_(nullptr) {}
+
+  bool Open(const void* buffer, size_t);
+  size_t num_tables();
+  std::shared_ptr<Table> GetTable(size_t i);
+  std::shared_ptr<Table> GetTableNamed(const std::string& name);
+
+ private:
+  const void* buffer_;
+  const fbs::File* file_;
+};
+
+} // namespace metadata
+
+} // namespace feather
+
+#endif // FEATHER_METADATA_H

@@ -1,4 +1,4 @@
 #!/bin/bash
 
 FLATC=$HOME/local/bin/flatc
-$FLATC --cpp -o src/feather src/feather/metadata.fbs
+$FLATC -c -o src/feather src/feather/metadata.fbs

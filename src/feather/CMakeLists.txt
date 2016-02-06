@@ -31,3 +31,5 @@ else()
     pthread
   )
 endif()
+
+ADD_FEATHER_TEST(metadata-test)

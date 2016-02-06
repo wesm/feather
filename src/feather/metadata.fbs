@@ -1,4 +1,4 @@
-namespace feather.metadata;
+namespace feather.fbs;
 
 enum Type : byte {
   BOOL = 0,
@@ -107,7 +107,14 @@ table Column {
   user_metadata: string;
 }
 
-table Table {
-  nrows: long;
+table CTable {
+  name: string;
+  num_rows: long;
   columns: [Column];
 }
+
+table File {
+  tables: [CTable];
+}
+
+root_type File;
