@@ -204,7 +204,7 @@ class TimeColumn : public Column {
 
 class Table {
  public:
-  Table(const fbs::CTable* table) :
+  explicit Table(const fbs::CTable* table) :
       table_(table) {}
 
   std::string name() const;
