@@ -25,7 +25,7 @@ typedef flatbuffers::FlatBufferBuilder FBB;
 // ----------------------------------------------------------------------
 // Primitive array
 
-const fbs::Type TYPE_ENUM_MAPPING[] = {
+const fbs::Type TYPE_FB_TO_FEATHER[] = {
   fbs::Type_BOOL,
   fbs::Type_INT8,
   fbs::Type_INT16,
@@ -46,7 +46,11 @@ const fbs::Type TYPE_ENUM_MAPPING[] = {
 };
 
 static inline fbs::Type ToFlatbufferEnum(PrimitiveType::type type) {
-  return TYPE_ENUM_MAPPING[type];
+  return TYPE_FB_TO_FEATHER[type];
+}
+
+static inline PrimitiveType::type FromFlatbufferEnum(fbs::Type type) {
+  return static_cast<PrimitiveType::type>(static_cast<int>(type));
 }
 
 const fbs::Encoding ENCODING_ENUM_MAPPING[] = {
@@ -56,6 +60,25 @@ const fbs::Encoding ENCODING_ENUM_MAPPING[] = {
 
 static inline fbs::Encoding ToFlatbufferEnum(Encoding::type encoding) {
   return ENCODING_ENUM_MAPPING[encoding];
+}
+
+static inline Encoding::type FromFlatbufferEnum(fbs::Encoding enc) {
+  return static_cast<Encoding::type>(static_cast<int>(enc));
+}
+
+static inline ColumnType::type ColumnTypeFromFB(fbs::TypeMetadata type) {
+  switch (type) {
+    case fbs::TypeMetadata_CategoryMetadata:
+      return ColumnType::CATEGORY;
+    case fbs::TypeMetadata_TimestampMetadata:
+      return ColumnType::TIMESTAMP;
+    case fbs::TypeMetadata_DateMetadata:
+      return ColumnType::DATE;
+    case fbs::TypeMetadata_TimeMetadata:
+      return ColumnType::TIME;
+    default:
+      return ColumnType::PRIMITIVE;
+  }
 }
 
 static inline flatbuffers::Offset<fbs::PrimitiveArray> GetPrimitiveArray(
@@ -98,7 +121,7 @@ size_t FileBuilder::BufferSize() const {
   return fbb_.GetSize();
 }
 
-std::unique_ptr<TableBuilder> FileBuilder::NewTable(const std::string& name,
+std::unique_ptr<TableBuilder> FileBuilder::AddTable(const std::string& name,
     int64_t num_rows) {
   return std::unique_ptr<TableBuilder>(new TableBuilder(this, name, num_rows));
 }
@@ -116,7 +139,7 @@ FBB& TableBuilder::fbb() {
   return parent_->fbb_;
 }
 
-std::unique_ptr<ColumnBuilder> TableBuilder::NewColumn(const std::string& name) {
+std::unique_ptr<ColumnBuilder> TableBuilder::AddColumn(const std::string& name) {
   return std::unique_ptr<ColumnBuilder>(new ColumnBuilder(this, name));
 }
 
@@ -275,11 +298,38 @@ std::shared_ptr<Column> Table::GetColumn(size_t i) {
   return std::shared_ptr<Column>(nullptr);
 }
 
+std::shared_ptr<Column> Table::GetColumnNamed(const std::string& name) {
+  FeatherException::NYI("GetColumnNamed");
+  return std::shared_ptr<Column>(nullptr);
+}
+
 // ----------------------------------------------------------------------
 // Column
 
+void FromFlatbuffer(const fbs::PrimitiveArray* values, PrimitiveArray* out) {
+  out->type = FromFlatbufferEnum(values->type());
+  out->encoding = FromFlatbufferEnum(values->encoding());
+  out->offset = values->offset();
+  out->length = values->length();
+  out->null_count = values->null_count();
+  out->total_bytes = values->total_bytes();
+}
+
 Column::Column(const fbs::Column* column) {
   column_ = column;
+  FromFlatbuffer(column->values(), &values_);
+}
+
+std::string Column::name() const {
+  return column_->name()->str();
+}
+
+ColumnType::type Column::type() const {
+  return ColumnTypeFromFB(column_->metadata_type());
+}
+
+std::string Column::user_metadata() const {
+  return column_->user_metadata()->str();
 }
 
 CategoryColumn::CategoryColumn(const fbs::Column* column) :

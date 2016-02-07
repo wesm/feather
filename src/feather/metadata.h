@@ -101,7 +101,7 @@ class TableBuilder {
   TableBuilder(FileBuilder* parent, const std::string& name,
       int64_t num_rows);
 
-  std::unique_ptr<ColumnBuilder> NewColumn(const std::string& name);
+  std::unique_ptr<ColumnBuilder> AddColumn(const std::string& name);
   void Finish();
 
   flatbuffers::FlatBufferBuilder& fbb();
@@ -119,7 +119,7 @@ class FileBuilder {
  public:
   FileBuilder();
 
-  std::unique_ptr<TableBuilder> NewTable(const std::string& name,
+  std::unique_ptr<TableBuilder> AddTable(const std::string& name,
       int64_t num_rows);
 
   void Finish();
@@ -127,6 +127,10 @@ class FileBuilder {
   // These are accessible after calling Finish
   const void* GetBuffer() const;
   size_t BufferSize() const;
+
+  flatbuffers::FlatBufferBuilder& fbb() {
+    return fbb_;
+  }
 
  private:
   friend class TableBuilder;
@@ -151,12 +155,13 @@ class Column {
 
   std::string user_metadata() const;
 
-  const fbs::PrimitiveArray* values() const {
-    return column_->values();
+  const PrimitiveArray* values() const {
+    return &values_;
   }
 
  protected:
   const fbs::Column* column_;
+  PrimitiveArray values_;
   ColumnType::type type_;
 };
 
@@ -213,6 +218,7 @@ class Table {
   size_t num_columns() const;
   std::shared_ptr<Column> GetColumn(size_t i);
   std::shared_ptr<Column> GetColumnNamed(const std::string& name);
+
  private:
   const fbs::CTable* table_;
 };
