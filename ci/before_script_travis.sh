@@ -23,5 +23,7 @@ fi
 export GTEST_HOME=$TP_DIR/$GTEST_BASEDIR
 export FLATBUFFERS_HOME=$TP_DIR/installed
 
+FEATHER_SRC=$TRAVIS_BUILD_DIR/src/feather
+
 FLATC=$TP_DIR/installed/bin/flatc
-$FLATC -c -o $HOME/src/feather $HOME/src/feather/metadata.fbs
+$FLATC -c -o $FEATHER_SRC $FEATHER_SRC/metadata.fbs
