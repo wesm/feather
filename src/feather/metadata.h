@@ -30,29 +30,6 @@ namespace metadata {
 typedef std::vector<flatbuffers::Offset<fbs::Column> > ColumnVector;
 typedef std::vector<flatbuffers::Offset<fbs::CTable> > TableVector;
 
-struct PrimitiveArray {
-  PrimitiveType::type type;
-  Encoding::type encoding;
-  int64_t offset;
-  int64_t length;
-  int64_t null_count;
-  int64_t total_bytes;
-};
-
-struct CategoryMetadata {
-  PrimitiveArray levels;
-  bool ordered;
-};
-
-struct TimestampMetadata {
-};
-
-struct DateMetadata {
-};
-
-struct TimeMetadata {
-};
-
 class FileBuilder;
 class TableBuilder;
 
