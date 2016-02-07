@@ -5,9 +5,12 @@ cp -r $TRAVIS_BUILD_DIR/thirdparty .
 ./thirdparty/download_thirdparty.sh
 source thirdparty/versions.sh
 
+# this is created in Travis CI
+export BUILD_DIR=$HOME/build_dir
+export TP_DIR=$BUILD_DIR/thirdparty
+
 if [ $TRAVIS_OS_NAME == "osx" ]; then
-  # Only build gtest
-  ./thirdparty/build_thirdparty.sh gtest
+  ./thirdparty/build_thirdparty.sh
 fi
 
 if [ $TRAVIS_OS_NAME == "linux" ]; then
@@ -17,8 +20,8 @@ if [ $TRAVIS_OS_NAME == "linux" ]; then
   export CXX="g++-4.9"
 fi
 
-export GTEST_HOME=$HOME/build_dir/thirdparty/$GTEST_BASEDIR
-export FLATBUFFERS_HOME=$HOME/build_dir/thirdparty/installed
+export GTEST_HOME=$TP_DIR/$GTEST_BASEDIR
+export FLATBUFFERS_HOME=$TP_DIR/installed
 
-FLATC=$HOME/build_dir/thirdparty/installed/bin/flatc
-$FLATC -c -o src/feather src/feather/metadata.fbs
+FLATC=$TP_DIR/installed/bin/flatc
+$FLATC -c -o $HOME/src/feather $HOME/src/feather/metadata.fbs
