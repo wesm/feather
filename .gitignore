@@ -1,0 +1,15 @@
+bin
+build
+Testing/
+
+CMakeCache.txt
+CMakeFiles
+CTestMakefile.cmake
+CTestTestfile.cmake
+cmake_install.cmake
+Makefile
+
+# Flatbuffers generated files
+*_generated.h
+
+thirdparty
