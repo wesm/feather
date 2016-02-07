@@ -15,6 +15,7 @@
 #ifndef FEATHER_METADATA_H
 #define FEATHER_METADATA_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -33,11 +34,14 @@ struct PrimitiveArray {
   PrimitiveType::type type;
   Encoding::type encoding;
   int64_t offset;
+  int64_t length;
   int64_t null_count;
   int64_t total_bytes;
 };
 
 struct CategoryMetadata {
+  PrimitiveArray levels;
+  bool ordered;
 };
 
 struct TimestampMetadata {
@@ -54,32 +58,58 @@ class TableBuilder;
 
 class ColumnBuilder {
  public:
-  void SetName(const std::string& name);
+  ColumnBuilder(TableBuilder* parent, const std::string& name);
 
   void SetValues(const PrimitiveArray& values);
-
   void SetCategory(const CategoryMetadata& meta);
   void SetTimestamp(const TimestampMetadata& meta);
   void SetDate(const DateMetadata& meta);
   void SetTime(const TimeMetadata& meta);
 
+  void SetUserMetadata(const std::string& data);
+
   void Finish();
 
- private:
-  friend class TableBuilder;
+  flatbuffers::FlatBufferBuilder& fbb();
 
+ private:
+  TableBuilder* parent_;
   std::string name_;
   PrimitiveArray values_;
-  TableBuilder* parent_;
+
+  std::string user_metadata_;
+
+  // Column metadata
+
+  // Is this a primitive type, or one of the types having metadata? Default is
+  // primitive
+  ColumnType::type type_;
+
+  // Type-specific metadata union
+  union {
+    CategoryMetadata meta_category_;
+    TimestampMetadata meta_timestamp_;
+    DateMetadata meta_date_;
+    TimeMetadata meta_time_;
+  };
+
+  flatbuffers::Offset<void> CreateColumnMetadata();
 };
 
 class TableBuilder {
  public:
-  void AddColumn(const ColumnBuilder& table);
+  TableBuilder(FileBuilder* parent, const std::string& name,
+      int64_t num_rows);
+
+  std::unique_ptr<ColumnBuilder> NewColumn(const std::string& name);
+  void Finish();
+
+  flatbuffers::FlatBufferBuilder& fbb();
 
  private:
-  friend class FileBuilder;
+  friend class ColumnBuilder;
 
+  FileBuilder* parent_;
   std::string name_;
   int64_t num_rows_;
   ColumnVector columns_;
@@ -89,13 +119,16 @@ class FileBuilder {
  public:
   FileBuilder() {}
 
-  void AddTable(const TableBuilder& table);
+  std::unique_ptr<TableBuilder> NewTable(const std::string& name,
+      int64_t num_rows);
 
   // These are accessible after calling Finish
   const void* GetBuffer() const;
   size_t BufferSize() const;
 
  private:
+  friend class TableBuilder;
+
   flatbuffers::FlatBufferBuilder fbb_;
   bool finished_;
   TableVector tables_;

@@ -22,4 +22,16 @@
 
 namespace feather {
 
+class TestFileBuilder : public ::testing::Test {
+ public:
+  void setUp() {
+  }
+
+ protected:
+  metadata::FileBuilder file_;
+};
+
+TEST_F(TestFileBuilder, EmptyTables) {
+}
+
 }
