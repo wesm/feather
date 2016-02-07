@@ -233,8 +233,25 @@ size_t File::num_tables() const {
   return file_->tables()->size();
 }
 
+std::shared_ptr<Table> File::GetTable(size_t i) {
+  const fbs::CTable* fb_table = file_->tables()->Get(i);
+  return std::make_shared<Table>(fb_table);
+}
+
 // ----------------------------------------------------------------------
 // Table
+
+std::string Table::name() const {
+  return table_->name()->str();
+}
+
+int64_t Table::num_rows() const {
+  return table_->num_rows();
+}
+
+size_t Table::num_columns() const {
+  return table_->columns()->size();
+}
 
 std::shared_ptr<Column> Table::GetColumn(size_t i) {
   const fbs::Column* col = table_->columns()->Get(i);

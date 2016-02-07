@@ -204,8 +204,11 @@ class TimeColumn : public Column {
 
 class Table {
  public:
+  Table(const fbs::CTable* table) :
+      table_(table) {}
+
   std::string name() const;
-  int64_t nrows() const;
+  int64_t num_rows() const;
 
   size_t num_columns() const;
   std::shared_ptr<Column> GetColumn(size_t i);

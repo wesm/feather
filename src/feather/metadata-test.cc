@@ -42,21 +42,38 @@ class TestFileBuilder : public ::testing::Test {
   metadata::FileBuilder fbuilder_;
 };
 
-TEST_F(TestFileBuilder, EmptyTables) {
-  std::unique_ptr<TableBuilder> table;
+TEST_F(TestFileBuilder, EmptyTableTests) {
+  // Test adding a few tables without any columns
+  std::unique_ptr<TableBuilder> tb;
 
-  table = fbuilder_.NewTable("a", 10);
-  table->Finish();
+  tb = fbuilder_.NewTable("a", 10);
+  tb->Finish();
 
-  table = fbuilder_.NewTable("b", 20);
-  table->Finish();
+  tb = fbuilder_.NewTable("bb", 20);
+  tb->Finish();
 
-  table = fbuilder_.NewTable("c", 20);
-  table->Finish();
+  tb = fbuilder_.NewTable("cccc", 1000000);
+  tb->Finish();
 
   std::unique_ptr<File> file = FinishGetRoot();
-
   ASSERT_EQ(3, file->num_tables());
+
+  std::shared_ptr<Table> table;
+
+  table = file->GetTable(0);
+  ASSERT_EQ("a", table->name());
+  ASSERT_EQ(10, table->num_rows());
+  ASSERT_EQ(0, table->num_columns());
+
+  table = file->GetTable(1);
+  ASSERT_EQ("bb", table->name());
+  ASSERT_EQ(20, table->num_rows());
+  ASSERT_EQ(0, table->num_columns());
+
+  table = file->GetTable(2);
+  ASSERT_EQ("cccc", table->name());
+  ASSERT_EQ(1000000, table->num_rows());
+  ASSERT_EQ(0, table->num_columns());
 }
 
 } // namespace metadata
