@@ -71,6 +71,6 @@ Column::Column(const fbs::Column* col) {
   column_ = col;
 }
 
-} // namespace feather
+} // namespace metadata
 
 } // namespace feather

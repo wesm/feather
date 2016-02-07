@@ -15,8 +15,10 @@
 #ifndef FEATHER_METADATA_H
 #define FEATHER_METADATA_H
 
-#include "feather/metadata_generated.h"
+#include <string>
+#include <vector>
 
+#include "feather/metadata_generated.h"
 #include "feather/types.h"
 
 namespace feather {
@@ -107,7 +109,7 @@ class Table;
 
 class Column {
  public:
-  Column(const fbs::Column*);
+  explicit Column(const fbs::Column*);
 
   std::string name() const;
   ColumnType::type type() const;
@@ -125,7 +127,7 @@ class Column {
 
 class CategoryColumn : public Column {
  public:
-  CategoryColumn(const fbs::Column* column);
+  explicit CategoryColumn(const fbs::Column* column);
 
   const fbs::PrimitiveArray* levels() const {
     return metadata_->levels();
@@ -141,7 +143,7 @@ class CategoryColumn : public Column {
 
 class TimestampColumn : public Column {
  public:
-  TimestampColumn(const fbs::Column* column);
+  explicit TimestampColumn(const fbs::Column* column);
 
   std::string timezone() const;
 
@@ -151,7 +153,7 @@ class TimestampColumn : public Column {
 
 class DateColumn : public Column {
  public:
-  DateColumn(const fbs::Column* column);
+  explicit DateColumn(const fbs::Column* column);
 
  private:
   const fbs::DateMetadata* metadata_;
@@ -159,7 +161,7 @@ class DateColumn : public Column {
 
 class TimeColumn : public Column {
  public:
-  TimeColumn(const fbs::Column* column);
+  explicit TimeColumn(const fbs::Column* column);
 
  private:
   const fbs::TimeMetadata* metadata_;
@@ -167,7 +169,6 @@ class TimeColumn : public Column {
 
 class Table {
  public:
-
   std::string name() const;
   int64_t nrows() const;
 
