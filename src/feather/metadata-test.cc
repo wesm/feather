@@ -22,16 +22,43 @@
 
 namespace feather {
 
+namespace metadata {
+
 class TestFileBuilder : public ::testing::Test {
  public:
   void setUp() {
   }
 
+  std::unique_ptr<File> FinishGetRoot() {
+    fbuilder_.Finish();
+
+    std::unique_ptr<File> result(new File());
+    result->Open(fbuilder_.GetBuffer(), fbuilder_.BufferSize());
+
+    return result;
+  }
+
  protected:
-  metadata::FileBuilder file_;
+  metadata::FileBuilder fbuilder_;
 };
 
 TEST_F(TestFileBuilder, EmptyTables) {
+  std::unique_ptr<TableBuilder> table;
+
+  table = fbuilder_.NewTable("a", 10);
+  table->Finish();
+
+  table = fbuilder_.NewTable("b", 20);
+  table->Finish();
+
+  table = fbuilder_.NewTable("c", 20);
+  table->Finish();
+
+  std::unique_ptr<File> file = FinishGetRoot();
+
+  ASSERT_EQ(3, file->num_tables());
 }
+
+} // namespace metadata
 
 } // namespace feather

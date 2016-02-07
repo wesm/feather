@@ -117,10 +117,12 @@ class TableBuilder {
 
 class FileBuilder {
  public:
-  FileBuilder() {}
+  FileBuilder();
 
   std::unique_ptr<TableBuilder> NewTable(const std::string& name,
       int64_t num_rows);
+
+  void Finish();
 
   // These are accessible after calling Finish
   const void* GetBuffer() const;
@@ -212,12 +214,13 @@ class Table {
   const fbs::CTable* table_;
 };
 
+// TODO: address memory ownership issues of the buffer here
 class File {
  public:
   File() : buffer_(nullptr), file_(nullptr) {}
 
   bool Open(const void* buffer, size_t);
-  size_t num_tables();
+  size_t num_tables() const;
   std::shared_ptr<Table> GetTable(size_t i);
   std::shared_ptr<Table> GetTableNamed(const std::string& name);
 

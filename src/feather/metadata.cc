@@ -14,6 +14,8 @@
 
 #include "feather/metadata.h"
 
+#include "feather/exception.h"
+
 namespace feather {
 
 namespace metadata {
@@ -75,6 +77,26 @@ static inline flatbuffers::Offset<fbs::PrimitiveArray> GetPrimitiveArray(
 
 // ----------------------------------------------------------------------
 // FileBuilder
+
+FileBuilder::FileBuilder() :
+    finished_(false) {}
+
+void FileBuilder::Finish() {
+  if (finished_) {
+    throw FeatherException("can only call this once");
+  }
+  auto root = fbs::CreateFile(fbb_, fbb_.CreateVector(tables_));
+  fbb_.Finish(root);
+  finished_ = true;
+}
+
+const void* FileBuilder::GetBuffer() const {
+  return fbb_.GetBufferPointer();
+}
+
+size_t FileBuilder::BufferSize() const {
+  return fbb_.GetSize();
+}
 
 std::unique_ptr<TableBuilder> FileBuilder::NewTable(const std::string& name,
     int64_t num_rows) {
@@ -207,6 +229,10 @@ bool File::Open(const void* buffer, size_t length) {
   return true;
 }
 
+size_t File::num_tables() const {
+  return file_->tables()->size();
+}
+
 // ----------------------------------------------------------------------
 // Table
 
@@ -235,8 +261,24 @@ std::shared_ptr<Column> Table::GetColumn(size_t i) {
 // ----------------------------------------------------------------------
 // Column
 
-Column::Column(const fbs::Column* col) {
-  column_ = col;
+Column::Column(const fbs::Column* column) {
+  column_ = column;
+}
+
+CategoryColumn::CategoryColumn(const fbs::Column* column) :
+    Column(column) {
+}
+
+TimestampColumn::TimestampColumn(const fbs::Column* column) :
+    Column(column) {
+}
+
+DateColumn::DateColumn(const fbs::Column* column) :
+    Column(column) {
+}
+
+TimeColumn::TimeColumn(const fbs::Column* column) :
+    Column(column) {
 }
 
 } // namespace metadata
