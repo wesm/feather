@@ -158,6 +158,8 @@ TEST_F(TestTableBuilder, AddPrimitiveColumn) {
   ASSERT_EQ(10000, rvalues->total_bytes);
 }
 
+
+
 } // namespace metadata
 
 } // namespace feather
