@@ -34,4 +34,4 @@ class TestFileBuilder : public ::testing::Test {
 TEST_F(TestFileBuilder, EmptyTables) {
 }
 
-}
+} // namespace feather
