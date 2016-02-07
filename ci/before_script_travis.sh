@@ -18,3 +18,7 @@ if [ $TRAVIS_OS_NAME == "linux" ]; then
 fi
 
 export GTEST_HOME=$HOME/build_dir/thirdparty/$GTEST_BASEDIR
+export FLATBUFFERS_HOME=$HOME/build_dir/thirdparty/installed
+
+FLATC=$HOME/build_dir/thirdparty/installed/bin/flatc
+$FLATC -c -o src/feather src/feather/metadata.fbs

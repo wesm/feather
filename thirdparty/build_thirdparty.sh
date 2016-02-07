@@ -16,6 +16,7 @@ else
   for arg in "$*"; do
     case $arg in
       "gtest")      F_GTEST=1 ;;
+      "flatbuffers")      F_FLATBUFFERS=1 ;;
       *)            echo "Unknown module: $arg"; exit 1 ;;
     esac
   done
@@ -55,6 +56,14 @@ if [ -n "$F_ALL" -o -n "$F_GTEST" ]; then
   fi
 
   make
+fi
+
+if [ -n "$F_ALL" -o -n "$F_FLATBUFFERS" ]; then
+  cd $TP_DIR/$FLATBUFFERS_BASEDIR
+
+  CXXFLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX:PATH=$PREFIX .
+  make -j$PARALLEL
+  make install
 fi
 
 echo "---------------------"
