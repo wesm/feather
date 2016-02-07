@@ -99,18 +99,30 @@ class TestTableBuilder : public TestFileBuilder {
   std::shared_ptr<Table> table_;
 };
 
+
+void AssertArrayEquals(const PrimitiveArray* left, const PrimitiveArray* right) {
+  EXPECT_EQ(left->type, right->type);
+  EXPECT_EQ(left->encoding, right->encoding);
+  EXPECT_EQ(left->offset, right->offset);
+  EXPECT_EQ(left->length, right->length);
+  EXPECT_EQ(left->null_count, right->null_count);
+  EXPECT_EQ(left->total_bytes, right->total_bytes);
+}
+
+
 TEST_F(TestTableBuilder, AddPrimitiveColumn) {
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("f0");
 
-  PrimitiveArray values;
-  values.type = PrimitiveType::INT32;
-  values.encoding = Encoding::PLAIN;
-  values.offset = 10000;
-  values.length = 1000;
-  values.null_count = 100;
-  values.total_bytes = 4000;
+  PrimitiveArray values1;
+  PrimitiveArray values2;
+  values1.type = PrimitiveType::INT32;
+  values1.encoding = Encoding::PLAIN;
+  values1.offset = 10000;
+  values1.length = 1000;
+  values1.null_count = 100;
+  values1.total_bytes = 4000;
 
-  cb->SetValues(values);
+  cb->SetValues(values1);
 
   std::string user_meta = "as you wish";
   cb->SetUserMetadata(user_meta);
@@ -119,14 +131,14 @@ TEST_F(TestTableBuilder, AddPrimitiveColumn) {
 
   cb = tb_->AddColumn("f1");
 
-  values.type = PrimitiveType::UTF8;
-  values.encoding = Encoding::PLAIN;
-  values.offset = 14000;
-  values.length = 1000;
-  values.null_count = 100;
-  values.total_bytes = 10000;
+  values2.type = PrimitiveType::UTF8;
+  values2.encoding = Encoding::PLAIN;
+  values2.offset = 14000;
+  values2.length = 1000;
+  values2.null_count = 100;
+  values2.total_bytes = 10000;
 
-  cb->SetValues(values);
+  cb->SetValues(values2);
   cb->Finish();
 
   Finish();
@@ -137,25 +149,13 @@ TEST_F(TestTableBuilder, AddPrimitiveColumn) {
   ASSERT_EQ(ColumnType::PRIMITIVE, col->type());
   ASSERT_EQ(user_meta, col->user_metadata());
 
-  auto rvalues = col->values();
-  ASSERT_EQ(PrimitiveType::INT32, rvalues->type);
-  ASSERT_EQ(Encoding::PLAIN, rvalues->encoding);
-  ASSERT_EQ(10000, rvalues->offset);
-  ASSERT_EQ(1000, rvalues->length);
-  ASSERT_EQ(100, rvalues->null_count);
-  ASSERT_EQ(4000, rvalues->total_bytes);
+  AssertArrayEquals(col->values(), &values1);
 
   col = table_->GetColumn(1);
   ASSERT_EQ("f1", col->name());
   ASSERT_EQ(ColumnType::PRIMITIVE, col->type());
 
-  rvalues = col->values();
-  ASSERT_EQ(PrimitiveType::UTF8, rvalues->type);
-  ASSERT_EQ(Encoding::PLAIN, rvalues->encoding);
-  ASSERT_EQ(14000, rvalues->offset);
-  ASSERT_EQ(1000, rvalues->length);
-  ASSERT_EQ(100, rvalues->null_count);
-  ASSERT_EQ(10000, rvalues->total_bytes);
+  AssertArrayEquals(col->values(), &values2);
 }
 
 
