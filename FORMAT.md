@@ -43,7 +43,7 @@ If, in the metadata, `null_count = 0`, then the null bitmask is omitted.
 
 ## Variable-length arrays
 
-We use the Arrow encoding for storing variable-length values
+We use the Apache Arrow encoding for storing variable-length values
 
 ```
 <null bitmask, optional> <value offsets> <value data>

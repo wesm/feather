@@ -71,7 +71,7 @@ class TableWriter {
   friend class FileWriter;
 
   FileWriter* parent_;
-  std::unique_ptr<TableBuilder> metadata_;
+  std::unique_ptr<metadata::TableBuilder> metadata_;
 };
 
 class FileWriter {
