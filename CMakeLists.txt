@@ -177,6 +177,7 @@ set(FEATHER_TEST_LINK_LIBS ${FEATHER_MIN_TEST_LIBS})
 # Library config
 
 set(LIBFEATHER_SRCS
+  src/feather/io.cc
   src/feather/metadata.cc
 )
 
