@@ -15,6 +15,8 @@
 #ifndef FEATHER_TYPES_H
 #define FEATHER_TYPES_H
 
+#include <string>
+
 namespace feather {
 
 // Feather enums, decoupled from some of the unpleasantness of
@@ -80,6 +82,44 @@ struct TimeUnit {
     MICROSECOND = 2,
     NANOSECOND = 3
   };
+};
+
+struct PrimitiveArray {
+  PrimitiveArray() {}
+
+  PrimitiveArray(PrimitiveType::type type, Encoding::type encoding,
+      int64_t offset, int64_t length, int64_t null_count,
+      int64_t total_bytes) :
+      type(type), encoding(encoding),
+      offset(offset), length(length),
+      null_count(null_count), total_bytes(total_bytes) {}
+
+  PrimitiveType::type type;
+  Encoding::type encoding;
+  int64_t offset;
+  int64_t length;
+  int64_t null_count;
+  int64_t total_bytes;
+};
+
+struct CategoryMetadata {
+  PrimitiveArray levels;
+  bool ordered;
+};
+
+struct TimestampMetadata {
+  TimeUnit::type unit;
+
+  // A timezone name known to the Olson timezone database. For display purposes
+  // because the actual data is all UTC
+  std::string timezone;
+};
+
+struct DateMetadata {
+};
+
+struct TimeMetadata {
+  TimeUnit::type unit;
 };
 
 } // namespace feather

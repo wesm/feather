@@ -21,6 +21,14 @@ if (NOT "$ENV{FEATHER_GCC_ROOT}" STREQUAL "")
   set(CMAKE_CXX_COMPILER ${GCC_ROOT}/bin/g++)
 endif()
 
+# Enable ccache with custom gcc toolchain
+if ("$ENV{FEATHER_USE_CCACHE}")
+  set(CMAKE_C_COMPILER_ARG1 ${CMAKE_C_COMPILER})
+  set(CMAKE_CXX_COMPILER_ARG1 ${CMAKE_CXX_COMPILER})
+  set(CMAKE_C_COMPILER ccache)
+  set(CMAKE_CXX_COMPILER ccache)
+endif()
+
 # generate CTest input files
 enable_testing()
 
