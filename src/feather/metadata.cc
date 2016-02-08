@@ -171,9 +171,10 @@ void ColumnBuilder::SetUserMetadata(const std::string& data) {
   user_metadata_ = data;
 }
 
-void ColumnBuilder::SetCategory(const CategoryMetadata& meta) {
+void ColumnBuilder::SetCategory(const PrimitiveArray& levels, bool ordered) {
   type_ = ColumnType::CATEGORY;
-  meta_category_ = meta;
+  meta_category_.levels = levels;
+  meta_category_.ordered = ordered;
 }
 
 void ColumnBuilder::SetTimestamp(const TimestampMetadata& meta) {
@@ -282,15 +283,15 @@ std::shared_ptr<Column> Table::GetColumn(size_t i) {
   // Construct the right column wrapper for the logical type
   switch (col->metadata_type()) {
     case fbs::TypeMetadata_NONE:
-      return std::make_shared<Column>(col);
+      return Column::Make(col);
     case fbs::TypeMetadata_CategoryMetadata:
-      return std::make_shared<CategoryColumn>(col);
+      return CategoryColumn::Make(col);
     case fbs::TypeMetadata_TimestampMetadata:
-      return std::make_shared<TimestampColumn>(col);
+      return TimestampColumn::Make(col);
     case fbs::TypeMetadata_DateMetadata:
-      return std::make_shared<DateColumn>(col);
+      return DateColumn::Make(col);
     case fbs::TypeMetadata_TimeMetadata:
-      return std::make_shared<TimeColumn>(col);
+      return TimeColumn::Make(col);
     default:
       break;
   }
@@ -306,46 +307,81 @@ std::shared_ptr<Column> Table::GetColumnNamed(const std::string& name) {
 // ----------------------------------------------------------------------
 // Column
 
-void FromFlatbuffer(const fbs::PrimitiveArray* values, PrimitiveArray* out) {
-  out->type = FromFlatbufferEnum(values->type());
-  out->encoding = FromFlatbufferEnum(values->encoding());
-  out->offset = values->offset();
-  out->length = values->length();
-  out->null_count = values->null_count();
-  out->total_bytes = values->total_bytes();
+void FromFlatbuffer(const fbs::PrimitiveArray* values, PrimitiveArray& out) {
+  out.type = FromFlatbufferEnum(values->type());
+  out.encoding = FromFlatbufferEnum(values->encoding());
+  out.offset = values->offset();
+  out.length = values->length();
+  out.null_count = values->null_count();
+  out.total_bytes = values->total_bytes();
 }
 
-Column::Column(const fbs::Column* column) {
-  column_ = column;
-  FromFlatbuffer(column->values(), &values_);
+void Column::Init(const void* fbs_column) {
+  const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
+  name_ = column->name()->str();
+  type_ = ColumnTypeFromFB(column->metadata_type());
+  FromFlatbuffer(column->values(), values_);
+
+  auto user_meta = column->user_metadata();
+  if (user_meta->size() > 0) {
+    user_metadata_ = user_meta->str();
+  }
+}
+
+std::shared_ptr<Column> Column::Make(const void* fbs_column) {
+  auto result = std::make_shared<Column>();
+  result->Init(fbs_column);
+  return result;
 }
 
 std::string Column::name() const {
-  return column_->name()->str();
+  return name_;
 }
 
 ColumnType::type Column::type() const {
-  return ColumnTypeFromFB(column_->metadata_type());
+  return type_;
 }
 
 std::string Column::user_metadata() const {
-  return column_->user_metadata()->str();
+  return user_metadata_;
 }
 
-CategoryColumn::CategoryColumn(const fbs::Column* column) :
-    Column(column) {
+std::shared_ptr<Column> CategoryColumn::Make(const void* fbs_column) {
+  const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
+
+  auto result = std::make_shared<CategoryColumn>();
+  result->Init(fbs_column);
+
+  // Category metadata
+  auto meta = static_cast<const fbs::CategoryMetadata*>(column->metadata());
+  FromFlatbuffer(meta->levels(), result->metadata_.levels);
+  result->metadata_.ordered = meta->ordered();
+
+  return result;
 }
 
-TimestampColumn::TimestampColumn(const fbs::Column* column) :
-    Column(column) {
+std::shared_ptr<Column> TimestampColumn::Make(const void* fbs_column) {
+  const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
+
+  auto result = std::make_shared<TimestampColumn>();
+  result->Init(fbs_column);
+  return result;
 }
 
-DateColumn::DateColumn(const fbs::Column* column) :
-    Column(column) {
+std::shared_ptr<Column> DateColumn::Make(const void* fbs_column) {
+  const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
+
+  auto result = std::make_shared<DateColumn>();
+  result->Init(fbs_column);
+  return result;
 }
 
-TimeColumn::TimeColumn(const fbs::Column* column) :
-    Column(column) {
+std::shared_ptr<Column> TimeColumn::Make(const void* fbs_column) {
+  const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
+
+  auto result = std::make_shared<TimeColumn>();
+  result->Init(fbs_column);
+  return result;
 }
 
 } // namespace metadata

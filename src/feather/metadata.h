@@ -38,7 +38,9 @@ class ColumnBuilder {
   ColumnBuilder(TableBuilder* parent, const std::string& name);
 
   void SetValues(const PrimitiveArray& values);
-  void SetCategory(const CategoryMetadata& meta);
+
+  void SetCategory(const PrimitiveArray& levels, bool ordered = false);
+
   void SetTimestamp(const TimestampMetadata& meta);
   void SetDate(const DateMetadata& meta);
   void SetTime(const TimeMetadata& meta);
@@ -125,63 +127,70 @@ class Table;
 
 class Column {
  public:
-  explicit Column(const fbs::Column*);
+  Column() {};
+
+  // Conceil flatbuffer types from the public API
+  static std::shared_ptr<Column> Make(const void* fbs_column);
 
   std::string name() const;
   ColumnType::type type() const;
 
   std::string user_metadata() const;
 
-  const PrimitiveArray* values() const {
-    return &values_;
+  const PrimitiveArray& values() const {
+    return values_;
   }
 
  protected:
-  const fbs::Column* column_;
-  PrimitiveArray values_;
+  void Init(const void* fbs_column);
+
+  std::string name_;
   ColumnType::type type_;
+  PrimitiveArray values_;
+
+  std::string user_metadata_;
 };
 
 class CategoryColumn : public Column {
  public:
-  explicit CategoryColumn(const fbs::Column* column);
+  static std::shared_ptr<Column> Make(const void* fbs_column);
 
-  const fbs::PrimitiveArray* levels() const {
-    return metadata_->levels();
+  const PrimitiveArray& levels() const {
+    return metadata_.levels;
   }
 
   bool ordered() const {
-    return metadata_->ordered();
+    return metadata_.ordered;
   }
 
  private:
-  const fbs::CategoryMetadata* metadata_;
+  CategoryMetadata metadata_;
 };
 
 class TimestampColumn : public Column {
  public:
-  explicit TimestampColumn(const fbs::Column* column);
+  static std::shared_ptr<Column> Make(const void* fbs_column);
 
   std::string timezone() const;
 
  private:
-  const fbs::TimestampMetadata* metadata_;
+  TimestampMetadata metadata_;
 };
 
 class DateColumn : public Column {
  public:
-  explicit DateColumn(const fbs::Column* column);
+  static std::shared_ptr<Column> Make(const void* fbs_column);
 
  private:
-  const fbs::DateMetadata* metadata_;
+  DateMetadata metadata_;
 };
 
 class TimeColumn : public Column {
  public:
-  explicit TimeColumn(const fbs::Column* column);
+  static std::shared_ptr<Column> Make(const void* fbs_column);
 
  private:
-  const fbs::TimeMetadata* metadata_;
+  TimeMetadata metadata_;
 };
 
 class Table {

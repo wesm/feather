@@ -100,13 +100,13 @@ class TestTableBuilder : public TestFileBuilder {
 };
 
 
-void AssertArrayEquals(const PrimitiveArray* left, const PrimitiveArray* right) {
-  EXPECT_EQ(left->type, right->type);
-  EXPECT_EQ(left->encoding, right->encoding);
-  EXPECT_EQ(left->offset, right->offset);
-  EXPECT_EQ(left->length, right->length);
-  EXPECT_EQ(left->null_count, right->null_count);
-  EXPECT_EQ(left->total_bytes, right->total_bytes);
+void AssertArrayEquals(const PrimitiveArray& left, const PrimitiveArray& right) {
+  EXPECT_EQ(left.type, right.type);
+  EXPECT_EQ(left.encoding, right.encoding);
+  EXPECT_EQ(left.offset, right.offset);
+  EXPECT_EQ(left.length, right.length);
+  EXPECT_EQ(left.null_count, right.null_count);
+  EXPECT_EQ(left.total_bytes, right.total_bytes);
 }
 
 
@@ -143,22 +143,55 @@ TEST_F(TestTableBuilder, AddPrimitiveColumn) {
 
   Finish();
 
+  ASSERT_EQ(2, table_->num_columns());
+
   auto col = table_->GetColumn(0);
 
   ASSERT_EQ("f0", col->name());
   ASSERT_EQ(ColumnType::PRIMITIVE, col->type());
   ASSERT_EQ(user_meta, col->user_metadata());
 
-  AssertArrayEquals(col->values(), &values1);
+  AssertArrayEquals(col->values(), values1);
 
   col = table_->GetColumn(1);
   ASSERT_EQ("f1", col->name());
   ASSERT_EQ(ColumnType::PRIMITIVE, col->type());
 
-  AssertArrayEquals(col->values(), &values2);
+  AssertArrayEquals(col->values(), values2);
 }
 
+TEST_F(TestTableBuilder, AddCategoryColumn) {
+  PrimitiveArray values1(PrimitiveType::UINT8, Encoding::PLAIN,
+      10000, 1000, 100, 4000);
+  PrimitiveArray levels(PrimitiveType::UTF8, Encoding::PLAIN,
+      14000, 10, 0, 300);
 
+  std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
+  cb->SetValues(values1);
+  cb->SetCategory(levels);
+  cb->Finish();
+
+  cb = tb_->AddColumn("c1");
+  cb->SetValues(values1);
+  cb->SetCategory(levels, true);
+  cb->Finish();
+
+  Finish();
+
+  auto col = table_->GetColumn(0);
+
+  ASSERT_EQ(ColumnType::CATEGORY, col->type());
+  AssertArrayEquals(col->values(), values1);
+
+  const CategoryColumn* cat_ptr = static_cast<const CategoryColumn*>(col.get());
+  ASSERT_FALSE(cat_ptr->ordered());
+  AssertArrayEquals(cat_ptr->levels(), levels);
+
+  col = table_->GetColumn(1);
+  cat_ptr = static_cast<const CategoryColumn*>(col.get());
+  ASSERT_TRUE(cat_ptr->ordered());
+  AssertArrayEquals(cat_ptr->levels(), levels);
+}
 
 } // namespace metadata
 
