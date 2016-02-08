@@ -225,6 +225,40 @@ TEST_F(TestTableBuilder, AddTimestampColumn) {
   ASSERT_EQ(tz, ts_ptr->timezone());
 }
 
+TEST_F(TestTableBuilder, AddDateColumn) {
+  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+      10000, 1000, 100, 4000);
+  std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("d0");
+  cb->SetValues(values1);
+  cb->SetDate();
+  cb->Finish();
+
+  Finish();
+
+  auto col = table_->GetColumn(0);
+
+  ASSERT_EQ(ColumnType::DATE, col->type());
+  AssertArrayEquals(col->values(), values1);
+}
+
+TEST_F(TestTableBuilder, AddTimeColumn) {
+  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+      10000, 1000, 100, 4000);
+  std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
+  cb->SetValues(values1);
+  cb->SetTime(TimeUnit::SECOND);
+  cb->Finish();
+  Finish();
+
+  auto col = table_->GetColumn(0);
+
+  ASSERT_EQ(ColumnType::TIME, col->type());
+  AssertArrayEquals(col->values(), values1);
+
+  const TimeColumn* t_ptr = static_cast<const TimeColumn*>(col.get());
+  ASSERT_EQ(TimeUnit::SECOND, t_ptr->unit());
+}
+
 } // namespace metadata
 
 } // namespace feather

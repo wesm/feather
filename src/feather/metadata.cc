@@ -246,7 +246,16 @@ flatbuffers::Offset<void> ColumnBuilder::CreateColumnMetadata() {
         return ts_meta.Union();
       }
     case ColumnType::DATE:
+      {
+        auto date_meta = fbs::CreateDateMetadata(fbb());
+        return date_meta.Union();
+      }
     case ColumnType::TIME:
+      {
+        auto time_meta = fbs::CreateTimeMetadata(fbb(),
+            ToFlatbufferEnum(meta_time_.unit));
+        return time_meta.Union();
+      }
     default:
       // null
       return flatbuffers::Offset<void>();
@@ -422,8 +431,6 @@ std::string TimestampColumn::timezone() const {
 // Date column
 
 std::shared_ptr<Column> DateColumn::Make(const void* fbs_column) {
-  const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
-
   auto result = std::make_shared<DateColumn>();
   result->Init(fbs_column);
   return result;
@@ -434,7 +441,15 @@ std::shared_ptr<Column> TimeColumn::Make(const void* fbs_column) {
 
   auto result = std::make_shared<TimeColumn>();
   result->Init(fbs_column);
+
+  auto meta = static_cast<const fbs::TimeMetadata*>(column->metadata());
+  result->metadata_.unit = FromFlatbufferEnum(meta->unit());
+
   return result;
+}
+
+TimeUnit::type TimeColumn::unit() const {
+  return metadata_.unit;
 }
 
 } // namespace metadata

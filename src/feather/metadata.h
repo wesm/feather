@@ -194,6 +194,8 @@ class TimeColumn : public Column {
  public:
   static std::shared_ptr<Column> Make(const void* fbs_column);
 
+  TimeUnit::type unit() const;
+
  private:
   TimeMetadata metadata_;
 };
