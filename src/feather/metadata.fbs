@@ -84,7 +84,6 @@ table TimestampMetadata {
 }
 
 table DateMetadata {
-  unit: TimeUnit;
 }
 
 table TimeMetadata {

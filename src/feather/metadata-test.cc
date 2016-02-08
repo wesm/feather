@@ -193,6 +193,38 @@ TEST_F(TestTableBuilder, AddCategoryColumn) {
   AssertArrayEquals(cat_ptr->levels(), levels);
 }
 
+TEST_F(TestTableBuilder, AddTimestampColumn) {
+  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+      10000, 1000, 100, 4000);
+  std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
+  cb->SetValues(values1);
+  cb->SetTimestamp(TimeUnit::MILLISECOND);
+  cb->Finish();
+
+  cb = tb_->AddColumn("c1");
+
+  std::string tz("America/Los_Angeles");
+
+  cb->SetValues(values1);
+  cb->SetTimestamp(TimeUnit::SECOND, tz);
+  cb->Finish();
+
+  Finish();
+
+  auto col = table_->GetColumn(0);
+
+  ASSERT_EQ(ColumnType::TIMESTAMP, col->type());
+  AssertArrayEquals(col->values(), values1);
+
+  const TimestampColumn* ts_ptr = static_cast<const TimestampColumn*>(col.get());
+  ASSERT_EQ(TimeUnit::MILLISECOND, ts_ptr->unit());
+
+  col = table_->GetColumn(1);
+  ts_ptr = static_cast<const TimestampColumn*>(col.get());
+  ASSERT_EQ(TimeUnit::SECOND, ts_ptr->unit());
+  ASSERT_EQ(tz, ts_ptr->timezone());
+}
+
 } // namespace metadata
 
 } // namespace feather

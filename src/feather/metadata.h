@@ -36,14 +36,17 @@ class TableBuilder;
 class ColumnBuilder {
  public:
   ColumnBuilder(TableBuilder* parent, const std::string& name);
+  ~ColumnBuilder();
 
   void SetValues(const PrimitiveArray& values);
 
   void SetCategory(const PrimitiveArray& levels, bool ordered = false);
 
-  void SetTimestamp(const TimestampMetadata& meta);
-  void SetDate(const DateMetadata& meta);
-  void SetTime(const TimeMetadata& meta);
+  void SetTimestamp(TimeUnit::type unit);
+  void SetTimestamp(TimeUnit::type unit, const std::string& timezone);
+
+  void SetDate();
+  void SetTime(TimeUnit::type unit);
 
   void SetUserMetadata(const std::string& data);
 
@@ -67,10 +70,11 @@ class ColumnBuilder {
   // Type-specific metadata union
   union {
     CategoryMetadata meta_category_;
-    TimestampMetadata meta_timestamp_;
     DateMetadata meta_date_;
     TimeMetadata meta_time_;
   };
+
+  TimestampMetadata meta_timestamp_;
 
   flatbuffers::Offset<void> CreateColumnMetadata();
 };
@@ -171,6 +175,7 @@ class TimestampColumn : public Column {
  public:
   static std::shared_ptr<Column> Make(const void* fbs_column);
 
+  TimeUnit::type unit() const;
   std::string timezone() const;
 
  private:

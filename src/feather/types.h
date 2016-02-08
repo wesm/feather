@@ -15,6 +15,8 @@
 #ifndef FEATHER_TYPES_H
 #define FEATHER_TYPES_H
 
+#include <string>
+
 namespace feather {
 
 // Feather enums, decoupled from some of the unpleasantness of
@@ -106,12 +108,18 @@ struct CategoryMetadata {
 };
 
 struct TimestampMetadata {
+  TimeUnit::type unit;
+
+  // A timezone name known to the Olson timezone database. For display purposes
+  // because the actual data is all UTC
+  std::string timezone;
 };
 
 struct DateMetadata {
 };
 
 struct TimeMetadata {
+  TimeUnit::type unit;
 };
 
 } // namespace feather

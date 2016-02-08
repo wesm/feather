@@ -81,6 +81,14 @@ static inline ColumnType::type ColumnTypeFromFB(fbs::TypeMetadata type) {
   }
 }
 
+static inline fbs::TimeUnit ToFlatbufferEnum(TimeUnit::type unit) {
+  return static_cast<fbs::TimeUnit>(static_cast<int>(unit));
+}
+
+static inline TimeUnit::type FromFlatbufferEnum(fbs::TimeUnit unit) {
+  return static_cast<TimeUnit::type>(static_cast<int>(unit));
+}
+
 static inline flatbuffers::Offset<fbs::PrimitiveArray> GetPrimitiveArray(
     FBB& fbb, const PrimitiveArray& array) {
   return fbs::CreatePrimitiveArray(fbb,
@@ -159,6 +167,8 @@ ColumnBuilder::ColumnBuilder(TableBuilder* parent, const std::string& name) :
     name_(name),
     type_(ColumnType::PRIMITIVE) {}
 
+ColumnBuilder::~ColumnBuilder() {}
+
 FBB& ColumnBuilder::fbb() {
   return parent_->fbb();
 }
@@ -177,19 +187,24 @@ void ColumnBuilder::SetCategory(const PrimitiveArray& levels, bool ordered) {
   meta_category_.ordered = ordered;
 }
 
-void ColumnBuilder::SetTimestamp(const TimestampMetadata& meta) {
+void ColumnBuilder::SetTimestamp(TimeUnit::type unit) {
   type_ = ColumnType::TIMESTAMP;
-  meta_timestamp_ = meta;
+  meta_timestamp_.unit = unit;
 }
 
-void ColumnBuilder::SetDate(const DateMetadata& meta) {
+void ColumnBuilder::SetTimestamp(TimeUnit::type unit,
+    const std::string& timezone) {
+  SetTimestamp(unit);
+  meta_timestamp_.timezone = timezone;
+}
+
+void ColumnBuilder::SetDate() {
   type_ = ColumnType::DATE;
-  meta_date_ = meta;
 }
 
-void ColumnBuilder::SetTime(const TimeMetadata& meta) {
+void ColumnBuilder::SetTime(TimeUnit::type unit) {
   type_ = ColumnType::TIME;
-  meta_time_ = meta;
+  meta_time_.unit = unit;
 }
 
 // Convert Feather enums to Flatbuffer enums
@@ -209,7 +224,8 @@ fbs::TypeMetadata ToFlatbufferEnum(ColumnType::type column_type) {
 flatbuffers::Offset<void> ColumnBuilder::CreateColumnMetadata() {
   switch (type_) {
     case ColumnType::PRIMITIVE:
-      return flatbuffers::Offset<void>();
+      // flatbuffer void
+      return 0;
     case ColumnType::CATEGORY:
       {
         auto cat_meta = fbs::CreateCategoryMetadata(fbb(),
@@ -218,6 +234,17 @@ flatbuffers::Offset<void> ColumnBuilder::CreateColumnMetadata() {
         return cat_meta.Union();
       }
     case ColumnType::TIMESTAMP:
+      {
+        // flatbuffer void
+        flatbuffers::Offset<flatbuffers::String> tz = 0;
+        if (!meta_timestamp_.timezone.empty()) {
+          tz = fbb().CreateString(meta_timestamp_.timezone);
+        }
+
+        auto ts_meta = fbs::CreateTimestampMetadata(fbb(),
+            ToFlatbufferEnum(meta_timestamp_.unit), tz);
+        return ts_meta.Union();
+      }
     case ColumnType::DATE:
     case ColumnType::TIME:
     default:
@@ -346,6 +373,9 @@ std::string Column::user_metadata() const {
   return user_metadata_;
 }
 
+// ----------------------------------------------------------------------
+// Category column
+
 std::shared_ptr<Column> CategoryColumn::Make(const void* fbs_column) {
   const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
 
@@ -356,17 +386,40 @@ std::shared_ptr<Column> CategoryColumn::Make(const void* fbs_column) {
   auto meta = static_cast<const fbs::CategoryMetadata*>(column->metadata());
   FromFlatbuffer(meta->levels(), result->metadata_.levels);
   result->metadata_.ordered = meta->ordered();
-
   return result;
 }
+
+// ----------------------------------------------------------------------
+// Timestamp column
 
 std::shared_ptr<Column> TimestampColumn::Make(const void* fbs_column) {
   const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
 
   auto result = std::make_shared<TimestampColumn>();
   result->Init(fbs_column);
+
+  auto meta = static_cast<const fbs::TimestampMetadata*>(column->metadata());
+  result->metadata_.unit = FromFlatbufferEnum(meta->unit());
+
+  auto tz = meta->timezone();
+  // flatbuffer non-null
+  if (tz != 0) {
+    result->metadata_.timezone = tz->str();
+  }
+
   return result;
 }
+
+TimeUnit::type TimestampColumn::unit() const {
+  return metadata_.unit;
+}
+
+std::string TimestampColumn::timezone() const {
+  return metadata_.timezone;
+}
+
+// ----------------------------------------------------------------------
+// Date column
 
 std::shared_ptr<Column> DateColumn::Make(const void* fbs_column) {
   const fbs::Column* column = static_cast<const fbs::Column*>(fbs_column);
