@@ -50,12 +50,18 @@ class FileWriter;
 
 class TableWriter {
  public:
-  void AppendPrimitive(const std::string& name, const PrimitiveData& values);
+  // Plain-encoded data
+  void AppendPlain(const std::string& name, const PrimitiveData& values);
+
+  // Dictionary-encoded primitive data. Especially useful for strings and
+  // binary data
   void AppendDictEncoded(const std::string& name, const DictionaryData& data);
 
+  // Category type data
   void AppendCategory(const std::string& name, const PrimitiveData& values,
       const PrimitiveData& levels, bool ordered = false);
 
+  // Other primitive data types
   void AppendTimestamp(const std::string& name, const PrimitiveData& values
       const TimestampMetadata& meta);
 
@@ -63,6 +69,7 @@ class TableWriter {
   friend class FileWriter;
 
   FileWriter* parent_;
+  std::unique_ptr<TableBuilder> metadata_;
 };
 
 class FileWriter {
