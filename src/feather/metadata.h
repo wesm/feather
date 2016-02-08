@@ -127,7 +127,7 @@ class Table;
 
 class Column {
  public:
-  Column() {};
+  Column() {}
 
   // Conceil flatbuffer types from the public API
   static std::shared_ptr<Column> Make(const void* fbs_column);
