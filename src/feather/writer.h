@@ -15,6 +15,8 @@
 #ifndef FEATHER_WRITER_H
 #define FEATHER_WRITER_H
 
+#include <string>
+
 #include "feather/io.h"
 #include "feather/metadata.h"
 #include "feather/types.h"
@@ -74,7 +76,7 @@ class TableWriter {
 
 class FileWriter {
  public:
-  FileWriter(std::unique_ptr<OutputStream> stream);
+  explicit FileWriter(std::unique_ptr<OutputStream> stream);
 
   // Append a table to the metadata
   std::unique_ptr<TableWriter> AddTable(const std::string& name,

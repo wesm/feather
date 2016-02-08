@@ -36,7 +36,7 @@ class OutputStream {
 // An output stream that is an in-memory
 class InMemoryOutputStream : public OutputStream {
  public:
-  InMemoryOutputStream(size_t initial_capacity);
+  explicit InMemoryOutputStream(size_t initial_capacity);
 
   virtual void Close() {}
 

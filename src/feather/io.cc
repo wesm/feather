@@ -50,7 +50,7 @@ void InMemoryOutputStream::Write(const uint8_t* data, size_t length) {
 
 size_t InMemoryOutputStream::Tell() {
   return size_;
-};
+}
 
 void InMemoryOutputStream::Transfer(std::vector<uint8_t>& out) {
   buffer_.resize(size_);
