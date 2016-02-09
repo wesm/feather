@@ -51,7 +51,7 @@ TEST_F(TestTableBuilder, EmptyTable) {
   ASSERT_EQ(0, table_->num_columns());
 }
 
-void AssertArrayEquals(const PrimitiveArray& left, const PrimitiveArray& right) {
+void AssertArrayEquals(const ArrayMetadata& left, const ArrayMetadata& right) {
   EXPECT_EQ(left.type, right.type);
   EXPECT_EQ(left.encoding, right.encoding);
   EXPECT_EQ(left.offset, right.offset);
@@ -64,8 +64,8 @@ void AssertArrayEquals(const PrimitiveArray& left, const PrimitiveArray& right) 
 TEST_F(TestTableBuilder, AddPrimitiveColumn) {
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("f0");
 
-  PrimitiveArray values1;
-  PrimitiveArray values2;
+  ArrayMetadata values1;
+  ArrayMetadata values2;
   values1.type = PrimitiveType::INT32;
   values1.encoding = Encoding::PLAIN;
   values1.offset = 10000;
@@ -112,9 +112,9 @@ TEST_F(TestTableBuilder, AddPrimitiveColumn) {
 }
 
 TEST_F(TestTableBuilder, AddCategoryColumn) {
-  PrimitiveArray values1(PrimitiveType::UINT8, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::UINT8, Encoding::PLAIN,
       10000, 1000, 100, 4000);
-  PrimitiveArray levels(PrimitiveType::UTF8, Encoding::PLAIN,
+  ArrayMetadata levels(PrimitiveType::UTF8, Encoding::PLAIN,
       14000, 10, 0, 300);
 
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
@@ -145,7 +145,7 @@ TEST_F(TestTableBuilder, AddCategoryColumn) {
 }
 
 TEST_F(TestTableBuilder, AddTimestampColumn) {
-  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::INT64, Encoding::PLAIN,
       10000, 1000, 100, 4000);
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
   cb->SetValues(values1);
@@ -177,7 +177,7 @@ TEST_F(TestTableBuilder, AddTimestampColumn) {
 }
 
 TEST_F(TestTableBuilder, AddDateColumn) {
-  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::INT64, Encoding::PLAIN,
       10000, 1000, 100, 4000);
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("d0");
   cb->SetValues(values1);
@@ -193,7 +193,7 @@ TEST_F(TestTableBuilder, AddDateColumn) {
 }
 
 TEST_F(TestTableBuilder, AddTimeColumn) {
-  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::INT64, Encoding::PLAIN,
       10000, 1000, 100, 4000);
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
   cb->SetValues(values1);

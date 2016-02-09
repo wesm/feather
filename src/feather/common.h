@@ -19,6 +19,14 @@ namespace feather {
 
 static constexpr const char* FEATHER_MAGIC_BYTES = "FEA1";
 
+namespace util {
+
+static inline size_t ceil_byte(size_t size) {
+  return (size + 7) & ~7;
+}
+
+} // namespace util
+
 } // namespace feather
 
 #endif // FEATHER_COMMON_H

@@ -52,6 +52,53 @@ struct PrimitiveType {
   };
 };
 
+const size_t TYPE_BYTE_SIZE[] = {
+  1, // BOOL
+  1, // INT8
+  2,
+  4,
+  8,
+  1, // UINT8
+  2,
+  4,
+  8, // UINT64
+  4, // FLOAT
+  8, // DOUBLE
+  1, // UTF8
+  1  // BINARY
+};
+
+static inline bool IsVariableLength(PrimitiveType::type type) {
+  return type == PrimitiveType::UTF8 || type == PrimitiveType::BINARY;
+}
+
+static inline size_t ByteSize(PrimitiveType::type type) {
+  switch (type) {
+    case PrimitiveType::BOOL:
+    case PrimitiveType::INT8:
+    case PrimitiveType::INT16:
+    case PrimitiveType::INT32:
+    case PrimitiveType::INT64:
+    case PrimitiveType::UINT8:
+    case PrimitiveType::UINT16:
+    case PrimitiveType::UINT32:
+    case PrimitiveType::UINT64:
+    case PrimitiveType::FLOAT:
+    case PrimitiveType::DOUBLE:
+    case PrimitiveType::UTF8:
+    case PrimitiveType::BINARY:
+      return TYPE_BYTE_SIZE[static_cast<int>(type)];
+    case PrimitiveType::CATEGORY:
+      return 0;
+    case PrimitiveType::TIMESTAMP:
+    case PrimitiveType::DATE:
+    case PrimitiveType::TIME:
+      return 8;
+    default:
+      return 0;
+  }
+}
+
 struct ColumnType {
   enum type {
     PRIMITIVE,
@@ -84,10 +131,10 @@ struct TimeUnit {
   };
 };
 
-struct PrimitiveArray {
-  PrimitiveArray() {}
+struct ArrayMetadata {
+  ArrayMetadata() {}
 
-  PrimitiveArray(PrimitiveType::type type, Encoding::type encoding,
+  ArrayMetadata(PrimitiveType::type type, Encoding::type encoding,
       int64_t offset, int64_t length, int64_t null_count,
       int64_t total_bytes) :
       type(type), encoding(encoding),
@@ -103,7 +150,7 @@ struct PrimitiveArray {
 };
 
 struct CategoryMetadata {
-  PrimitiveArray levels;
+  ArrayMetadata levels;
   bool ordered;
 };
 

@@ -90,7 +90,7 @@ static inline TimeUnit::type FromFlatbufferEnum(fbs::TimeUnit unit) {
 }
 
 static inline flatbuffers::Offset<fbs::PrimitiveArray> GetPrimitiveArray(
-    FBB& fbb, const PrimitiveArray& array) {
+    FBB& fbb, const ArrayMetadata& array) {
   return fbs::CreatePrimitiveArray(fbb,
       ToFlatbufferEnum(array.type),
       ToFlatbufferEnum(array.encoding),
@@ -149,7 +149,7 @@ FBB& ColumnBuilder::fbb() {
   return parent_->fbb();
 }
 
-void ColumnBuilder::SetValues(const PrimitiveArray& values) {
+void ColumnBuilder::SetValues(const ArrayMetadata& values) {
   values_ = values;
 }
 
@@ -157,7 +157,7 @@ void ColumnBuilder::SetUserMetadata(const std::string& data) {
   user_metadata_ = data;
 }
 
-void ColumnBuilder::SetCategory(const PrimitiveArray& levels, bool ordered) {
+void ColumnBuilder::SetCategory(const ArrayMetadata& levels, bool ordered) {
   type_ = ColumnType::CATEGORY;
   meta_category_.levels = levels;
   meta_category_.ordered = ordered;
@@ -307,7 +307,7 @@ std::shared_ptr<Column> Table::GetColumnNamed(const std::string& name) {
 // ----------------------------------------------------------------------
 // Column
 
-void FromFlatbuffer(const fbs::PrimitiveArray* values, PrimitiveArray& out) {
+void FromFlatbuffer(const fbs::PrimitiveArray* values, ArrayMetadata& out) {
   out.type = FromFlatbufferEnum(values->type());
   out.encoding = FromFlatbufferEnum(values->encoding());
   out.offset = values->offset();

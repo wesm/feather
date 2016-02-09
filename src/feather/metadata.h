@@ -37,9 +37,9 @@ class ColumnBuilder {
   ColumnBuilder(TableBuilder* parent, const std::string& name);
   ~ColumnBuilder();
 
-  void SetValues(const PrimitiveArray& values);
+  void SetValues(const ArrayMetadata& values);
 
-  void SetCategory(const PrimitiveArray& levels, bool ordered = false);
+  void SetCategory(const ArrayMetadata& levels, bool ordered = false);
 
   void SetTimestamp(TimeUnit::type unit);
   void SetTimestamp(TimeUnit::type unit, const std::string& timezone);
@@ -56,7 +56,7 @@ class ColumnBuilder {
  private:
   TableBuilder* parent_;
   std::string name_;
-  PrimitiveArray values_;
+  ArrayMetadata values_;
 
   std::string user_metadata_;
 
@@ -80,6 +80,7 @@ class ColumnBuilder {
 
 class TableBuilder {
  public:
+  TableBuilder();
   TableBuilder(const std::string& name, int64_t num_rows);
 
   std::unique_ptr<ColumnBuilder> AddColumn(const std::string& name);
@@ -90,6 +91,14 @@ class TableBuilder {
   size_t BufferSize() const;
 
   flatbuffers::FlatBufferBuilder& fbb();
+
+  void SetName(const std::string& name) {
+    name_ = name;
+  }
+
+  void SetNumRows(int64_t num_rows) {
+    num_rows_ = num_rows;
+  }
 
  private:
   friend class ColumnBuilder;
@@ -120,7 +129,7 @@ class Column {
 
   std::string user_metadata() const;
 
-  const PrimitiveArray& values() const {
+  const ArrayMetadata& values() const {
     return values_;
   }
 
@@ -129,7 +138,7 @@ class Column {
 
   std::string name_;
   ColumnType::type type_;
-  PrimitiveArray values_;
+  ArrayMetadata values_;
 
   std::string user_metadata_;
 };
@@ -138,7 +147,7 @@ class CategoryColumn : public Column {
  public:
   static std::shared_ptr<Column> Make(const void* fbs_column);
 
-  const PrimitiveArray& levels() const {
+  const ArrayMetadata& levels() const {
     return metadata_.levels;
   }
 

@@ -29,9 +29,9 @@ struct PrimitiveData {
   int64_t null_count;
 
   // If null_count == 0, treated as nullptr
-  const uint8* nulls;
+  const uint8_t* nulls;
 
-  const void* data;
+  const uint8_t* values;
 
   // For UTF8 and BINARY, not used otherwise
   const int32_t* offsets;
@@ -41,17 +41,20 @@ struct CategoryData {
   PrimitiveData indices;
   PrimitiveData levels;
   bool ordered;
-}
+};
 
 struct DictionaryData {
   PrimitiveData dict_values;
   PrimitiveData indices;
 };
 
-class FileWriter;
-
 class TableWriter {
  public:
+  explicit TableWriter(std::unique_ptr<OutputStream> stream);
+
+  void SetName(const std::string& name);
+  void SetNumRows(int64_t num_rows);
+
   // Plain-encoded data
   void AppendPlain(const std::string& name, const PrimitiveData& values);
 
@@ -64,30 +67,15 @@ class TableWriter {
       const PrimitiveData& levels, bool ordered = false);
 
   // Other primitive data types
-  void AppendTimestamp(const std::string& name, const PrimitiveData& values
+  void AppendTimestamp(const std::string& name, const PrimitiveData& values,
       const TimestampMetadata& meta);
-
- private:
-  friend class FileWriter;
-
-  FileWriter* parent_;
-  std::unique_ptr<metadata::TableBuilder> metadata_;
-};
-
-class FileWriter {
- public:
-  explicit FileWriter(std::unique_ptr<OutputStream> stream);
-
-  // Append a table to the metadata
-  std::unique_ptr<TableWriter> AddTable(const std::string& name,
-      int64_t num_rows);
 
   // We are done, write the file metadata and footer
   void Finalize();
 
  private:
   std::unique_ptr<OutputStream> stream_;
-  metadata::FileBuilder metadata_;
+  metadata::TableBuilder metadata_;
 
   // Append a primitive array to the file
   void AppendPrimitiveArray();
