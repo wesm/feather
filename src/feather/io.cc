@@ -20,6 +20,48 @@
 namespace feather {
 
 // ----------------------------------------------------------------------
+// LocalFile methods
+
+LocalFile::~LocalFile() {
+  CloseFile();
+}
+
+void LocalFile::Open(const std::string& path) {
+  path_ = path;
+  file_ = fopen(path_.c_str(), "r");
+  is_open_ = true;
+}
+
+void LocalFile::Close() {
+  // Pure virtual
+  CloseFile();
+}
+
+void LocalFile::CloseFile() {
+  if (is_open_) {
+    fclose(file_);
+    is_open_ = false;
+  }
+}
+
+size_t LocalFile::Size() {
+  fseek(file_, 0L, SEEK_END);
+  return Tell();
+}
+
+void LocalFile::Seek(size_t pos) {
+  fseek(file_, pos, SEEK_SET);
+}
+
+size_t LocalFile::Tell() {
+  return ftell(file_);
+}
+
+size_t LocalFile::Read(size_t nbytes, uint8_t* buffer) {
+  return fread(buffer, 1, nbytes, file_);
+}
+
+// ----------------------------------------------------------------------
 // In-memory output stream
 
 InMemoryOutputStream::InMemoryOutputStream(size_t initial_capacity) :

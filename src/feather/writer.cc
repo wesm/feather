@@ -50,7 +50,7 @@ void TableWriter::Finalize() {
 }
 
 void TableWriter::AppendPlain(const std::string& name,
-    const PrimitiveData& values) {
+    const PrimitiveArray& values) {
   // Prepare metadata payload
   ArrayMetadata meta;
   meta.type = values.type;

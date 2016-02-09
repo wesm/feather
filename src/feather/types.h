@@ -169,6 +169,32 @@ struct TimeMetadata {
   TimeUnit::type unit;
 };
 
+
+struct PrimitiveArray {
+  PrimitiveType::type type;
+  int64_t length;
+  int64_t null_count;
+
+  // If null_count == 0, treated as nullptr
+  const uint8_t* nulls;
+
+  const uint8_t* values;
+
+  // For UTF8 and BINARY, not used otherwise
+  const int32_t* offsets;
+};
+
+struct CategoryArray {
+  PrimitiveArray indices;
+  PrimitiveArray levels;
+  bool ordered;
+};
+
+struct DictEncodedArray {
+  PrimitiveArray dict_values;
+  PrimitiveArray indices;
+};
+
 } // namespace feather
 
 #endif // FEATHER_TYPES_H

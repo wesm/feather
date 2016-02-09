@@ -15,6 +15,7 @@
 #ifndef FEATHER_WRITER_H
 #define FEATHER_WRITER_H
 
+#include <memory>
 #include <string>
 
 #include "feather/io.h"
@@ -22,31 +23,6 @@
 #include "feather/types.h"
 
 namespace feather {
-
-struct PrimitiveData {
-  PrimitiveType::type type;
-  int64_t length;
-  int64_t null_count;
-
-  // If null_count == 0, treated as nullptr
-  const uint8_t* nulls;
-
-  const uint8_t* values;
-
-  // For UTF8 and BINARY, not used otherwise
-  const int32_t* offsets;
-};
-
-struct CategoryData {
-  PrimitiveData indices;
-  PrimitiveData levels;
-  bool ordered;
-};
-
-struct DictionaryData {
-  PrimitiveData dict_values;
-  PrimitiveData indices;
-};
 
 class TableWriter {
  public:
@@ -56,18 +32,18 @@ class TableWriter {
   void SetNumRows(int64_t num_rows);
 
   // Plain-encoded data
-  void AppendPlain(const std::string& name, const PrimitiveData& values);
+  void AppendPlain(const std::string& name, const PrimitiveArray& values);
 
   // Dictionary-encoded primitive data. Especially useful for strings and
   // binary data
-  void AppendDictEncoded(const std::string& name, const DictionaryData& data);
+  void AppendDictEncoded(const std::string& name, const DictEncodedArray& data);
 
   // Category type data
-  void AppendCategory(const std::string& name, const PrimitiveData& values,
-      const PrimitiveData& levels, bool ordered = false);
+  void AppendCategory(const std::string& name, const PrimitiveArray& values,
+      const PrimitiveArray& levels, bool ordered = false);
 
   // Other primitive data types
-  void AppendTimestamp(const std::string& name, const PrimitiveData& values,
+  void AppendTimestamp(const std::string& name, const PrimitiveArray& values,
       const TimestampMetadata& meta);
 
   // We are done, write the file metadata and footer
