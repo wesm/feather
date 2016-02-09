@@ -60,7 +60,10 @@ void TableWriter::AppendPlain(const std::string& name,
 
   // Write the null bitmask
   if (values.null_count > 0) {
-    size_t null_bytes = util::ceil_byte(values.null_count);
+    // We assume there is one bit for each value in values.nulls, aligned on a
+    // byte boundary, and we write this much data into the stream
+    size_t null_bytes = util::ceil_byte(values.length);
+
     meta.total_bytes += null_bytes;
     stream_->Write(values.nulls, null_bytes);
   }
