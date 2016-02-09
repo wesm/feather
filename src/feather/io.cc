@@ -16,49 +16,93 @@
 
 #include <algorithm>
 #include <cstring>
+#include <sstream>
+
+#include "feather/exception.h"
 
 namespace feather {
 
 // ----------------------------------------------------------------------
-// LocalFile methods
+// BufferReader
 
-LocalFile::~LocalFile() {
+size_t BufferReader::Tell() {
+  return pos_;
+}
+
+void BufferReader::Seek(size_t pos) {
+  if (pos >= size_) {
+    std::stringstream ss;
+    ss << "Cannot seek to " << pos
+       << "File is length " << size_;
+    throw FeatherException(ss.str());
+  }
+  pos_ = pos;
+}
+
+size_t BufferReader::ReadInto(size_t nbytes, uint8_t* out) {
+  FeatherException::NYI("not implemented");
+  return 0;
+}
+
+const uint8_t* BufferReader::ReadNoCopy(size_t nbytes, size_t* bytes_available) {
+  *bytes_available = std::min(nbytes, size_ - pos_);
+  const uint8_t* result = Head();
+  pos_ += *bytes_available;
+  return result;
+}
+
+// ----------------------------------------------------------------------
+// LocalFileReader methods
+
+LocalFileReader::~LocalFileReader() {
   CloseFile();
 }
 
-void LocalFile::Open(const std::string& path) {
+void LocalFileReader::Open(const std::string& path) {
   path_ = path;
   file_ = fopen(path_.c_str(), "r");
+  if (file_ == nullptr) {
+    throw FeatherException("Unable to open file");
+  }
+
+  // Get and set file size
+  fseek(file_, 0L, SEEK_END);
+  size_ = ftell(file_);
   is_open_ = true;
+
+  // Rewind to the beginning
+  Seek(0);
 }
 
-void LocalFile::Close() {
-  // Pure virtual
-  CloseFile();
-}
-
-void LocalFile::CloseFile() {
+void LocalFileReader::CloseFile() {
   if (is_open_) {
     fclose(file_);
     is_open_ = false;
   }
 }
 
-size_t LocalFile::Size() {
+size_t LocalFileReader::Size() {
   fseek(file_, 0L, SEEK_END);
   return Tell();
 }
 
-void LocalFile::Seek(size_t pos) {
+void LocalFileReader::Seek(size_t pos) {
   fseek(file_, pos, SEEK_SET);
 }
 
-size_t LocalFile::Tell() {
+size_t LocalFileReader::Tell() {
   return ftell(file_);
 }
 
-size_t LocalFile::Read(size_t nbytes, uint8_t* buffer) {
-  return fread(buffer, 1, nbytes, file_);
+size_t LocalFileReader::ReadInto(size_t nbytes, uint8_t* buffer) {
+  size_t bytes_read = fread(buffer, 1, nbytes, file_);
+  if (bytes_read < nbytes) {
+    // Exception if not EOF
+    if (!feof(file_)) {
+      throw FeatherException("Error reading bytes from file");
+    }
+  }
+  return bytes_read;
 }
 
 // ----------------------------------------------------------------------

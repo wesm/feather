@@ -49,7 +49,7 @@ struct CategoryColumn : struct Column {
 
 class TableReader {
  public:
-  explicit TableReader(std::unique_ptr<FileLike> file);
+  explicit TableReader(std::unique_ptr<RandomAccessReader> file);
 
   static std::unique_ptr<TableReader> OpenFile(const std::string& abspath);
 

@@ -26,46 +26,91 @@ namespace feather {
 // ----------------------------------------------------------------------
 // Input interfaces
 
-// An abstract read-only file interface
-class FileLike {
+// An abstract read-only file interface capable of performing Seeks (as opposed
+// to being an input stream)
+class RandomAccessReader {
  public:
-  virtual ~FileLike() {}
+  virtual ~RandomAccessReader() {}
 
-  virtual void Close() = 0;
-  virtual size_t Size() = 0;
   virtual size_t Tell() = 0;
   virtual void Seek(size_t pos) = 0;
 
-  // Returns actual number of bytes read
-  virtual size_t Read(size_t nbytes, uint8_t* out) = 0;
+  size_t size() {
+    return size_;
+  }
+
+  // Most generic read method: *copies* bytes from the reader into a
+  // preallocated memory region that you pass in.
+  //
+  // Other reader implementations may have a method that lets you get access to
+  // data without copying. See BufferReader.
+  //
+  // @returns actual number of bytes read
+  virtual size_t ReadInto(size_t nbytes, uint8_t* out) = 0;
+
+ protected:
+  size_t size_;
 };
 
 
-// File interface that interacts with a file on disk
-class LocalFile : public FileLike {
+// File interface that interacts with a file on disk using operating-system
+// level seek and read calls.
+class LocalFileReader : public RandomAccessReader {
  public:
-  LocalFile() : file_(nullptr), is_open_(false) {}
-  virtual ~LocalFile();
+  LocalFileReader() : file_(nullptr), is_open_(false) {}
+  virtual ~LocalFileReader();
 
   void Open(const std::string& path);
 
-  virtual void Close();
+  void CloseFile();
+
   virtual size_t Size();
   virtual size_t Tell();
   virtual void Seek(size_t pos);
 
   // Returns actual number of bytes read
-  virtual size_t Read(size_t nbytes, uint8_t* out);
+  virtual size_t ReadInto(size_t nbytes, uint8_t* out);
 
   bool is_open() const { return is_open_;}
   const std::string& path() const { return path_;}
 
  private:
-  void CloseFile();
-
   std::string path_;
   FILE* file_;
   bool is_open_;
+};
+
+// A file-like object that reads from virtual address space
+class BufferReader : public RandomAccessReader {
+ public:
+  BufferReader(const uint8_t* buffer, size_t size) :
+      buffer_(buffer),
+      pos_(0) {
+    size_ = size;
+  }
+
+  virtual size_t Tell();
+  virtual void Seek(size_t pos);
+
+  const uint8_t* ReadNoCopy(size_t nbytes, size_t* bytes_available);
+
+  virtual size_t ReadInto(size_t nbytes, uint8_t* out);
+
+ protected:
+  const uint8_t* Head() {
+    return buffer_ + pos_;
+  }
+
+  const uint8_t* buffer_;
+  size_t pos_;
+};
+
+// A file reader that uses a memory-mapped file as its internal buffer rather
+// than issuing operating system file commands
+class MemoryMapReader : public BufferReader {
+  MemoryMapReader();
+
+  void Open(const std::string* path);
 };
 
 // ----------------------------------------------------------------------

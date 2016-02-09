@@ -21,7 +21,27 @@
 
 namespace feather {
 
-TEST(TestInMemory, Basics) {
+TEST(TestBufferReader, Basics) {
+  std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+  std::unique_ptr<BufferReader> reader(new BufferReader(&data[0], data.size()));
+
+  ASSERT_EQ(0, reader->Tell());
+  ASSERT_EQ(10, reader->size());
+
+  size_t bytes_read;
+  const uint8_t* buffer = reader->ReadNoCopy(4, &bytes_read);
+  ASSERT_EQ(4, bytes_read);
+  ASSERT_EQ(0, memcmp(buffer, &data[0], bytes_read));
+  ASSERT_EQ(4, reader->Tell());
+
+  buffer = reader->ReadNoCopy(10, &bytes_read);
+  ASSERT_EQ(6, bytes_read);
+  ASSERT_EQ(0, memcmp(buffer, &data[4], bytes_read));
+  ASSERT_EQ(10, reader->Tell());
+}
+
+TEST(TestInMemoryOutputStream, Basics) {
   std::unique_ptr<InMemoryOutputStream> stream(new InMemoryOutputStream(8));
 
   std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
