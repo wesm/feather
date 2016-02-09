@@ -32,7 +32,7 @@ struct Column {
 };
 
 struct PrimitiveColumn : struct Column {
-  PrimitiveColumn(const std::string& name) :
+  explicit PrimitiveColumn(const std::string& name) :
       Column(name, ColumnType::PRIMITIVE) {}
 
   std::shared_ptr<metadata::Column> metadata;
@@ -40,7 +40,7 @@ struct PrimitiveColumn : struct Column {
 };
 
 struct CategoryColumn : struct Column {
-  CategoryColumn(const std::string& name) :
+  explicit CategoryColumn(const std::string& name) :
       Column(name, ColumnType::CATEGORY) {}
 
   std::shared_ptr<metadata::CategoryColumn> metadata;
