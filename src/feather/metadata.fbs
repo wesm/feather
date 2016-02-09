@@ -112,8 +112,4 @@ table CTable {
   columns: [Column];
 }
 
-table File {
-  tables: [CTable];
-}
-
-root_type File;
+root_type CTable;

@@ -24,81 +24,32 @@ namespace feather {
 
 namespace metadata {
 
-class TestFileBuilder : public ::testing::Test {
- public:
-  std::unique_ptr<File> Finish() {
-    fbuilder_.Finish();
-
-    std::unique_ptr<File> result(new File());
-    result->Open(fbuilder_.GetBuffer(), fbuilder_.BufferSize());
-
-    return result;
-  }
-
- protected:
-  metadata::FileBuilder fbuilder_;
-};
-
-TEST_F(TestFileBuilder, EmptyTableTests) {
-  // Test adding a few tables without any columns
-  std::unique_ptr<TableBuilder> tb;
-
-  tb = fbuilder_.AddTable("a", 10);
-  tb->Finish();
-
-  tb = fbuilder_.AddTable("bb", 20);
-  tb->Finish();
-
-  tb = fbuilder_.AddTable("cccc", 1000000);
-  tb->Finish();
-
-  std::unique_ptr<File> file = Finish();
-  ASSERT_EQ(3, file->num_tables());
-
-  std::shared_ptr<Table> table;
-
-  table = file->GetTable(0);
-  ASSERT_EQ("a", table->name());
-  ASSERT_EQ(10, table->num_rows());
-  ASSERT_EQ(0, table->num_columns());
-
-  table = file->GetTable(1);
-  ASSERT_EQ("bb", table->name());
-  ASSERT_EQ(20, table->num_rows());
-  ASSERT_EQ(0, table->num_columns());
-
-  table = file->GetTable(2);
-  ASSERT_EQ("cccc", table->name());
-  ASSERT_EQ(1000000, table->num_rows());
-  ASSERT_EQ(0, table->num_columns());
-}
-
-// ----------------------------------------------------------------------
-// Test column building
-
-class TestTableBuilder : public TestFileBuilder {
+class TestTableBuilder : public ::testing::Test {
  public:
   void SetUp() {
-    tb_ = fbuilder_.AddTable("table", 1000);
+    tb_.reset(new TableBuilder("table", 1000));
   }
 
   virtual void Finish() {
     tb_->Finish();
 
-    // Get the root now
-    file_ = TestFileBuilder::Finish();
-
-    // Get the table
-    table_ = file_->GetTable(0);
+    table_.reset(new Table());
+    table_->Open(tb_->GetBuffer(), tb_->BufferSize());
   }
 
  protected:
   std::unique_ptr<TableBuilder> tb_;
-  std::unique_ptr<File> file_;
-
-  std::shared_ptr<Table> table_;
+  std::unique_ptr<Table> table_;
 };
 
+
+TEST_F(TestTableBuilder, EmptyTable) {
+  Finish();
+
+  ASSERT_EQ("table", table_->name());
+  ASSERT_EQ(1000, table_->num_rows());
+  ASSERT_EQ(0, table_->num_columns());
+}
 
 void AssertArrayEquals(const PrimitiveArray& left, const PrimitiveArray& right) {
   EXPECT_EQ(left.type, right.type);

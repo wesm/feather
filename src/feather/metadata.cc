@@ -101,62 +101,38 @@ static inline flatbuffers::Offset<fbs::PrimitiveArray> GetPrimitiveArray(
 }
 
 // ----------------------------------------------------------------------
-// Category metadata
+// TableBuilder
 
-// ----------------------------------------------------------------------
-// Date and time metadata
+TableBuilder::TableBuilder(const std::string& name, int64_t num_rows) :
+    finished_(false),
+    name_(name),
+    num_rows_(num_rows) {}
 
-// ----------------------------------------------------------------------
-// FileBuilder
-
-FileBuilder::FileBuilder() :
-    finished_(false) {}
-
-void FileBuilder::Finish() {
+void TableBuilder::Finish() {
   if (finished_) {
     throw FeatherException("can only call this once");
   }
-  auto root = fbs::CreateFile(fbb_, fbb_.CreateVector(tables_));
+  auto root = fbs::CreateCTable(fbb_, fbb_.CreateString(name_),
+      num_rows_,
+      fbb_.CreateVector(columns_));
   fbb_.Finish(root);
   finished_ = true;
 }
 
-const void* FileBuilder::GetBuffer() const {
+const void* TableBuilder::GetBuffer() const {
   return fbb_.GetBufferPointer();
 }
 
-size_t FileBuilder::BufferSize() const {
+size_t TableBuilder::BufferSize() const {
   return fbb_.GetSize();
 }
 
-std::unique_ptr<TableBuilder> FileBuilder::AddTable(const std::string& name,
-    int64_t num_rows) {
-  return std::unique_ptr<TableBuilder>(new TableBuilder(this, name, num_rows));
-}
-
-// ----------------------------------------------------------------------
-// TableBuilder
-
-TableBuilder::TableBuilder(FileBuilder* parent, const std::string& name,
-    int64_t num_rows) :
-    parent_(parent),
-    name_(name),
-    num_rows_(num_rows) {}
-
 FBB& TableBuilder::fbb() {
-  return parent_->fbb_;
+  return fbb_;
 }
 
 std::unique_ptr<ColumnBuilder> TableBuilder::AddColumn(const std::string& name) {
   return std::unique_ptr<ColumnBuilder>(new ColumnBuilder(this, name));
-}
-
-void TableBuilder::Finish() {
-  FBB& buf = fbb();
-  auto fb_table = fbs::CreateCTable(buf, buf.CreateString(name_),
-      num_rows_,
-      buf.CreateVector(columns_));
-  parent_->tables_.push_back(fb_table);
 }
 
 // ----------------------------------------------------------------------
@@ -278,28 +254,16 @@ void ColumnBuilder::Finish() {
   parent_->columns_.push_back(fb_column);
 }
 
-// ---------------------------------------------------------------------
-// File
+// ----------------------------------------------------------------------
+// Table
 
-bool File::Open(const void* buffer, size_t length) {
+bool Table::Open(const void* buffer, size_t length) {
   // Verify the buffer
 
   // Initiatilize the Flatbuffer interface
-  file_ = fbs::GetFile(buffer);
+  table_ = fbs::GetCTable(buffer);
   return true;
 }
-
-size_t File::num_tables() const {
-  return file_->tables()->size();
-}
-
-std::shared_ptr<Table> File::GetTable(size_t i) {
-  const fbs::CTable* fb_table = file_->tables()->Get(i);
-  return std::make_shared<Table>(fb_table);
-}
-
-// ----------------------------------------------------------------------
-// Table
 
 std::string Table::name() const {
   return table_->name()->str();
