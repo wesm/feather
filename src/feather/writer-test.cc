@@ -62,4 +62,16 @@ TEST_F(TestTableWriter, EmptyTable) {
   ASSERT_EQ(0, reader_->num_columns());
 }
 
+TEST_F(TestTableWriter, SetDescription) {
+  std::string desc("contents of the file");
+  writer_->SetDescription(desc);
+  Finish();
+
+  ASSERT_TRUE(reader_->HasDescription());
+  ASSERT_EQ(desc, reader_->GetDescription());
+
+  ASSERT_EQ(0, reader_->num_rows());
+  ASSERT_EQ(0, reader_->num_columns());
+}
+
 } // namespace feather
