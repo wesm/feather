@@ -76,4 +76,7 @@ int64_t TableReader::num_columns() const {
   return metadata_.num_columns();
 }
 
+std::unique_ptr<Column> GetColumn(size_t i) {
+}
+
 } // namespace feather

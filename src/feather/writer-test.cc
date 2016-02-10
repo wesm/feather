@@ -74,4 +74,36 @@ TEST_F(TestTableWriter, SetDescription) {
   ASSERT_EQ(0, reader_->num_columns());
 }
 
+PrimitiveArray MakePrimitiveArray(PrimitiveType::type type,
+    int64_t length, int64_t null_count,
+    const uint8_t* nulls, const uint8_t* values) {
+  PrimitiveArray result;
+  result.type = type;
+  result.length = length;
+  result.null_count = null_count;
+  result.nulls = nulls;
+  result.values = values;
+  return result;
+}
+
+
+void AssertPrimitiveEquals(const PrimitiveArray& left,
+    const PrimitiveArray& right) {
+  EXPECT_EQ(left.type, right.type);
+  EXPECT_EQ(left.encoding, right.encoding);
+  EXPECT_EQ(left.offset, right.offset);
+  EXPECT_EQ(left.length, right.length);
+  EXPECT_EQ(left.null_count, right.null_count);
+  EXPECT_EQ(left.total_bytes, right.total_bytes);
+}
+
+
+TEST_F(TestTableWriter, PrimitiveRoundTrip) {
+  PrimitiveArray array;
+}
+
+TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
+  // UTF8 or BINARY
+}
+
 } // namespace feather
