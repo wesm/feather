@@ -24,14 +24,14 @@
 namespace feather {
 
 struct Column {
-  Column(const std::string& name, ColumnType::type) :
+  Column(const std::string& name, ColumnType::type type) :
       name(name), type(type) {}
 
   std::string name;
   ColumnType::type type;
 };
 
-struct PrimitiveColumn : struct Column {
+struct PrimitiveColumn : public Column {
   explicit PrimitiveColumn(const std::string& name) :
       Column(name, ColumnType::PRIMITIVE) {}
 
@@ -39,7 +39,7 @@ struct PrimitiveColumn : struct Column {
   PrimitiveArray values;
 };
 
-struct CategoryColumn : struct Column {
+struct CategoryColumn : public Column {
   explicit CategoryColumn(const std::string& name) :
       Column(name, ColumnType::CATEGORY) {}
 
@@ -49,18 +49,24 @@ struct CategoryColumn : struct Column {
 
 class TableReader {
  public:
-  explicit TableReader(std::unique_ptr<RandomAccessReader> file);
+  explicit TableReader(std::shared_ptr<RandomAccessReader> source);
 
   static std::unique_ptr<TableReader> OpenFile(const std::string& abspath);
 
-  // The table name stored in the file
-  const std::string& name() const;
+  // Optional table description
+  //
+  // This does not return a const std::string& because a string has to be
+  // copied from the flatbuffer to be able to return a non-flatbuffer type
+  std::string GetDescription() const;
+  bool HasDescription() const;
+
   int64_t num_rows() const;
+  int64_t num_columns() const;
 
   std::unique_ptr<Column> GetColumn(size_t i);
 
  private:
-  std::unique_ptr<FileLike> file_;
+  std::shared_ptr<RandomAccessReader> source_;
   metadata::Table metadata_;
 };
 

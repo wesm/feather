@@ -17,8 +17,10 @@
 
 #include <gtest/gtest.h>
 
+#include "feather/exception.h"
 #include "feather/io.h"
 #include "feather/test-common.h"
+#include "feather/reader.h"
 #include "feather/writer.h"
 
 using std::shared_ptr;
@@ -36,18 +38,28 @@ class TestTableWriter : public ::testing::Test {
   void Finish() {
     // Write table footer
     writer_->Finalize();
-
     stream_->Transfer(&output_);
+
+    shared_ptr<BufferReader> buffer(new BufferReader(&output_[0], output_.size()));
+    reader_.reset(new TableReader(buffer));
   }
 
  protected:
   shared_ptr<InMemoryOutputStream> stream_;
   unique_ptr<TableWriter> writer_;
+  unique_ptr<TableReader> reader_;
 
   std::vector<uint8_t> output_;
 };
 
 TEST_F(TestTableWriter, EmptyTable) {
+  Finish();
+
+  ASSERT_FALSE(reader_->HasDescription());
+  ASSERT_THROW(reader_->GetDescription(), FeatherException);
+
+  ASSERT_EQ(0, reader_->num_rows());
+  ASSERT_EQ(0, reader_->num_columns());
 }
 
 } // namespace feather

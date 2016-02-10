@@ -49,6 +49,8 @@ class RandomAccessReader {
   // @returns actual number of bytes read
   virtual size_t ReadInto(size_t nbytes, uint8_t* out) = 0;
 
+  virtual const uint8_t* ReadNoCopy(size_t nbytes, size_t* bytes_available);
+
  protected:
   size_t size_;
 };
@@ -98,7 +100,7 @@ class BufferReader : public RandomAccessReader {
   virtual size_t Tell();
   virtual void Seek(size_t pos);
 
-  const uint8_t* ReadNoCopy(size_t nbytes, size_t* bytes_available);
+  virtual const uint8_t* ReadNoCopy(size_t nbytes, size_t* bytes_available);
 
   virtual size_t ReadInto(size_t nbytes, uint8_t* out);
 

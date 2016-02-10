@@ -52,6 +52,15 @@ const uint8_t* BufferReader::ReadNoCopy(size_t nbytes, size_t* bytes_available) 
 }
 
 // ----------------------------------------------------------------------
+// Abstract RandomAccessReader
+
+const uint8_t* RandomAccessReader::ReadNoCopy(size_t nbytes,
+    size_t* bytes_available) {
+  FeatherException::NYI("Not implemented for this type");
+  return nullptr;
+}
+
+// ----------------------------------------------------------------------
 // LocalFileReader methods
 
 LocalFileReader::~LocalFileReader() {
