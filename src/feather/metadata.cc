@@ -107,6 +107,9 @@ TableBuilder::TableBuilder(int64_t num_rows) :
     finished_(false),
     num_rows_(num_rows) {}
 
+TableBuilder::TableBuilder() :
+    TableBuilder(0) {}
+
 void TableBuilder::Finish() {
   if (finished_) {
     throw FeatherException("can only call this once");

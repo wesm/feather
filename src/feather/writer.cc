@@ -20,10 +20,9 @@
 
 namespace feather {
 
-TableWriter::TableWriter(std::unique_ptr<OutputStream> stream) :
-    stream_(std::move(stream)) {
-  stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
-      strlen(FEATHER_MAGIC_BYTES));
+TableWriter::TableWriter(std::shared_ptr<OutputStream> stream) :
+    stream_(stream),
+    initialized_stream_(false) {
 }
 
 void TableWriter::SetDescription(const std::string& desc) {
@@ -34,7 +33,15 @@ void TableWriter::SetNumRows(int64_t num_rows) {
   metadata_.SetNumRows(num_rows);
 }
 
+void TableWriter::Init() {
+  stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
+      strlen(FEATHER_MAGIC_BYTES));
+}
+
 void TableWriter::Finalize() {
+  if (!initialized_stream_) {
+    Init();
+  }
   metadata_.Finish();
 
   uint32_t buffer_size = metadata_.BufferSize();
@@ -51,6 +58,10 @@ void TableWriter::Finalize() {
 
 void TableWriter::AppendPlain(const std::string& name,
     const PrimitiveArray& values) {
+  if (!initialized_stream_) {
+    Init();
+  }
+
   // Prepare metadata payload
   ArrayMetadata meta;
   meta.type = values.type;

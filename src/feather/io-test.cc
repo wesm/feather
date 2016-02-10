@@ -51,7 +51,7 @@ TEST(TestInMemoryOutputStream, Basics) {
   stream->Write(&data[4], data.size() - 4);
 
   std::vector<uint8_t> out;
-  stream->Transfer(out);
+  stream->Transfer(&out);
 
   assert_vector_equal(data, out);
 }

@@ -146,7 +146,7 @@ class InMemoryOutputStream : public OutputStream {
   virtual void Write(const uint8_t* data, size_t length);
 
   // Hand off the in-memory data to a new owner
-  void Transfer(std::vector<uint8_t>& out);
+  void Transfer(std::vector<uint8_t>* out);
 
  private:
   uint8_t* Head();

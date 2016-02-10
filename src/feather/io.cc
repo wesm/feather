@@ -138,9 +138,9 @@ size_t InMemoryOutputStream::Tell() {
   return size_;
 }
 
-void InMemoryOutputStream::Transfer(std::vector<uint8_t>& out) {
+void InMemoryOutputStream::Transfer(std::vector<uint8_t>* out) {
   buffer_.resize(size_);
-  buffer_.swap(out);
+  buffer_.swap(*out);
   size_ = 0;
   capacity_ = buffer_.size();
 }

@@ -34,3 +34,4 @@ endif()
 
 ADD_FEATHER_TEST(io-test)
 ADD_FEATHER_TEST(metadata-test)
+ADD_FEATHER_TEST(writer-test)
