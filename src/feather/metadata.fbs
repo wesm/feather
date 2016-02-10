@@ -107,13 +107,11 @@ table Column {
 }
 
 table CTable {
-  name: string;
+  /// Some text (or a name) metadata about what the file is, optional
+  description: string;
+
   num_rows: long;
   columns: [Column];
 }
 
-table File {
-  tables: [CTable];
-}
-
-root_type File;
+root_type CTable;

@@ -18,89 +18,50 @@
 
 #include <gtest/gtest.h>
 
+#include "feather/exception.h"
 #include "feather/metadata.h"
 
 namespace feather {
 
 namespace metadata {
 
-class TestFileBuilder : public ::testing::Test {
- public:
-  std::unique_ptr<File> Finish() {
-    fbuilder_.Finish();
-
-    std::unique_ptr<File> result(new File());
-    result->Open(fbuilder_.GetBuffer(), fbuilder_.BufferSize());
-
-    return result;
-  }
-
- protected:
-  metadata::FileBuilder fbuilder_;
-};
-
-TEST_F(TestFileBuilder, EmptyTableTests) {
-  // Test adding a few tables without any columns
-  std::unique_ptr<TableBuilder> tb;
-
-  tb = fbuilder_.AddTable("a", 10);
-  tb->Finish();
-
-  tb = fbuilder_.AddTable("bb", 20);
-  tb->Finish();
-
-  tb = fbuilder_.AddTable("cccc", 1000000);
-  tb->Finish();
-
-  std::unique_ptr<File> file = Finish();
-  ASSERT_EQ(3, file->num_tables());
-
-  std::shared_ptr<Table> table;
-
-  table = file->GetTable(0);
-  ASSERT_EQ("a", table->name());
-  ASSERT_EQ(10, table->num_rows());
-  ASSERT_EQ(0, table->num_columns());
-
-  table = file->GetTable(1);
-  ASSERT_EQ("bb", table->name());
-  ASSERT_EQ(20, table->num_rows());
-  ASSERT_EQ(0, table->num_columns());
-
-  table = file->GetTable(2);
-  ASSERT_EQ("cccc", table->name());
-  ASSERT_EQ(1000000, table->num_rows());
-  ASSERT_EQ(0, table->num_columns());
-}
-
-// ----------------------------------------------------------------------
-// Test column building
-
-class TestTableBuilder : public TestFileBuilder {
+class TestTableBuilder : public ::testing::Test {
  public:
   void SetUp() {
-    tb_ = fbuilder_.AddTable("table", 1000);
+    tb_.reset(new TableBuilder(1000));
   }
 
   virtual void Finish() {
     tb_->Finish();
 
-    // Get the root now
-    file_ = TestFileBuilder::Finish();
-
-    // Get the table
-    table_ = file_->GetTable(0);
+    table_.reset(new Table());
+    table_->Open(tb_->GetBuffer(), tb_->BufferSize());
   }
 
  protected:
   std::unique_ptr<TableBuilder> tb_;
-  std::unique_ptr<File> file_;
-
-  std::shared_ptr<Table> table_;
+  std::unique_ptr<Table> table_;
 };
 
 
-void AssertArrayEquals(const PrimitiveArray& left, const PrimitiveArray& right) {
+TEST_F(TestTableBuilder, EmptyTable) {
+  Finish();
+
+  ASSERT_FALSE(table_->has_description());
+  ASSERT_THROW(table_->description(), FeatherException);
+  ASSERT_EQ(1000, table_->num_rows());
+  ASSERT_EQ(0, table_->num_columns());
+}
+
+TEST_F(TestTableBuilder, SetDescription) {
+  std::string desc("this is some good data");
+  tb_->SetDescription(desc);
+  Finish();
+  ASSERT_TRUE(table_->has_description());
+  ASSERT_EQ(desc, table_->description());
+}
+
+void AssertArrayEquals(const ArrayMetadata& left, const ArrayMetadata& right) {
   EXPECT_EQ(left.type, right.type);
   EXPECT_EQ(left.encoding, right.encoding);
   EXPECT_EQ(left.offset, right.offset);
@@ -113,8 +74,8 @@ void AssertArrayEquals(const PrimitiveArray& left, const PrimitiveArray& right) 
 TEST_F(TestTableBuilder, AddPrimitiveColumn) {
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("f0");
 
-  PrimitiveArray values1;
-  PrimitiveArray values2;
+  ArrayMetadata values1;
+  ArrayMetadata values2;
   values1.type = PrimitiveType::INT32;
   values1.encoding = Encoding::PLAIN;
   values1.offset = 10000;
@@ -161,9 +122,9 @@ TEST_F(TestTableBuilder, AddPrimitiveColumn) {
 }
 
 TEST_F(TestTableBuilder, AddCategoryColumn) {
-  PrimitiveArray values1(PrimitiveType::UINT8, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::UINT8, Encoding::PLAIN,
       10000, 1000, 100, 4000);
-  PrimitiveArray levels(PrimitiveType::UTF8, Encoding::PLAIN,
+  ArrayMetadata levels(PrimitiveType::UTF8, Encoding::PLAIN,
       14000, 10, 0, 300);
 
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
@@ -194,7 +155,7 @@ TEST_F(TestTableBuilder, AddCategoryColumn) {
 }
 
 TEST_F(TestTableBuilder, AddTimestampColumn) {
-  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::INT64, Encoding::PLAIN,
       10000, 1000, 100, 4000);
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
   cb->SetValues(values1);
@@ -226,7 +187,7 @@ TEST_F(TestTableBuilder, AddTimestampColumn) {
 }
 
 TEST_F(TestTableBuilder, AddDateColumn) {
-  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::INT64, Encoding::PLAIN,
       10000, 1000, 100, 4000);
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("d0");
   cb->SetValues(values1);
@@ -242,7 +203,7 @@ TEST_F(TestTableBuilder, AddDateColumn) {
 }
 
 TEST_F(TestTableBuilder, AddTimeColumn) {
-  PrimitiveArray values1(PrimitiveType::INT64, Encoding::PLAIN,
+  ArrayMetadata values1(PrimitiveType::INT64, Encoding::PLAIN,
       10000, 1000, 100, 4000);
   std::unique_ptr<ColumnBuilder> cb = tb_->AddColumn("c0");
   cb->SetValues(values1);

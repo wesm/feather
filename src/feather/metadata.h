@@ -30,7 +30,6 @@ namespace metadata {
 typedef std::vector<flatbuffers::Offset<fbs::Column> > ColumnVector;
 typedef std::vector<flatbuffers::Offset<fbs::CTable> > TableVector;
 
-class FileBuilder;
 class TableBuilder;
 
 class ColumnBuilder {
@@ -38,9 +37,9 @@ class ColumnBuilder {
   ColumnBuilder(TableBuilder* parent, const std::string& name);
   ~ColumnBuilder();
 
-  void SetValues(const PrimitiveArray& values);
+  void SetValues(const ArrayMetadata& values);
 
-  void SetCategory(const PrimitiveArray& levels, bool ordered = false);
+  void SetCategory(const ArrayMetadata& levels, bool ordered = false);
 
   void SetTimestamp(TimeUnit::type unit);
   void SetTimestamp(TimeUnit::type unit, const std::string& timezone);
@@ -57,7 +56,7 @@ class ColumnBuilder {
  private:
   TableBuilder* parent_;
   std::string name_;
-  PrimitiveArray values_;
+  ArrayMetadata values_;
 
   std::string user_metadata_;
 
@@ -81,46 +80,35 @@ class ColumnBuilder {
 
 class TableBuilder {
  public:
-  TableBuilder(FileBuilder* parent, const std::string& name,
-      int64_t num_rows);
+  TableBuilder();
+  explicit TableBuilder(int64_t num_rows);
 
   std::unique_ptr<ColumnBuilder> AddColumn(const std::string& name);
-  void Finish();
-
-  flatbuffers::FlatBufferBuilder& fbb();
-
- private:
-  friend class ColumnBuilder;
-
-  FileBuilder* parent_;
-  std::string name_;
-  int64_t num_rows_;
-  ColumnVector columns_;
-};
-
-class FileBuilder {
- public:
-  FileBuilder();
-
-  std::unique_ptr<TableBuilder> AddTable(const std::string& name,
-      int64_t num_rows);
-
   void Finish();
 
   // These are accessible after calling Finish
   const void* GetBuffer() const;
   size_t BufferSize() const;
 
-  flatbuffers::FlatBufferBuilder& fbb() {
-    return fbb_;
+  flatbuffers::FlatBufferBuilder& fbb();
+
+  void SetDescription(const std::string& description) {
+    description_ = description;
+  }
+
+  void SetNumRows(int64_t num_rows) {
+    num_rows_ = num_rows;
   }
 
  private:
-  friend class TableBuilder;
+  friend class ColumnBuilder;
 
   flatbuffers::FlatBufferBuilder fbb_;
   bool finished_;
-  TableVector tables_;
+
+  std::string description_;
+  int64_t num_rows_;
+  ColumnVector columns_;
 };
 
 // ----------------------------------------------------------------------
@@ -141,7 +129,7 @@ class Column {
 
   std::string user_metadata() const;
 
-  const PrimitiveArray& values() const {
+  const ArrayMetadata& values() const {
     return values_;
   }
 
@@ -150,7 +138,7 @@ class Column {
 
   std::string name_;
   ColumnType::type type_;
-  PrimitiveArray values_;
+  ArrayMetadata values_;
 
   std::string user_metadata_;
 };
@@ -159,7 +147,7 @@ class CategoryColumn : public Column {
  public:
   static std::shared_ptr<Column> Make(const void* fbs_column);
 
-  const PrimitiveArray& levels() const {
+  const ArrayMetadata& levels() const {
     return metadata_.levels;
   }
 
@@ -200,12 +188,18 @@ class TimeColumn : public Column {
   TimeMetadata metadata_;
 };
 
+// TODO: address memory ownership issues of the buffer here
 class Table {
  public:
-  explicit Table(const fbs::CTable* table) :
-      table_(table) {}
+  Table() : buffer_(nullptr), table_(nullptr) {}
 
-  std::string name() const;
+  bool Open(const void* buffer, size_t);
+
+  std::string description() const;
+
+  // Optional
+  bool has_description() const;
+
   int64_t num_rows() const;
 
   size_t num_columns() const;
@@ -213,22 +207,8 @@ class Table {
   std::shared_ptr<Column> GetColumnNamed(const std::string& name);
 
  private:
-  const fbs::CTable* table_;
-};
-
-// TODO: address memory ownership issues of the buffer here
-class File {
- public:
-  File() : buffer_(nullptr), file_(nullptr) {}
-
-  bool Open(const void* buffer, size_t);
-  size_t num_tables() const;
-  std::shared_ptr<Table> GetTable(size_t i);
-  std::shared_ptr<Table> GetTableNamed(const std::string& name);
-
- private:
   const void* buffer_;
-  const fbs::File* file_;
+  const fbs::CTable* table_;
 };
 
 } // namespace metadata

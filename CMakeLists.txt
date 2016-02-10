@@ -140,8 +140,23 @@ set(LIBRARY_OUTPUT_DIRECTORY "${BUILD_OUTPUT_ROOT_DIRECTORY}")
 # where to put generated binaries
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_OUTPUT_ROOT_DIRECTORY}")
 
+set(CXX_FLAGS_DEBUG "-ggdb")
+set(CXX_FLAGS_FASTDEBUG "-ggdb -O1 -fno-omit-frame-pointer")
+set(CXX_FLAGS_RELEASE "-O3 -g -DNDEBUG -fno-omit-frame-pointer")
+
+string (TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+  set(CMAKE_CXX_FLAGS ${CXX_FLAGS_DEBUG})
+elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "FASTDEBUG")
+  set(CMAKE_CXX_FLAGS ${CXX_FLAGS_FASTDEBUG})
+elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
+  set(CMAKE_CXX_FLAGS ${CXX_FLAGS_RELEASE})
+else()
+  message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
+endif ()
+
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -msse3 -Wall")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -ggdb")
 
 if (APPLE)
   # Use libc++ to avoid linker errors on some platforms
@@ -177,7 +192,9 @@ set(FEATHER_TEST_LINK_LIBS ${FEATHER_MIN_TEST_LIBS})
 # Library config
 
 set(LIBFEATHER_SRCS
+  src/feather/io.cc
   src/feather/metadata.cc
+  src/feather/writer.cc
 )
 
 set(LIBFEATHER_LINK_LIBS
