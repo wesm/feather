@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <memory>
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -57,14 +58,12 @@ class RandomAccessReader {
 // level seek and read calls.
 class LocalFileReader : public RandomAccessReader {
  public:
-  LocalFileReader() : file_(nullptr), is_open_(false) {}
   virtual ~LocalFileReader();
 
-  void Open(const std::string& path);
+  static std::unique_ptr<LocalFileReader> Open(const std::string& path);
 
   void CloseFile();
 
-  virtual size_t Size();
   virtual size_t Tell();
   virtual void Seek(size_t pos);
 
@@ -75,6 +74,13 @@ class LocalFileReader : public RandomAccessReader {
   const std::string& path() const { return path_;}
 
  private:
+  LocalFileReader(const std::string& path, size_t size, FILE* file) :
+      path_(path),
+      file_(file),
+      is_open_(true) {
+    size_ = size;
+  }
+
   std::string path_;
   FILE* file_;
   bool is_open_;

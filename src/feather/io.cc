@@ -58,20 +58,25 @@ LocalFileReader::~LocalFileReader() {
   CloseFile();
 }
 
-void LocalFileReader::Open(const std::string& path) {
-  path_ = path;
-  file_ = fopen(path_.c_str(), "r");
-  if (file_ == nullptr) {
+std::unique_ptr<LocalFileReader> LocalFileReader::Open(const std::string& path) {
+  FILE* file = fopen(path.c_str(), "r");
+  if (file == nullptr) {
     throw FeatherException("Unable to open file");
   }
 
   // Get and set file size
-  fseek(file_, 0L, SEEK_END);
-  size_ = ftell(file_);
-  is_open_ = true;
+  fseek(file, 0L, SEEK_END);
+  if (ferror(file)) {
+    throw FeatherException("Unable to seek to end of file");
+  }
 
-  // Rewind to the beginning
-  Seek(0);
+  size_t size = ftell(file);
+
+  auto result = std::unique_ptr<LocalFileReader>(
+      new LocalFileReader(path, size, file));
+
+  result->Seek(0);
+  return result;
 }
 
 void LocalFileReader::CloseFile() {
@@ -79,11 +84,6 @@ void LocalFileReader::CloseFile() {
     fclose(file_);
     is_open_ = false;
   }
-}
-
-size_t LocalFileReader::Size() {
-  fseek(file_, 0L, SEEK_END);
-  return Tell();
 }
 
 void LocalFileReader::Seek(size_t pos) {

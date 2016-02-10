@@ -103,16 +103,20 @@ static inline flatbuffers::Offset<fbs::PrimitiveArray> GetPrimitiveArray(
 // ----------------------------------------------------------------------
 // TableBuilder
 
-TableBuilder::TableBuilder(const std::string& name, int64_t num_rows) :
+TableBuilder::TableBuilder(int64_t num_rows) :
     finished_(false),
-    name_(name),
     num_rows_(num_rows) {}
 
 void TableBuilder::Finish() {
   if (finished_) {
     throw FeatherException("can only call this once");
   }
-  auto root = fbs::CreateCTable(fbb_, fbb_.CreateString(name_),
+  flatbuffers::Offset<flatbuffers::String> desc = 0;
+  if (!description_.empty()) {
+    desc = fbb_.CreateString(description_);
+  }
+
+  auto root = fbs::CreateCTable(fbb_, desc,
       num_rows_,
       fbb_.CreateVector(columns_));
   fbb_.Finish(root);
@@ -265,8 +269,16 @@ bool Table::Open(const void* buffer, size_t length) {
   return true;
 }
 
-std::string Table::name() const {
-  return table_->name()->str();
+std::string Table::description() const {
+  if (!has_description()) {
+    throw FeatherException("description is null");
+  }
+  return table_->description()->str();
+}
+
+bool Table::has_description() const {
+  // null represented as 0 flatbuffer offset
+  return table_->description() !=  0;
 }
 
 int64_t Table::num_rows() const {

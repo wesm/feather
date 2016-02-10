@@ -26,8 +26,8 @@ TableWriter::TableWriter(std::unique_ptr<OutputStream> stream) :
       strlen(FEATHER_MAGIC_BYTES));
 }
 
-void TableWriter::SetName(const std::string& name) {
-  metadata_.SetName(name);
+void TableWriter::SetDescription(const std::string& desc) {
+  metadata_.SetDescription(desc);
 }
 
 void TableWriter::SetNumRows(int64_t num_rows) {

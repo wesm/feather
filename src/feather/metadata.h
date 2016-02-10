@@ -81,7 +81,7 @@ class ColumnBuilder {
 class TableBuilder {
  public:
   TableBuilder();
-  TableBuilder(const std::string& name, int64_t num_rows);
+  explicit TableBuilder(int64_t num_rows);
 
   std::unique_ptr<ColumnBuilder> AddColumn(const std::string& name);
   void Finish();
@@ -92,8 +92,8 @@ class TableBuilder {
 
   flatbuffers::FlatBufferBuilder& fbb();
 
-  void SetName(const std::string& name) {
-    name_ = name;
+  void SetDescription(const std::string& description) {
+    description_ = description;
   }
 
   void SetNumRows(int64_t num_rows) {
@@ -106,7 +106,7 @@ class TableBuilder {
   flatbuffers::FlatBufferBuilder fbb_;
   bool finished_;
 
-  std::string name_;
+  std::string description_;
   int64_t num_rows_;
   ColumnVector columns_;
 };
@@ -195,7 +195,11 @@ class Table {
 
   bool Open(const void* buffer, size_t);
 
-  std::string name() const;
+  std::string description() const;
+
+  // Optional
+  bool has_description() const;
+
   int64_t num_rows() const;
 
   size_t num_columns() const;

@@ -28,7 +28,7 @@ class TableWriter {
  public:
   explicit TableWriter(std::unique_ptr<OutputStream> stream);
 
-  void SetName(const std::string& name);
+  void SetDescription(const std::string& desc);
   void SetNumRows(int64_t num_rows);
 
   // Plain-encoded data

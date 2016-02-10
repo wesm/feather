@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 
+#include "feather/exception.h"
 #include "feather/metadata.h"
 
 namespace feather {
@@ -27,7 +28,7 @@ namespace metadata {
 class TestTableBuilder : public ::testing::Test {
  public:
   void SetUp() {
-    tb_.reset(new TableBuilder("table", 1000));
+    tb_.reset(new TableBuilder(1000));
   }
 
   virtual void Finish() {
@@ -46,9 +47,18 @@ class TestTableBuilder : public ::testing::Test {
 TEST_F(TestTableBuilder, EmptyTable) {
   Finish();
 
-  ASSERT_EQ("table", table_->name());
+  ASSERT_FALSE(table_->has_description());
+  ASSERT_THROW(table_->description(), FeatherException);
   ASSERT_EQ(1000, table_->num_rows());
   ASSERT_EQ(0, table_->num_columns());
+}
+
+TEST_F(TestTableBuilder, SetDescription) {
+  std::string desc("this is some good data");
+  tb_->SetDescription(desc);
+  Finish();
+  ASSERT_TRUE(table_->has_description());
+  ASSERT_EQ(desc, table_->description());
 }
 
 void AssertArrayEquals(const ArrayMetadata& left, const ArrayMetadata& right) {

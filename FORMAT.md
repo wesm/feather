@@ -29,8 +29,9 @@ For the arrays themselves, the memory layout is type dependent.
 ```
 
 The null bitmask is byte-aligned, but contains 1 bit per value indicating null
-or not null. For example, an array with length 5 containing 3 nulls followed by
-2 valid values would have a single byte with the values
+or not null. We use MSB left-to-right bit-numbering ([reference][1]). For
+example, an array with length 5 containing 3 nulls followed by 2 valid values
+would have a single byte with the values
 
 ```
 1 1 1 0 0 0 0 0
@@ -63,3 +64,5 @@ Dictionary-encoded data is stored in the following layout.
 
 The `total_bytes` stored in the metadata is the cumulative size of all of these
 pieces of data.
+
+[1]: https://en.wikipedia.org/wiki/Bit_numbering
