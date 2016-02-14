@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include <memory>
 #include <vector>
 
-#include <gtest/gtest.h>
-
 #include "feather/exception.h"
 #include "feather/io.h"
-#include "feather/test-common.h"
 #include "feather/reader.h"
+#include "feather/test-common.h"
 #include "feather/writer.h"
 
 using std::shared_ptr;
 using std::unique_ptr;
+using std::vector;
 
 namespace feather {
 
@@ -49,7 +50,7 @@ class TestTableWriter : public ::testing::Test {
   unique_ptr<TableWriter> writer_;
   unique_ptr<TableReader> reader_;
 
-  std::vector<uint8_t> output_;
+  vector<uint8_t> output_;
 };
 
 TEST_F(TestTableWriter, EmptyTable) {
@@ -74,7 +75,7 @@ TEST_F(TestTableWriter, SetDescription) {
   ASSERT_EQ(0, reader_->num_columns());
 }
 
-PrimitiveArray MakePrimitiveArray(PrimitiveType::type type,
+PrimitiveArray MakeFixedSize(PrimitiveType::type type,
     int64_t length, int64_t null_count,
     const uint8_t* nulls, const uint8_t* values) {
   PrimitiveArray result;
@@ -83,23 +84,27 @@ PrimitiveArray MakePrimitiveArray(PrimitiveType::type type,
   result.null_count = null_count;
   result.nulls = nulls;
   result.values = values;
+  result.offsets = nullptr;
   return result;
 }
 
-
-void AssertPrimitiveEquals(const PrimitiveArray& left,
-    const PrimitiveArray& right) {
-  EXPECT_EQ(left.type, right.type);
-  EXPECT_EQ(left.encoding, right.encoding);
-  EXPECT_EQ(left.offset, right.offset);
-  EXPECT_EQ(left.length, right.length);
-  EXPECT_EQ(left.null_count, right.null_count);
-  EXPECT_EQ(left.total_bytes, right.total_bytes);
-}
-
-
 TEST_F(TestTableWriter, PrimitiveRoundTrip) {
-  PrimitiveArray array;
+  int num_values = 1000;
+  int num_nulls = 50;
+  int null_bytes = util::ceil_byte(n);
+
+  // Generate some random data
+  vector<uint8_t> null_buffer(null_bytes);
+  vector<uint8_t> values_buffer(n * sizeof(int32_t));
+
+  test::random_bytes(null_buffer.size(), 0, &null_buffer);
+  test::random_bytes(values_buffer.size(), 0, &values_buffer);
+
+  PrimitiveArray array = MakeFixedSize(PrimitiveType::INT32, num_values,
+      num_nulls, &null_buffer[0], &values_buffer[0]);
+
+  writer_->AppendPlain("f0", array);
+  Finish();
 }
 
 TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {

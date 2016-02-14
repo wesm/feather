@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "feather/exception.h"
 #include "feather/metadata.h"

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
-
 #include <gtest/gtest.h>
+
+#include <memory>
 
 #include "feather/io.h"
 #include "feather/test-common.h"
@@ -53,7 +53,7 @@ TEST(TestInMemoryOutputStream, Basics) {
   std::vector<uint8_t> out;
   stream->Transfer(&out);
 
-  assert_vector_equal(data, out);
+  test::assert_vector_equal(data, out);
 }
 
 } // namespace feather

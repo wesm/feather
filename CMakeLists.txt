@@ -195,6 +195,7 @@ set(LIBFEATHER_SRCS
   src/feather/io.cc
   src/feather/metadata.cc
   src/feather/reader.cc
+  src/feather/types.cc
   src/feather/writer.cc
 )
 

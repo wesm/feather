@@ -12,37 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
-
-#include <cstdint>
-#include <random>
-#include <vector>
-
-using std::vector;
+#include "feather/types.h"
 
 namespace feather {
 
-namespace test {
-
-template <typename T>
-inline void assert_vector_equal(const vector<T>& left,
-    const vector<T>& right) {
-  ASSERT_EQ(left.size(), right.size());
-
-  for (size_t i = 0; i < left.size(); ++i) {
-    ASSERT_EQ(left[i], right[i]) << i;
-  }
+bool ArrayMetadata::Equals(const ArrayMetadata& other) const {
+  return this->type == other.type &&
+    this->encoding == other.encoding &&
+    this->offset == other.offset &&
+    this->length == other.length &&
+    this->null_count == other.null_count &&
+    this->total_bytes == other.total_bytes;
 }
-
-static inline void random_bytes(int n, uint32_t seed, std::vector<uint8_t>* out) {
-  std::mt19937 gen(seed);
-  std::uniform_int_distribution<int> d(0, 255);
-
-  for (int i = 0; i < n; ++i) {
-    out->push_back(d(gen) & 0xFF);
-  }
-}
-
-} // namespace test
 
 } // namespace feather
