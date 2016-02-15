@@ -14,6 +14,9 @@
 
 #include "feather/metadata.h"
 
+#include <cstdint>
+
+#include "feather/buffer.h"
 #include "feather/exception.h"
 
 namespace feather {
@@ -126,12 +129,9 @@ void TableBuilder::Finish() {
   finished_ = true;
 }
 
-const void* TableBuilder::GetBuffer() const {
-  return fbb_.GetBufferPointer();
-}
-
-size_t TableBuilder::BufferSize() const {
-  return fbb_.GetSize();
+std::shared_ptr<Buffer> TableBuilder::GetBuffer() const {
+  return std::make_shared<Buffer>(fbb_.GetBufferPointer(),
+      static_cast<int64_t>(fbb_.GetSize()));
 }
 
 FBB& TableBuilder::fbb() {
@@ -264,11 +264,13 @@ void ColumnBuilder::Finish() {
 // ----------------------------------------------------------------------
 // Table
 
-bool Table::Open(const void* buffer, size_t length) {
+bool Table::Open(std::shared_ptr<Buffer> buffer) {
+  buffer_ = buffer;
+
   // Verify the buffer
 
   // Initiatilize the Flatbuffer interface
-  table_ = fbs::GetCTable(buffer);
+  table_ = fbs::GetCTable(buffer->data());
   return true;
 }
 

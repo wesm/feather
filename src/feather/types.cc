@@ -14,6 +14,10 @@
 
 #include "feather/types.h"
 
+#include <cstring>
+
+#include "feather/common.h"
+
 namespace feather {
 
 bool ArrayMetadata::Equals(const ArrayMetadata& other) const {
@@ -23,6 +27,28 @@ bool ArrayMetadata::Equals(const ArrayMetadata& other) const {
     this->length == other.length &&
     this->null_count == other.null_count &&
     this->total_bytes == other.total_bytes;
+}
+
+bool PrimitiveArray::Equals(const PrimitiveArray& other) const {
+  // Should we even try comparing the data?
+  if (this->type != other.type ||
+      this->length != other.length ||
+      this->null_count != other.null_count) {
+    return false;
+  }
+
+  // TODO: variable-length dimensions
+  if (this->null_count > 0) {
+    if (!memcmp(this->nulls, other.nulls, util::ceil_byte(this->length))) {
+      return false;
+    }
+  }
+
+  if (memcmp(this->values, other.values, this->length * ByteSize(this->type))) {
+    return false;
+  }
+
+  return true;
 }
 
 } // namespace feather

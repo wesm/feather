@@ -23,14 +23,24 @@
 namespace feather {
 
 // ----------------------------------------------------------------------
+// Buffer and its subclasses
+
+// ----------------------------------------------------------------------
 // BufferReader
 
-size_t BufferReader::Tell() {
+std::shared_ptr<Buffer> RandomAccessReader::ReadAt(int64_t position,
+    int64_t nbytes) {
+  // TODO(wesm): boundchecking
+  Seek(position);
+  return Read(nbytes);
+}
+
+int64_t BufferReader::Tell() const {
   return pos_;
 }
 
-void BufferReader::Seek(size_t pos) {
-  if (pos >= size_) {
+void BufferReader::Seek(int64_t pos) {
+  if (pos < 0 || pos >= size_) {
     std::stringstream ss;
     ss << "Cannot seek to " << pos
        << "File is length " << size_;
@@ -39,25 +49,9 @@ void BufferReader::Seek(size_t pos) {
   pos_ = pos;
 }
 
-size_t BufferReader::ReadInto(size_t nbytes, uint8_t* out) {
-  FeatherException::NYI("not implemented");
-  return 0;
-}
-
-const uint8_t* BufferReader::ReadNoCopy(size_t nbytes, size_t* bytes_available) {
-  *bytes_available = std::min(nbytes, size_ - pos_);
-  const uint8_t* result = Head();
-  pos_ += *bytes_available;
-  return result;
-}
-
-// ----------------------------------------------------------------------
-// Abstract RandomAccessReader
-
-const uint8_t* RandomAccessReader::ReadNoCopy(size_t nbytes,
-    size_t* bytes_available) {
-  FeatherException::NYI("Not implemented for this type");
-  return nullptr;
+std::shared_ptr<Buffer> BufferReader::Read(int64_t nbytes) {
+  int64_t bytes_available = std::min(nbytes, size_ - pos_);
+  return std::make_shared<Buffer>(Head(), bytes_available);
 }
 
 // ----------------------------------------------------------------------
@@ -79,7 +73,7 @@ std::unique_ptr<LocalFileReader> LocalFileReader::Open(const std::string& path) 
     throw FeatherException("Unable to seek to end of file");
   }
 
-  size_t size = ftell(file);
+  int64_t size = ftell(file);
 
   auto result = std::unique_ptr<LocalFileReader>(
       new LocalFileReader(path, size, file));
@@ -95,29 +89,32 @@ void LocalFileReader::CloseFile() {
   }
 }
 
-void LocalFileReader::Seek(size_t pos) {
+void LocalFileReader::Seek(int64_t pos) {
   fseek(file_, pos, SEEK_SET);
 }
 
-size_t LocalFileReader::Tell() {
+int64_t LocalFileReader::Tell() const {
   return ftell(file_);
 }
 
-size_t LocalFileReader::ReadInto(size_t nbytes, uint8_t* buffer) {
-  size_t bytes_read = fread(buffer, 1, nbytes, file_);
+std::shared_ptr<Buffer> LocalFileReader::Read(int64_t nbytes) {
+  auto buffer = std::make_shared<OwnedMutableBuffer>(nbytes);
+  int64_t bytes_read = fread(buffer->mutable_data(), 1, nbytes, file_);
   if (bytes_read < nbytes) {
     // Exception if not EOF
     if (!feof(file_)) {
       throw FeatherException("Error reading bytes from file");
     }
+
+    buffer->Resize(bytes_read);
   }
-  return bytes_read;
+  return buffer;
 }
 
 // ----------------------------------------------------------------------
 // In-memory output stream
 
-InMemoryOutputStream::InMemoryOutputStream(size_t initial_capacity) :
+InMemoryOutputStream::InMemoryOutputStream(int64_t initial_capacity) :
     size_(0),
     capacity_(initial_capacity) {
   if (initial_capacity == 0) {
@@ -130,9 +127,9 @@ uint8_t* InMemoryOutputStream::Head() {
   return &buffer_[size_];
 }
 
-void InMemoryOutputStream::Write(const uint8_t* data, size_t length) {
+void InMemoryOutputStream::Write(const uint8_t* data, int64_t length) {
   if (size_ + length > capacity_) {
-    size_t new_capacity = capacity_ * 2;
+    int64_t new_capacity = capacity_ * 2;
     while (new_capacity < size_ + length) {
       new_capacity *= 2;
     }
@@ -143,7 +140,7 @@ void InMemoryOutputStream::Write(const uint8_t* data, size_t length) {
   size_ += length;
 }
 
-size_t InMemoryOutputStream::Tell() {
+int64_t InMemoryOutputStream::Tell() const {
   return size_;
 }
 

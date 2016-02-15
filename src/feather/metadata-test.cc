@@ -35,7 +35,7 @@ class TestTableBuilder : public ::testing::Test {
     tb_->Finish();
 
     table_.reset(new Table());
-    table_->Open(tb_->GetBuffer(), tb_->BufferSize());
+    table_->Open(tb_->GetBuffer());
   }
 
  protected:

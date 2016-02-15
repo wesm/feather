@@ -44,11 +44,12 @@ void TableWriter::Finalize() {
   }
   metadata_.Finish();
 
-  uint32_t buffer_size = metadata_.BufferSize();
+  auto buffer = metadata_.GetBuffer();
 
   // Writer metadata
-  stream_->Write(reinterpret_cast<const uint8_t*>(metadata_.GetBuffer()),
-      buffer_size);
+  stream_->Write(buffer->data(), buffer->size());
+
+  uint32_t buffer_size = buffer->size();
 
   // Footer: metadata length, magic bytes
   stream_->Write(reinterpret_cast<const uint8_t*>(&buffer_size), sizeof(uint32_t));

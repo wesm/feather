@@ -17,45 +17,45 @@
 #include <cstring>
 #include <memory>
 
+#include "feather/buffer.h"
 #include "feather/common.h"
 #include "feather/exception.h"
+#include "feather/io.h"
 
 namespace feather {
 
 
 TableReader::TableReader(std::shared_ptr<RandomAccessReader> source) :
     source_(source) {
-  size_t magic_size = strlen(FEATHER_MAGIC_BYTES);
-  size_t footer_size = magic_size + sizeof(uint32_t);
+  int magic_size = strlen(FEATHER_MAGIC_BYTES);
+  int footer_size = magic_size + sizeof(uint32_t);
 
   // Pathological issue where the file is smaller than
   if (source->size() < magic_size + footer_size) {
     throw FeatherException("File is too small to be a well-formed file");
   }
 
-  size_t bytes_read;
-  const uint8_t* buffer = source->ReadNoCopy(magic_size, &bytes_read);
+  std::shared_ptr<Buffer> buffer = source->Read(magic_size);
 
-  if (memcmp(buffer, FEATHER_MAGIC_BYTES, magic_size)) {
+  if (memcmp(buffer->data(), FEATHER_MAGIC_BYTES, magic_size)) {
     throw FeatherException("Not a feather file");
   }
 
   // Now get the footer and verify
-  source->Seek(source->size() - footer_size);
-  buffer = source->ReadNoCopy(footer_size, &bytes_read);
-  if (memcmp(buffer + sizeof(uint32_t), FEATHER_MAGIC_BYTES, magic_size)) {
+  buffer = source->ReadAt(source->size() - footer_size, footer_size);
+
+  if (memcmp(buffer->data() + sizeof(uint32_t), FEATHER_MAGIC_BYTES, magic_size)) {
     throw FeatherException("Feather file footer incomplete");
   }
 
-  uint32_t metadata_length = *reinterpret_cast<const uint32_t*>(buffer);
+  uint32_t metadata_length = *reinterpret_cast<const uint32_t*>(buffer->data());
   if (source->size() < magic_size + footer_size + metadata_length) {
     throw FeatherException("File is smaller than indicated metadata size");
   }
-  source->Seek(source->size() - footer_size - metadata_length);
-  buffer = source->ReadNoCopy(source->size() - footer_size - metadata_length,
-      &bytes_read);
+  buffer = source->ReadAt(source->size() - footer_size - metadata_length,
+      metadata_length);
 
-  if (!metadata_.Open(buffer, metadata_length)) {
+  if (!metadata_.Open(buffer)) {
     throw FeatherException("Invalid file metadata");
   }
 }
@@ -76,7 +76,50 @@ int64_t TableReader::num_columns() const {
   return metadata_.num_columns();
 }
 
-std::unique_ptr<Column> GetColumn(size_t i) {
+std::shared_ptr<Buffer> TableReader::GetPrimitiveArray(
+    const ArrayMetadata& meta, PrimitiveArray* out) {
+
+  // Buffer data from the source (may or may not perform a copy depending on
+  // input source)
+  std::shared_ptr<Buffer> buffer = source_->ReadAt(meta.offset,
+      meta.total_bytes);
+
+  const uint8_t* data = buffer->data();
+
+  // If there are nulls, the null bitmask is first
+  if (meta.null_count > 0) {
+    out->nulls = data;
+    data += util::ceil_byte(meta.length);
+  } else {
+    out->nulls = nullptr;
+  }
+
+  // TODO(wesm): For variable-length primitive types, the offsets are next
+
+  // The value bytes are last
+  out->values = data;
+
+  out->length = meta.length;
+  out->null_count = meta.null_count;
+
+  return buffer;
+}
+
+std::shared_ptr<Column> TableReader::GetColumn(int i) {
+  auto col_meta = metadata_.GetColumn(i);
+  auto values_meta = col_meta->values();
+
+  PrimitiveArray values;
+  std::shared_ptr<Buffer> buffer = GetPrimitiveArray(values_meta, &values);
+
+  switch (col_meta->type()) {
+    case ColumnType::PRIMITIVE:
+      return std::make_shared<Column>(ColumnType::PRIMITIVE, col_meta, values,
+          buffer);
+    default:
+      return std::shared_ptr<Column>(nullptr);
+      break;
+  }
 }
 
 } // namespace feather

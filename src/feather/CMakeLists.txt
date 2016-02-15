@@ -13,6 +13,14 @@
 # limitations under the License.
 
 install(FILES
+  buffer.h
+  common.h
+  exception.h
+  io.h
+  metadata.h
+  reader.h
+  types.h
+  writer.h
   DESTINATION include/feather)
 
 add_library(feather_test_main

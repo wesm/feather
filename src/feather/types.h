@@ -185,6 +185,8 @@ struct PrimitiveArray {
 
   // For UTF8 and BINARY, not used otherwise
   const int32_t* offsets;
+
+  bool Equals(const PrimitiveArray& other) const;
 };
 
 struct CategoryArray {

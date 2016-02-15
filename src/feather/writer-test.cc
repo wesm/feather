@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 
+#include "feather/common.h"
 #include "feather/exception.h"
 #include "feather/io.h"
 #include "feather/reader.h"
@@ -91,11 +92,11 @@ PrimitiveArray MakeFixedSize(PrimitiveType::type type,
 TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::ceil_byte(n);
+  int null_bytes = util::ceil_byte(num_values);
 
   // Generate some random data
   vector<uint8_t> null_buffer(null_bytes);
-  vector<uint8_t> values_buffer(n * sizeof(int32_t));
+  vector<uint8_t> values_buffer(num_values * sizeof(int32_t));
 
   test::random_bytes(null_buffer.size(), 0, &null_buffer);
   test::random_bytes(values_buffer.size(), 0, &values_buffer);
@@ -105,6 +106,9 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
 
   writer_->AppendPlain("f0", array);
   Finish();
+
+  auto col = reader_->GetColumn(0);
+  ASSERT_TRUE(col->values().Equals(array));
 }
 
 TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
