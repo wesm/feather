@@ -24,7 +24,6 @@
 
 namespace feather {
 
-
 TableReader::TableReader(std::shared_ptr<RandomAccessReader> source) :
     source_(source) {
   int magic_size = strlen(FEATHER_MAGIC_BYTES);
@@ -96,9 +95,12 @@ std::shared_ptr<Buffer> TableReader::GetPrimitiveArray(
 
   // TODO(wesm): For variable-length primitive types, the offsets are next
 
+  // TODO(wesm): dictionary encoding
+
   // The value bytes are last
   out->values = data;
 
+  out->type = meta.type;
   out->length = meta.length;
   out->null_count = meta.null_count;
 

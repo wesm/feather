@@ -39,7 +39,7 @@ bool PrimitiveArray::Equals(const PrimitiveArray& other) const {
 
   // TODO: variable-length dimensions
   if (this->null_count > 0) {
-    if (!memcmp(this->nulls, other.nulls, util::ceil_byte(this->length))) {
+    if (memcmp(this->nulls, other.nulls, util::ceil_byte(this->length))) {
       return false;
     }
   }

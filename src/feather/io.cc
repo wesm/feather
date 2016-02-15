@@ -51,7 +51,9 @@ void BufferReader::Seek(int64_t pos) {
 
 std::shared_ptr<Buffer> BufferReader::Read(int64_t nbytes) {
   int64_t bytes_available = std::min(nbytes, size_ - pos_);
-  return std::make_shared<Buffer>(Head(), bytes_available);
+  auto result = std::make_shared<Buffer>(Head(), bytes_available);
+  pos_ += bytes_available;
+  return result;
 }
 
 // ----------------------------------------------------------------------
