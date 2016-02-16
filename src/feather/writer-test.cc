@@ -105,11 +105,21 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   PrimitiveArray array = MakeFixedSize(PrimitiveType::INT32, num_values,
       num_nulls, &null_buffer[0], &values_buffer[0]);
 
+  // A non-nullable version of this
+  PrimitiveArray nn_array = MakeFixedSize(PrimitiveType::INT32, num_values,
+      0, nullptr, &values_buffer[0]);
+
   writer_->AppendPlain("f0", array);
+  writer_->AppendPlain("f1", nn_array);
   Finish();
 
   auto col = reader_->GetColumn(0);
   ASSERT_TRUE(col->values().Equals(array));
+  ASSERT_EQ("f0", col->metadata()->name());
+
+  col = reader_->GetColumn(1);
+  ASSERT_TRUE(col->values().Equals(nn_array));
+  ASSERT_EQ("f1", col->metadata()->name());
 }
 
 TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {

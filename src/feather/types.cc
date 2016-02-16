@@ -37,9 +37,10 @@ bool PrimitiveArray::Equals(const PrimitiveArray& other) const {
     return false;
   }
 
-  // TODO: variable-length dimensions
+  // TODO(wesm): variable-length dimensions
   if (this->null_count > 0) {
-    if (memcmp(this->nulls, other.nulls, util::ceil_byte(this->length))) {
+    if (this->null_count != other.null_count ||
+        memcmp(this->nulls, other.nulls, util::ceil_byte(this->length))) {
       return false;
     }
   }
