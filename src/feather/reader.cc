@@ -24,7 +24,7 @@
 
 namespace feather {
 
-TableReader::TableReader(std::shared_ptr<RandomAccessReader> source) :
+TableReader::TableReader(const std::shared_ptr<RandomAccessReader>& source) :
     source_(source) {
   int magic_size = strlen(FEATHER_MAGIC_BYTES);
   int footer_size = magic_size + sizeof(uint32_t);

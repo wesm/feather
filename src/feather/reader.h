@@ -26,8 +26,10 @@ namespace feather {
 
 class Column {
  public:
-  Column(ColumnType::type type, std::shared_ptr<metadata::Column> metadata,
-      const PrimitiveArray& values, std::shared_ptr<Buffer> buffer) :
+  Column(ColumnType::type type,
+      const std::shared_ptr<metadata::Column>& metadata,
+      const PrimitiveArray& values,
+      const std::shared_ptr<Buffer>& buffer) :
       type_(type),
       metadata_(metadata),
       buffer_(buffer),
@@ -50,11 +52,11 @@ class Column {
 
 class CategoryColumn : public Column {
  public:
-  CategoryColumn(std::shared_ptr<metadata::Column> metadata,
+  CategoryColumn(const std::shared_ptr<metadata::Column>& metadata,
       const PrimitiveArray& values,
-      std::shared_ptr<Buffer> values_buffer,
+      const std::shared_ptr<Buffer>& values_buffer,
       const PrimitiveArray& levels,
-      std::shared_ptr<Buffer> levels_buffer) :
+      const std::shared_ptr<Buffer>& levels_buffer) :
       Column(ColumnType::CATEGORY, metadata, values, values_buffer),
       levels_(levels),
       levels_buffer_(levels_buffer) {
@@ -73,7 +75,7 @@ class CategoryColumn : public Column {
 
 class TableReader {
  public:
-  explicit TableReader(std::shared_ptr<RandomAccessReader> source);
+  explicit TableReader(const std::shared_ptr<RandomAccessReader>& source);
 
   static std::unique_ptr<TableReader> OpenFile(const std::string& abspath);
 

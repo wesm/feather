@@ -26,7 +26,8 @@ namespace feather {
 TEST(TestBufferReader, Basics) {
   std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-  std::unique_ptr<BufferReader> reader(new BufferReader(&data[0], data.size()));
+  auto data_buffer = std::make_shared<Buffer>(&data[0], data.size());
+  std::unique_ptr<BufferReader> reader(new BufferReader(data_buffer));
 
   ASSERT_EQ(0, reader->Tell());
   ASSERT_EQ(10, reader->size());
@@ -51,10 +52,8 @@ TEST(TestInMemoryOutputStream, Basics) {
   ASSERT_EQ(4, stream->Tell());
   stream->Write(&data[4], data.size() - 4);
 
-  std::vector<uint8_t> out;
-  stream->Transfer(&out);
-
-  test::assert_vector_equal(data, out);
+  std::shared_ptr<Buffer> buffer = stream->Finish();
+  ASSERT_EQ(0, memcmp(buffer->data(), &data[0], data.size()));
 }
 
 } // namespace feather

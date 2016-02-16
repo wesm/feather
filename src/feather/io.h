@@ -92,10 +92,11 @@ class LocalFileReader : public RandomAccessReader {
 // A file-like object that reads from virtual address space
 class BufferReader : public RandomAccessReader {
  public:
-  BufferReader(const uint8_t* buffer, int64_t size) :
+  explicit BufferReader(const std::shared_ptr<Buffer>& buffer) :
       buffer_(buffer),
+      data_(buffer->data()),
       pos_(0) {
-    size_ = size;
+    size_ = buffer->size();
   }
 
   virtual int64_t Tell() const;
@@ -105,10 +106,11 @@ class BufferReader : public RandomAccessReader {
 
  protected:
   const uint8_t* Head() {
-    return buffer_ + pos_;
+    return data_ + pos_;
   }
 
-  const uint8_t* buffer_;
+  std::shared_ptr<Buffer> buffer_;
+  const uint8_t* data_;
   int64_t pos_;
 };
 
@@ -146,13 +148,13 @@ class InMemoryOutputStream : public OutputStream {
 
   virtual void Write(const uint8_t* data, int64_t length);
 
-  // Hand off the in-memory data to a new owner
-  void Transfer(std::vector<uint8_t>* out);
+  // Hand off the buffered data to a new owner
+  std::shared_ptr<Buffer> Finish();
 
  private:
   uint8_t* Head();
 
-  std::vector<uint8_t> buffer_;
+  std::shared_ptr<OwnedMutableBuffer> buffer_;
   int64_t size_;
   int64_t capacity_;
 };

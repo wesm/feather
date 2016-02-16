@@ -40,9 +40,10 @@ class TestTableWriter : public ::testing::Test {
   void Finish() {
     // Write table footer
     writer_->Finalize();
-    stream_->Transfer(&output_);
 
-    shared_ptr<BufferReader> buffer(new BufferReader(&output_[0], output_.size()));
+    output_ = stream_->Finish();
+
+    shared_ptr<BufferReader> buffer(new BufferReader(output_));
     reader_.reset(new TableReader(buffer));
   }
 
@@ -51,7 +52,7 @@ class TestTableWriter : public ::testing::Test {
   unique_ptr<TableWriter> writer_;
   unique_ptr<TableReader> reader_;
 
-  vector<uint8_t> output_;
+  std::shared_ptr<Buffer> output_;
 };
 
 TEST_F(TestTableWriter, EmptyTable) {
