@@ -264,7 +264,7 @@ void ColumnBuilder::Finish() {
 // ----------------------------------------------------------------------
 // Table
 
-bool Table::Open(std::shared_ptr<Buffer> buffer) {
+bool Table::Open(const std::shared_ptr<Buffer>& buffer) {
   buffer_ = buffer;
 
   // Verify the buffer

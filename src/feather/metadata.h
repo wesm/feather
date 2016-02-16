@@ -193,7 +193,7 @@ class Table {
  public:
   Table() : table_(nullptr) {}
 
-  bool Open(std::shared_ptr<Buffer> buffer);
+  bool Open(const std::shared_ptr<Buffer>& buffer);
 
   std::string description() const;
 

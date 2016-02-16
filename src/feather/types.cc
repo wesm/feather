@@ -52,12 +52,13 @@ bool PrimitiveArray::Equals(const PrimitiveArray& other) const {
       return false;
     }
     size_t total_bytes = this->offsets[this->length] * ByteSize(this->type);
-    if (memcmp(this->values, other.values, total_bytes)) {
+    if (memcmp(this->values, other.values, total_bytes) != 0) {
       return false;
     }
   } else {
     // Fixed size, get the number of bytes from the length and value size
-    if (memcmp(this->values, other.values, this->length * ByteSize(this->type))) {
+    if (memcmp(this->values, other.values,
+            this->length * ByteSize(this->type)) != 0) {
       return false;
     }
   }
