@@ -65,6 +65,12 @@ TEST_F(TestTableWriter, EmptyTable) {
   ASSERT_EQ(0, reader_->num_columns());
 }
 
+TEST_F(TestTableWriter, SetNumRows) {
+  writer_->SetNumRows(1000);
+  Finish();
+  ASSERT_EQ(1000, reader_->num_rows());
+}
+
 TEST_F(TestTableWriter, SetDescription) {
   std::string desc("contents of the file");
   writer_->SetDescription(desc);
@@ -95,7 +101,7 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   int num_nulls = 50;
   int null_bytes = util::ceil_byte(num_values);
 
-  // Generate some random data
+    // Generate some random data
   vector<uint8_t> null_buffer(null_bytes);
   vector<uint8_t> values_buffer(num_values * sizeof(int32_t));
 
@@ -120,6 +126,9 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   col = reader_->GetColumn(1);
   ASSERT_TRUE(col->values().Equals(nn_array));
   ASSERT_EQ("f1", col->metadata()->name());
+}
+
+TEST_F(TestTableWriter, CategoryRoundtrip) {
 }
 
 TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
