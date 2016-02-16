@@ -93,9 +93,12 @@ std::shared_ptr<Buffer> TableReader::GetPrimitiveArray(
     out->nulls = nullptr;
   }
 
-  // TODO(wesm): For variable-length primitive types, the offsets are next
+  if (IsVariableLength(meta.type)) {
+    out->offsets = reinterpret_cast<const int32_t*>(data);
+    data += (meta.length + 1) * sizeof(int32_t);
+  }
 
-  // TODO(wesm): dictionary encoding
+  // TODO(wesm): dictionary encoded values
 
   // The value bytes are last
   out->values = data;

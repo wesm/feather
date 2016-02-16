@@ -43,6 +43,29 @@ static inline void random_bytes(int n, uint32_t seed, std::vector<uint8_t>* out)
   }
 }
 
+static inline void random_vlen_bytes(int n, int max_value_size, uint32_t seed,
+    std::vector<int32_t>* offsets, std::vector<uint8_t>* values) {
+  std::mt19937 gen(seed);
+
+  std::uniform_int_distribution<int32_t> len_dist(0, max_value_size);
+  std::uniform_int_distribution<int> byte_dist(0, 255);
+
+  int32_t offset = 0;
+  for (int i = 0; i < n; ++i) {
+    offsets->push_back(offset);
+
+    int32_t length = len_dist(gen);
+
+    // Generate bytes for the value in this slot
+    for (int j = 0; j < length; ++j) {
+      values->push_back(byte_dist(gen) & 0xFF);
+    }
+    offset += length;
+  }
+  // final (n + 1)-th offset
+  offsets->push_back(offset);
+}
+
 } // namespace test
 
 } // namespace feather

@@ -37,16 +37,29 @@ bool PrimitiveArray::Equals(const PrimitiveArray& other) const {
     return false;
   }
 
-  // TODO(wesm): variable-length dimensions
   if (this->null_count > 0) {
     if (this->null_count != other.null_count ||
-        memcmp(this->nulls, other.nulls, util::ceil_byte(this->length))) {
+        memcmp(this->nulls, other.nulls, util::ceil_byte(this->length)) != 0) {
       return false;
     }
   }
 
-  if (memcmp(this->values, other.values, this->length * ByteSize(this->type))) {
-    return false;
+  // TODO(wesm): variable-length dimensions
+  if (IsVariableLength(this->type)) {
+    // One more offset than
+    if (memcmp(this->offsets, other.offsets,
+            (this->length + 1) * sizeof(int32_t)) != 0) {
+      return false;
+    }
+    size_t total_bytes = this->offsets[this->length] * ByteSize(this->type);
+    if (memcmp(this->values, other.values, total_bytes)) {
+      return false;
+    }
+  } else {
+    // Fixed size, get the number of bytes from the length and value size
+    if (memcmp(this->values, other.values, this->length * ByteSize(this->type))) {
+      return false;
+    }
   }
 
   return true;
