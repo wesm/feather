@@ -35,10 +35,10 @@ matrix:
     - ctest
 
 before_install:
-- export CPP_DIR=$TRAVIS_BUILD_DIR/cpp
+- export FEATHER_CPP=$TRAVIS_BUILD_DIR/cpp
 - mkdir $HOME/build_dir
 - cd $HOME/build_dir
 
 before_script:
-- source $CPP_DIR/ci/before_script_travis.sh
-- cmake -DCMAKE_CXX_FLAGS="-Werror" $CPP_DIR
+- source $FEATHER_CPP/ci/before_script_travis.sh
+- cmake -DCMAKE_CXX_FLAGS="-Werror" $FEATHER_CPP
