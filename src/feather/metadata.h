@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "feather/buffer.h"
 #include "feather/metadata_generated.h"
 #include "feather/types.h"
 
@@ -87,8 +88,7 @@ class TableBuilder {
   void Finish();
 
   // These are accessible after calling Finish
-  const void* GetBuffer() const;
-  size_t BufferSize() const;
+  std::shared_ptr<Buffer> GetBuffer() const;
 
   flatbuffers::FlatBufferBuilder& fbb();
 
@@ -121,7 +121,7 @@ class Column {
  public:
   Column() {}
 
-  // Conceil flatbuffer types from the public API
+  // Conceal flatbuffer types from the public API
   static std::shared_ptr<Column> Make(const void* fbs_column);
 
   std::string name() const;
@@ -191,9 +191,9 @@ class TimeColumn : public Column {
 // TODO: address memory ownership issues of the buffer here
 class Table {
  public:
-  Table() : buffer_(nullptr), table_(nullptr) {}
+  Table() : table_(nullptr) {}
 
-  bool Open(const void* buffer, size_t);
+  bool Open(const std::shared_ptr<Buffer>& buffer);
 
   std::string description() const;
 
@@ -207,7 +207,7 @@ class Table {
   std::shared_ptr<Column> GetColumnNamed(const std::string& name);
 
  private:
-  const void* buffer_;
+  std::shared_ptr<Buffer> buffer_;
   const fbs::CTable* table_;
 };
 

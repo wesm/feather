@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "feather/buffer.h"
+
 namespace feather {
 
 // ----------------------------------------------------------------------
@@ -33,24 +35,25 @@ class RandomAccessReader {
  public:
   virtual ~RandomAccessReader() {}
 
-  virtual size_t Tell() = 0;
-  virtual void Seek(size_t pos) = 0;
+  virtual int64_t Tell() const = 0;
+  virtual void Seek(int64_t pos) = 0;
 
-  size_t size() {
+  // Read data from source at position (seeking if necessary), returning copy
+  // only if necessary. Lifetime of read data is managed by the returned Buffer
+  // instance
+  //
+  // @returns: shared_ptr<Buffer>
+  std::shared_ptr<Buffer> ReadAt(int64_t position, int64_t nbytes);
+
+  // Read bytes from source at current position
+  virtual std::shared_ptr<Buffer> Read(int64_t nbytes) = 0;
+
+  int64_t size() {
     return size_;
   }
 
-  // Most generic read method: *copies* bytes from the reader into a
-  // preallocated memory region that you pass in.
-  //
-  // Other reader implementations may have a method that lets you get access to
-  // data without copying. See BufferReader.
-  //
-  // @returns actual number of bytes read
-  virtual size_t ReadInto(size_t nbytes, uint8_t* out) = 0;
-
  protected:
-  size_t size_;
+  int64_t size_;
 };
 
 
@@ -64,17 +67,16 @@ class LocalFileReader : public RandomAccessReader {
 
   void CloseFile();
 
-  virtual size_t Tell();
-  virtual void Seek(size_t pos);
+  virtual int64_t Tell() const;
+  virtual void Seek(int64_t pos);
 
-  // Returns actual number of bytes read
-  virtual size_t ReadInto(size_t nbytes, uint8_t* out);
+  virtual std::shared_ptr<Buffer> Read(int64_t nbytes);
 
   bool is_open() const { return is_open_;}
   const std::string& path() const { return path_;}
 
  private:
-  LocalFileReader(const std::string& path, size_t size, FILE* file) :
+  LocalFileReader(const std::string& path, int64_t size, FILE* file) :
       path_(path),
       file_(file),
       is_open_(true) {
@@ -86,29 +88,30 @@ class LocalFileReader : public RandomAccessReader {
   bool is_open_;
 };
 
+// ----------------------------------------------------------------------
 // A file-like object that reads from virtual address space
 class BufferReader : public RandomAccessReader {
  public:
-  BufferReader(const uint8_t* buffer, size_t size) :
+  explicit BufferReader(const std::shared_ptr<Buffer>& buffer) :
       buffer_(buffer),
+      data_(buffer->data()),
       pos_(0) {
-    size_ = size;
+    size_ = buffer->size();
   }
 
-  virtual size_t Tell();
-  virtual void Seek(size_t pos);
+  virtual int64_t Tell() const;
+  virtual void Seek(int64_t pos);
 
-  const uint8_t* ReadNoCopy(size_t nbytes, size_t* bytes_available);
-
-  virtual size_t ReadInto(size_t nbytes, uint8_t* out);
+  virtual std::shared_ptr<Buffer> Read(int64_t nbytes);
 
  protected:
   const uint8_t* Head() {
-    return buffer_ + pos_;
+    return data_ + pos_;
   }
 
-  const uint8_t* buffer_;
-  size_t pos_;
+  std::shared_ptr<Buffer> buffer_;
+  const uint8_t* data_;
+  int64_t pos_;
 };
 
 // A file reader that uses a memory-mapped file as its internal buffer rather
@@ -128,41 +131,33 @@ class OutputStream {
   // Close the output stream
   virtual void Close() = 0;
 
-  virtual size_t Tell() = 0;
+  virtual int64_t Tell() const = 0;
 
-  virtual void Write(const uint8_t* data, size_t length) = 0;
+  virtual void Write(const uint8_t* data, int64_t length) = 0;
 };
 
 
 // An output stream that is an in-memory
 class InMemoryOutputStream : public OutputStream {
  public:
-  explicit InMemoryOutputStream(size_t initial_capacity);
+  explicit InMemoryOutputStream(int64_t initial_capacity);
 
   virtual void Close() {}
 
-  virtual size_t Tell();
+  virtual int64_t Tell() const;
 
-  virtual void Write(const uint8_t* data, size_t length);
+  virtual void Write(const uint8_t* data, int64_t length);
 
-  // Hand off the in-memory data to a new owner
-  void Transfer(std::vector<uint8_t>* out);
+  // Hand off the buffered data to a new owner
+  std::shared_ptr<Buffer> Finish();
 
  private:
   uint8_t* Head();
 
-  std::vector<uint8_t> buffer_;
-  size_t size_;
-  size_t capacity_;
+  std::shared_ptr<OwnedMutableBuffer> buffer_;
+  int64_t size_;
+  int64_t capacity_;
 };
-
-
-// class FileOutputStream : public OutputStream {
-//  public:
-
-//  private:
-
-// };
 
 } // namespace feather
 

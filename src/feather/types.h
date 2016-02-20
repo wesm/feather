@@ -15,6 +15,7 @@
 #ifndef FEATHER_TYPES_H
 #define FEATHER_TYPES_H
 
+#include <cstdint>
 #include <string>
 
 namespace feather {
@@ -52,7 +53,7 @@ struct PrimitiveType {
   };
 };
 
-const size_t TYPE_BYTE_SIZE[] = {
+const int TYPE_BYTE_SIZE[] = {
   1, // BOOL
   1, // INT8
   2,
@@ -72,7 +73,7 @@ static inline bool IsVariableLength(PrimitiveType::type type) {
   return type == PrimitiveType::UTF8 || type == PrimitiveType::BINARY;
 }
 
-static inline size_t ByteSize(PrimitiveType::type type) {
+static inline int ByteSize(PrimitiveType::type type) {
   switch (type) {
     case PrimitiveType::BOOL:
     case PrimitiveType::INT8:
@@ -141,6 +142,8 @@ struct ArrayMetadata {
       offset(offset), length(length),
       null_count(null_count), total_bytes(total_bytes) {}
 
+  bool Equals(const ArrayMetadata& other) const;
+
   PrimitiveType::type type;
   Encoding::type encoding;
   int64_t offset;
@@ -182,6 +185,8 @@ struct PrimitiveArray {
 
   // For UTF8 and BINARY, not used otherwise
   const int32_t* offsets;
+
+  bool Equals(const PrimitiveArray& other) const;
 };
 
 struct CategoryArray {

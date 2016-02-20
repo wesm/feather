@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "feather/exception.h"
 #include "feather/metadata.h"
@@ -35,7 +35,7 @@ class TestTableBuilder : public ::testing::Test {
     tb_->Finish();
 
     table_.reset(new Table());
-    table_->Open(tb_->GetBuffer(), tb_->BufferSize());
+    table_->Open(tb_->GetBuffer());
   }
 
  protected:

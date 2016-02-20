@@ -17,50 +17,89 @@
 
 #include <string>
 
+#include "feather/buffer.h"
 #include "feather/io.h"
 #include "feather/metadata.h"
 #include "feather/types.h"
 
 namespace feather {
 
-struct Column {
-  Column(const std::string& name, ColumnType::type) :
-      name(name), type(type) {}
+class Column {
+ public:
+  Column(ColumnType::type type,
+      const std::shared_ptr<metadata::Column>& metadata,
+      const PrimitiveArray& values,
+      const std::shared_ptr<Buffer>& buffer) :
+      type_(type),
+      metadata_(metadata),
+      buffer_(buffer),
+      values_(values) {}
 
-  std::string name;
-  ColumnType::type type;
+  const PrimitiveArray& values() const {
+    return values_;
+  }
+
+  const std::shared_ptr<metadata::Column>& metadata() const {
+    return metadata_;
+  }
+
+ protected:
+  ColumnType::type type_;
+  std::shared_ptr<metadata::Column> metadata_;
+  std::shared_ptr<Buffer> buffer_;
+  PrimitiveArray values_;
 };
 
-struct PrimitiveColumn : struct Column {
-  explicit PrimitiveColumn(const std::string& name) :
-      Column(name, ColumnType::PRIMITIVE) {}
+class CategoryColumn : public Column {
+ public:
+  CategoryColumn(const std::shared_ptr<metadata::Column>& metadata,
+      const PrimitiveArray& values,
+      const std::shared_ptr<Buffer>& values_buffer,
+      const PrimitiveArray& levels,
+      const std::shared_ptr<Buffer>& levels_buffer) :
+      Column(ColumnType::CATEGORY, metadata, values, values_buffer),
+      levels_(levels),
+      levels_buffer_(levels_buffer) {
+    category_meta_ = static_cast<const metadata::CategoryColumn*>(metadata.get());
+  }
 
-  std::shared_ptr<metadata::Column> metadata;
-  PrimitiveArray values;
-};
+  const PrimitiveArray& levels() const {
+    return levels_;
+  }
 
-struct CategoryColumn : struct Column {
-  explicit CategoryColumn(const std::string& name) :
-      Column(name, ColumnType::CATEGORY) {}
-
-  std::shared_ptr<metadata::CategoryColumn> metadata;
-  CategoryArray values;
+ private:
+  const metadata::CategoryColumn* category_meta_;
+  PrimitiveArray levels_;
+  std::shared_ptr<Buffer> levels_buffer_;
 };
 
 class TableReader {
  public:
-  explicit TableReader(std::unique_ptr<RandomAccessReader> file);
+  explicit TableReader(const std::shared_ptr<RandomAccessReader>& source);
 
   static std::unique_ptr<TableReader> OpenFile(const std::string& abspath);
 
-  // The table name stored in the file
-  const std::string& name() const;
-  int64_t num_rows() const;
+  // Optional table description
+  //
+  // This does not return a const std::string& because a string has to be
+  // copied from the flatbuffer to be able to return a non-flatbuffer type
+  std::string GetDescription() const;
+  bool HasDescription() const;
 
-  std::unique_ptr<Column> GetColumn(size_t i);
+  int64_t num_rows() const;
+  int64_t num_columns() const;
+
+  std::shared_ptr<Column> GetColumn(int i);
 
  private:
-  std::unique_ptr<FileLike> file_;
+  // Retrieve a primitive array from the data source
+  //
+  // @returns: a Buffer instance, the precise type will depend on the kind of
+  // input data source (which may or may not have memory-map like semantics)
+  std::shared_ptr<Buffer> GetPrimitiveArray(const ArrayMetadata& meta,
+      PrimitiveArray* out);
+
+  std::shared_ptr<RandomAccessReader> source_;
   metadata::Table metadata_;
 };
 

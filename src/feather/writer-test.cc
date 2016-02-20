@@ -12,17 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include <memory>
 #include <vector>
 
-#include <gtest/gtest.h>
-
+#include "feather/common.h"
+#include "feather/exception.h"
 #include "feather/io.h"
+#include "feather/reader.h"
 #include "feather/test-common.h"
 #include "feather/writer.h"
 
 using std::shared_ptr;
 using std::unique_ptr;
+using std::vector;
 
 namespace feather {
 
@@ -37,17 +41,128 @@ class TestTableWriter : public ::testing::Test {
     // Write table footer
     writer_->Finalize();
 
-    stream_->Transfer(&output_);
+    output_ = stream_->Finish();
+
+    shared_ptr<BufferReader> buffer(new BufferReader(output_));
+    reader_.reset(new TableReader(buffer));
   }
 
  protected:
   shared_ptr<InMemoryOutputStream> stream_;
   unique_ptr<TableWriter> writer_;
+  unique_ptr<TableReader> reader_;
 
-  std::vector<uint8_t> output_;
+  std::shared_ptr<Buffer> output_;
 };
 
 TEST_F(TestTableWriter, EmptyTable) {
+  Finish();
+
+  ASSERT_FALSE(reader_->HasDescription());
+  ASSERT_THROW(reader_->GetDescription(), FeatherException);
+
+  ASSERT_EQ(0, reader_->num_rows());
+  ASSERT_EQ(0, reader_->num_columns());
+}
+
+TEST_F(TestTableWriter, SetNumRows) {
+  writer_->SetNumRows(1000);
+  Finish();
+  ASSERT_EQ(1000, reader_->num_rows());
+}
+
+TEST_F(TestTableWriter, SetDescription) {
+  std::string desc("contents of the file");
+  writer_->SetDescription(desc);
+  Finish();
+
+  ASSERT_TRUE(reader_->HasDescription());
+  ASSERT_EQ(desc, reader_->GetDescription());
+
+  ASSERT_EQ(0, reader_->num_rows());
+  ASSERT_EQ(0, reader_->num_columns());
+}
+
+PrimitiveArray MakePrimitive(PrimitiveType::type type,
+    int64_t length, int64_t null_count,
+    const uint8_t* nulls, const uint8_t* values,
+    const int32_t* offsets) {
+  PrimitiveArray result;
+  result.type = type;
+  result.length = length;
+  result.null_count = null_count;
+  result.nulls = nulls;
+  result.values = values;
+  result.offsets = offsets;
+  return result;
+}
+
+TEST_F(TestTableWriter, PrimitiveRoundTrip) {
+  int num_values = 1000;
+  int num_nulls = 50;
+  int null_bytes = util::ceil_byte(num_values);
+
+    // Generate some random data
+  vector<uint8_t> null_buffer;
+  vector<uint8_t> values_buffer;
+  test::random_bytes(null_bytes, 0, &null_buffer);
+  test::random_bytes(num_values * sizeof(int32_t), 0, &values_buffer);
+
+  PrimitiveArray array = MakePrimitive(PrimitiveType::INT32, num_values,
+      num_nulls, &null_buffer[0], &values_buffer[0], nullptr);
+
+  // A non-nullable version of this
+  PrimitiveArray nn_array = MakePrimitive(PrimitiveType::INT32, num_values,
+      0, nullptr, &values_buffer[0], nullptr);
+
+  writer_->AppendPlain("f0", array);
+  writer_->AppendPlain("f1", nn_array);
+  Finish();
+
+  auto col = reader_->GetColumn(0);
+  ASSERT_TRUE(col->values().Equals(array));
+  ASSERT_EQ("f0", col->metadata()->name());
+
+  col = reader_->GetColumn(1);
+  ASSERT_TRUE(col->values().Equals(nn_array));
+  ASSERT_EQ("f1", col->metadata()->name());
+}
+
+TEST_F(TestTableWriter, CategoryRoundtrip) {
+}
+
+TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
+  // UTF8 or BINARY
+  int num_values = 1000;
+  int num_nulls = 50;
+  int null_bytes = util::ceil_byte(num_values);
+
+    // Generate some random data
+  vector<uint8_t> null_buffer;
+  vector<int32_t> offsets_buffer;
+  vector<uint8_t> values_buffer;
+
+  test::random_bytes(null_bytes, 0, &null_buffer);
+  test::random_vlen_bytes(num_values, 10, 0, &offsets_buffer, &values_buffer);
+
+  PrimitiveArray array = MakePrimitive(PrimitiveType::UTF8, num_values,
+      num_nulls, &null_buffer[0], &values_buffer[0], &offsets_buffer[0]);
+
+  // A non-nullable version
+  PrimitiveArray nn_array = MakePrimitive(PrimitiveType::UTF8, num_values,
+      0, nullptr, &values_buffer[0], &offsets_buffer[0]);
+
+  writer_->AppendPlain("f0", array);
+  writer_->AppendPlain("f1", nn_array);
+  Finish();
+
+  auto col = reader_->GetColumn(0);
+  ASSERT_TRUE(col->values().Equals(array));
+  ASSERT_EQ("f0", col->metadata()->name());
+
+  col = reader_->GetColumn(1);
+  ASSERT_TRUE(col->values().Equals(nn_array));
+  ASSERT_EQ("f1", col->metadata()->name());
 }
 
 } // namespace feather
