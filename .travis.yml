@@ -18,21 +18,25 @@ matrix:
   include:
   - compiler: gcc
     os: linux
+    before_script:
+    - export CC="gcc-4.9"
+    - export CXX="g++-4.9"
+    - source $FEATHER_CPP/ci/before_script_travis.sh
+    - cmake -DCMAKE_CXX_FLAGS="-Werror" $FEATHER_CPP
     script:
     - make lint
     - make -j4 || exit 1
     - valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ctest
   - compiler: clang
     os: linux
-    script:
-    - make -j4 || exit 1
-    - ctest
+    before_script:
+    - export CC="clang"
+    - export CXX="clang++"
+    - source $FEATHER_CPP/ci/before_script_travis.sh
+    - cmake -DCMAKE_CXX_FLAGS="-Werror" $FEATHER_CPP
   - os: osx
     compiler: clang
     addons:
-    script:
-    - make -j4 || exit 1
-    - ctest
 
 before_install:
 - export FEATHER_CPP=$TRAVIS_BUILD_DIR/cpp
@@ -42,3 +46,7 @@ before_install:
 before_script:
 - source $FEATHER_CPP/ci/before_script_travis.sh
 - cmake -DCMAKE_CXX_FLAGS="-Werror" $FEATHER_CPP
+
+script:
+- make -j4 || exit 1
+- ctest

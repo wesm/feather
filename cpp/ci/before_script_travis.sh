@@ -15,9 +15,6 @@ fi
 
 if [ $TRAVIS_OS_NAME == "linux" ]; then
   ./thirdparty/build_thirdparty.sh
-  # Use a C++11 compiler on Linux
-  export CC="gcc-4.9"
-  export CXX="g++-4.9"
 fi
 
 export GTEST_HOME=$TP_DIR/$GTEST_BASEDIR
