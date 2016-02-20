@@ -66,6 +66,7 @@ void TableWriter::AppendPlain(const std::string& name,
   // Prepare metadata payload
   ArrayMetadata meta;
   meta.type = values.type;
+  meta.encoding = Encoding::PLAIN;
   meta.offset = stream_->Tell();
   meta.length = values.length;
   meta.null_count = values.null_count;

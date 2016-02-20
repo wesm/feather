@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-cloc --by-file src/ --not-match-f="-test|generated|CMake"
+cloc --by-file cpp/src/ --not-match-f="-test|generated|CMake"
