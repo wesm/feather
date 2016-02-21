@@ -87,6 +87,7 @@ RT_LIBRARY_DIRS = LIBRARY_DIRS
 
 ext = Extension('feather.ext',
                 ['feather/ext.pyx'],
+                language='c++',
                 libraries=['feather'],
                 include_dirs=INCLUDE_PATHS,
                 library_dirs=LIBRARY_DIRS,

@@ -14,6 +14,7 @@
 
 #include "feather/writer.h"
 
+#include <cstring>
 #include <memory>
 
 #include "feather/common.h"
