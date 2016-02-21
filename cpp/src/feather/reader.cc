@@ -59,6 +59,12 @@ TableReader::TableReader(const std::shared_ptr<RandomAccessReader>& source) :
   }
 }
 
+std::unique_ptr<TableReader> TableReader::OpenFile(const std::string& abspath) {
+  auto reader = LocalFileReader::Open(abspath);
+  std::shared_ptr<RandomAccessReader> source(reader.release());
+  return std::unique_ptr<TableReader>(new TableReader(source));
+}
+
 bool TableReader::HasDescription() const {
   return metadata_.has_description();
 }

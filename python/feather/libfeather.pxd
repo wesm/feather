@@ -97,6 +97,27 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         InMemoryOutputStream(int64_t initial_capacity)
         shared_ptr[Buffer] Finish()
 
+    cdef cppclass RandomAccessReader:
+        int64_t Tell()
+        void Seek(int64_t pos)
+
+        shared_ptr[Buffer] ReadAt(int64_t position, int64_t nbytes)
+        shared_ptr[Buffer] Read(int64_t nbytes)
+
+        int64_t size()
+
+    cdef cppclass LocalFileReader(RandomAccessReader):
+        @staticmethod
+        unique_ptr[LocalFileReader] Open(const string& path)
+
+        void CloseFile()
+
+        c_bool is_open()
+        const string& path()
+
+    cdef cppclass BufferReader(RandomAccessReader):
+        BufferReader(const shared_ptr[Buffer]& buffer)
+
     cdef cppclass TableWriter:
         TableWriter(const shared_ptr[OutputStream]& stream)
 
@@ -105,3 +126,24 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
 
         void AppendPlain(const string& name, const PrimitiveArray& values)
         void Finalize()
+
+    cdef cppclass Column:
+        const PrimitiveArray& values()
+        const string& name()
+
+    cdef cppclass CategoryColumn(Column):
+        const PrimitiveArray& levels()
+
+    cdef cppclass TableReader:
+        TableReader(const shared_ptr[RandomAccessReader]& source)
+
+        @staticmethod
+        unique_ptr[TableReader] OpenFile(const string& abspath)
+
+        string GetDescription()
+        c_bool HasDescription()
+
+        int64_t num_rows()
+        int64_t num_columns()
+
+        shared_ptr[Column] GetColumn(int i)

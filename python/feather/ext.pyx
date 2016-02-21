@@ -23,4 +23,24 @@ from cython.operator cimport dereference as deref
 
 from libfeather cimport *
 
+from feather.compat import frombytes, tobytes
 import six
+
+cdef class FeatherWriter:
+    cdef:
+        unique_ptr[TableWriter] writer
+
+    def __cinit__(self, object name):
+        cdef:
+            string c_name = tobytes(name)
+
+
+cdef class FeatherReader:
+    cdef:
+        unique_ptr[TableReader] reader
+
+    def __cinit__(self, object name):
+        cdef:
+            string c_name = tobytes(name)
+
+        self.reader = TableReader.OpenFile(c_name)
