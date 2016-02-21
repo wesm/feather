@@ -13,6 +13,7 @@
 # limitations under the License.
 
 install(FILES
+  api.h
   buffer.h
   common.h
   exception.h

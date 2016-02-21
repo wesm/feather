@@ -26,7 +26,7 @@ namespace feather {
 
 class TableWriter {
  public:
-  explicit TableWriter(std::shared_ptr<OutputStream> stream);
+  explicit TableWriter(const std::shared_ptr<OutputStream>& stream);
 
   void SetDescription(const std::string& desc);
   void SetNumRows(int64_t num_rows);
@@ -47,10 +47,11 @@ class TableWriter {
       const TimestampMetadata& meta);
 
   // We are done, write the file metadata and footer
-  void Init();
   void Finalize();
 
  private:
+  void Init();
+
   std::shared_ptr<OutputStream> stream_;
 
   bool initialized_stream_;

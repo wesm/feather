@@ -20,7 +20,7 @@
 
 namespace feather {
 
-TableWriter::TableWriter(std::shared_ptr<OutputStream> stream) :
+TableWriter::TableWriter(const std::shared_ptr<OutputStream>& stream) :
     stream_(stream),
     initialized_stream_(false) {
 }

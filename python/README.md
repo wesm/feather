@@ -1,1 +1,1 @@
-## Python Feather Format API
+## Python interface to the Apache Arrow-based Feather File Format
