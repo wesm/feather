@@ -13,7 +13,7 @@ build, run:
 mkdir release-build
 cd release-build
 export FEATHER_HOME=$HOME/local
-cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=$FEATHER_HOME
+cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=$FEATHER_HOME ..
 make -j4
 make install
 ```
@@ -41,3 +41,6 @@ make lint
 Explicit memory management and non-trivial destructors are to be avoided. Use
 smart pointers to manage the lifetime of objects and memory, and generally use
 [RAII][2] whenever possible.
+
+[1]: http://google.github.io/styleguide/cppguide.html
+[2]: https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization
