@@ -18,12 +18,16 @@
 
 #include "feather/buffer.h"
 #include "feather/exception.h"
+#include "feather/metadata_generated.h"
 
 namespace feather {
 
 namespace metadata {
 
 typedef flatbuffers::FlatBufferBuilder FBB;
+
+// Flatbuffers conveniences
+typedef std::vector<flatbuffers::Offset<fbs::Column> > ColumnVector;
 
 // ----------------------------------------------------------------------
 // Primitive array
@@ -103,93 +107,6 @@ static inline flatbuffers::Offset<fbs::PrimitiveArray> GetPrimitiveArray(
       array.total_bytes);
 }
 
-// ----------------------------------------------------------------------
-// TableBuilder
-
-TableBuilder::TableBuilder(int64_t num_rows) :
-    finished_(false),
-    num_rows_(num_rows) {}
-
-TableBuilder::TableBuilder() :
-    TableBuilder(0) {}
-
-void TableBuilder::Finish() {
-  if (finished_) {
-    throw FeatherException("can only call this once");
-  }
-  flatbuffers::Offset<flatbuffers::String> desc = 0;
-  if (!description_.empty()) {
-    desc = fbb_.CreateString(description_);
-  }
-
-  auto root = fbs::CreateCTable(fbb_, desc,
-      num_rows_,
-      fbb_.CreateVector(columns_));
-  fbb_.Finish(root);
-  finished_ = true;
-}
-
-std::shared_ptr<Buffer> TableBuilder::GetBuffer() const {
-  return std::make_shared<Buffer>(fbb_.GetBufferPointer(),
-      static_cast<int64_t>(fbb_.GetSize()));
-}
-
-FBB& TableBuilder::fbb() {
-  return fbb_;
-}
-
-std::unique_ptr<ColumnBuilder> TableBuilder::AddColumn(const std::string& name) {
-  return std::unique_ptr<ColumnBuilder>(new ColumnBuilder(this, name));
-}
-
-// ----------------------------------------------------------------------
-// ColumnBuilder
-
-ColumnBuilder::ColumnBuilder(TableBuilder* parent, const std::string& name) :
-    parent_(parent),
-    name_(name),
-    type_(ColumnType::PRIMITIVE) {}
-
-ColumnBuilder::~ColumnBuilder() {}
-
-FBB& ColumnBuilder::fbb() {
-  return parent_->fbb();
-}
-
-void ColumnBuilder::SetValues(const ArrayMetadata& values) {
-  values_ = values;
-}
-
-void ColumnBuilder::SetUserMetadata(const std::string& data) {
-  user_metadata_ = data;
-}
-
-void ColumnBuilder::SetCategory(const ArrayMetadata& levels, bool ordered) {
-  type_ = ColumnType::CATEGORY;
-  meta_category_.levels = levels;
-  meta_category_.ordered = ordered;
-}
-
-void ColumnBuilder::SetTimestamp(TimeUnit::type unit) {
-  type_ = ColumnType::TIMESTAMP;
-  meta_timestamp_.unit = unit;
-}
-
-void ColumnBuilder::SetTimestamp(TimeUnit::type unit,
-    const std::string& timezone) {
-  SetTimestamp(unit);
-  meta_timestamp_.timezone = timezone;
-}
-
-void ColumnBuilder::SetDate() {
-  type_ = ColumnType::DATE;
-}
-
-void ColumnBuilder::SetTime(TimeUnit::type unit) {
-  type_ = ColumnType::TIME;
-  meta_time_.unit = unit;
-}
-
 // Convert Feather enums to Flatbuffer enums
 
 const fbs::TypeMetadata COLUMN_TYPE_ENUM_MAPPING[] = {
@@ -204,61 +121,251 @@ fbs::TypeMetadata ToFlatbufferEnum(ColumnType::type column_type) {
   return COLUMN_TYPE_ENUM_MAPPING[column_type];
 }
 
-flatbuffers::Offset<void> ColumnBuilder::CreateColumnMetadata() {
-  switch (type_) {
-    case ColumnType::PRIMITIVE:
-      // flatbuffer void
-      return 0;
-    case ColumnType::CATEGORY:
-      {
-        auto cat_meta = fbs::CreateCategoryMetadata(fbb(),
-            GetPrimitiveArray(fbb(), meta_category_.levels),
-            meta_category_.ordered);
-        return cat_meta.Union();
-      }
-    case ColumnType::TIMESTAMP:
-      {
-        // flatbuffer void
-        flatbuffers::Offset<flatbuffers::String> tz = 0;
-        if (!meta_timestamp_.timezone.empty()) {
-          tz = fbb().CreateString(meta_timestamp_.timezone);
-        }
+// ----------------------------------------------------------------------
+// TableBuilder
 
-        auto ts_meta = fbs::CreateTimestampMetadata(fbb(),
-            ToFlatbufferEnum(meta_timestamp_.unit), tz);
-        return ts_meta.Union();
-      }
-    case ColumnType::DATE:
-      {
-        auto date_meta = fbs::CreateDateMetadata(fbb());
-        return date_meta.Union();
-      }
-    case ColumnType::TIME:
-      {
-        auto time_meta = fbs::CreateTimeMetadata(fbb(),
-            ToFlatbufferEnum(meta_time_.unit));
-        return time_meta.Union();
-      }
-    default:
-      // null
-      return flatbuffers::Offset<void>();
+class TableBuilder::Impl {
+ public:
+  explicit Impl(int64_t num_rows) :
+      finished_(false),
+      num_rows_(num_rows) {}
+
+  FBB& fbb() {
+    return fbb_;
   }
+
+  void Finish() {
+    if (finished_) {
+      throw FeatherException("can only call this once");
+    }
+    flatbuffers::Offset<flatbuffers::String> desc = 0;
+    if (!description_.empty()) {
+      desc = fbb_.CreateString(description_);
+    }
+
+    auto root = fbs::CreateCTable(fbb_, desc,
+        num_rows_,
+        fbb_.CreateVector(columns_));
+    fbb_.Finish(root);
+    finished_ = true;
+  }
+
+  void set_description(const std::string& description) {
+    description_ = description;
+  }
+
+  void set_num_rows(int64_t num_rows) {
+    num_rows_ = num_rows;
+  }
+
+  void add_column(const flatbuffers::Offset<fbs::Column>& col) {
+    columns_.push_back(col);
+  }
+
+ private:
+  flatbuffers::FlatBufferBuilder fbb_;
+  ColumnVector columns_;
+
+  bool finished_;
+  std::string description_;
+  int64_t num_rows_;
+};
+
+TableBuilder::TableBuilder(int64_t num_rows) {
+  impl_.reset(new Impl(num_rows));
 }
 
+TableBuilder::TableBuilder() :
+    TableBuilder(0) {}
+
+std::shared_ptr<Buffer> TableBuilder::GetBuffer() const {
+  return std::make_shared<Buffer>(impl_->fbb().GetBufferPointer(),
+      static_cast<int64_t>(impl_->fbb().GetSize()));
+}
+
+std::unique_ptr<ColumnBuilder> TableBuilder::AddColumn(const std::string& name) {
+  return std::unique_ptr<ColumnBuilder>(new ColumnBuilder(this, name));
+}
+
+void TableBuilder::SetDescription(const std::string& description) {
+  impl_->set_description(description);
+}
+
+void TableBuilder::SetNumRows(int64_t num_rows) {
+  impl_->set_num_rows(num_rows);
+}
+
+void TableBuilder::Finish() {
+  impl_->Finish();
+}
+
+// ----------------------------------------------------------------------
+// ColumnBuilder
+
+class ColumnBuilder::Impl {
+ public:
+  Impl(FBB* builder, const std::string& name) :
+      name_(name),
+      type_(ColumnType::PRIMITIVE) {
+    fbb_ = builder;
+  }
+
+  flatbuffers::Offset<void> CreateColumnMetadata() {
+    switch (type_) {
+      case ColumnType::PRIMITIVE:
+        // flatbuffer void
+        return 0;
+      case ColumnType::CATEGORY:
+        {
+          auto cat_meta = fbs::CreateCategoryMetadata(fbb(),
+              GetPrimitiveArray(fbb(), meta_category_.levels),
+              meta_category_.ordered);
+          return cat_meta.Union();
+        }
+      case ColumnType::TIMESTAMP:
+        {
+          // flatbuffer void
+          flatbuffers::Offset<flatbuffers::String> tz = 0;
+          if (!meta_timestamp_.timezone.empty()) {
+            tz = fbb().CreateString(meta_timestamp_.timezone);
+          }
+
+          auto ts_meta = fbs::CreateTimestampMetadata(fbb(),
+              ToFlatbufferEnum(meta_timestamp_.unit), tz);
+          return ts_meta.Union();
+        }
+      case ColumnType::DATE:
+        {
+          auto date_meta = fbs::CreateDateMetadata(fbb());
+          return date_meta.Union();
+        }
+      case ColumnType::TIME:
+        {
+          auto time_meta = fbs::CreateTimeMetadata(fbb(),
+              ToFlatbufferEnum(meta_time_.unit));
+          return time_meta.Union();
+        }
+      default:
+        // null
+        return flatbuffers::Offset<void>();
+    }
+  }
+
+  flatbuffers::Offset<fbs::Column> Finish() {
+    FBB& buf = fbb();
+
+    // values
+    auto values = GetPrimitiveArray(buf, values_);
+    flatbuffers::Offset<void> metadata = CreateColumnMetadata();
+
+    return fbs::CreateColumn(buf, buf.CreateString(name_),
+        values,
+        ToFlatbufferEnum(type_), // metadata_type
+        metadata,
+        buf.CreateString(user_metadata_));
+  }
+
+  void set_values(const ArrayMetadata& values) {
+    values_ = values;
+  }
+
+  void set_user_metadata(const std::string& data) {
+    user_metadata_ = data;
+  }
+
+  void set_category(const ArrayMetadata& levels, bool ordered) {
+    type_ = ColumnType::CATEGORY;
+    meta_category_.levels = levels;
+    meta_category_.ordered = ordered;
+  }
+
+  void set_timestamp(TimeUnit::type unit) {
+    type_ = ColumnType::TIMESTAMP;
+    meta_timestamp_.unit = unit;
+  }
+
+  void set_timestamp(TimeUnit::type unit,
+      const std::string& timezone) {
+    set_timestamp(unit);
+    meta_timestamp_.timezone = timezone;
+  }
+
+  void set_date() {
+    type_ = ColumnType::DATE;
+  }
+
+  void set_time(TimeUnit::type unit) {
+    type_ = ColumnType::TIME;
+    meta_time_.unit = unit;
+  }
+
+  FBB& fbb() {
+    return *fbb_;
+  }
+
+ private:
+  std::string name_;
+  ArrayMetadata values_;
+  std::string user_metadata_;
+
+  // Column metadata
+
+  // Is this a primitive type, or one of the types having metadata? Default is
+  // primitive
+  ColumnType::type type_;
+
+  // Type-specific metadata union
+  union {
+    CategoryMetadata meta_category_;
+    DateMetadata meta_date_;
+    TimeMetadata meta_time_;
+  };
+
+  TimestampMetadata meta_timestamp_;
+
+  FBB* fbb_;
+};
+
 void ColumnBuilder::Finish() {
-  FBB& buf = fbb();
+  auto result = impl_->Finish();
+  // horrible coupling, but can clean this up later
+  parent_->impl_->add_column(result);
+}
 
-  // values
-  auto values = GetPrimitiveArray(buf, values_);
-  flatbuffers::Offset<void> metadata = CreateColumnMetadata();
+ColumnBuilder::ColumnBuilder(TableBuilder* parent, const std::string& name) :
+    parent_(parent) {
+  impl_.reset(new Impl(&parent->impl_->fbb(), name));
+}
 
-  auto fb_column = fbs::CreateColumn(buf, buf.CreateString(name_),
-      values,
-      ToFlatbufferEnum(type_), // metadata_type
-      metadata,
-      buf.CreateString(user_metadata_));
+ColumnBuilder::~ColumnBuilder() {}
 
-  parent_->columns_.push_back(fb_column);
+void ColumnBuilder::SetValues(const ArrayMetadata& values) {
+  impl_->set_values(values);
+}
+
+void ColumnBuilder::SetUserMetadata(const std::string& data) {
+  impl_->set_user_metadata(data);
+}
+
+void ColumnBuilder::SetCategory(const ArrayMetadata& levels, bool ordered) {
+  impl_->set_category(levels, ordered);
+}
+
+void ColumnBuilder::SetTimestamp(TimeUnit::type unit) {
+  impl_->set_timestamp(unit);
+}
+
+void ColumnBuilder::SetTimestamp(TimeUnit::type unit,
+    const std::string& timezone) {
+  impl_->set_timestamp(unit, timezone);
+}
+
+void ColumnBuilder::SetDate() {
+  impl_->set_date();
+}
+
+void ColumnBuilder::SetTime(TimeUnit::type unit) {
+  impl_->set_time(unit);
 }
 
 // ----------------------------------------------------------------------
@@ -270,7 +377,7 @@ bool Table::Open(const std::shared_ptr<Buffer>& buffer) {
   // Verify the buffer
 
   // Initiatilize the Flatbuffer interface
-  table_ = fbs::GetCTable(buffer->data());
+  table_ = static_cast<const void*>(fbs::GetCTable(buffer->data()));
   return true;
 }
 
@@ -278,24 +385,30 @@ std::string Table::description() const {
   if (!has_description()) {
     throw FeatherException("description is null");
   }
-  return table_->description()->str();
+
+  const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
+  return table->description()->str();
 }
 
 bool Table::has_description() const {
   // null represented as 0 flatbuffer offset
-  return table_->description() !=  0;
+  const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
+  return table->description() !=  0;
 }
 
 int64_t Table::num_rows() const {
-  return table_->num_rows();
+  const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
+  return table->num_rows();
 }
 
 size_t Table::num_columns() const {
-  return table_->columns()->size();
+  const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
+  return table->columns()->size();
 }
 
 std::shared_ptr<Column> Table::GetColumn(size_t i) {
-  const fbs::Column* col = table_->columns()->Get(i);
+  const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
+  const fbs::Column* col = table->columns()->Get(i);
 
   // Construct the right column wrapper for the logical type
   switch (col->metadata_type()) {

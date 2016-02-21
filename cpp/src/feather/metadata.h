@@ -20,16 +20,11 @@
 #include <vector>
 
 #include "feather/buffer.h"
-#include "feather/metadata_generated.h"
 #include "feather/types.h"
 
 namespace feather {
 
 namespace metadata {
-
-// Flatbuffers conveniences
-typedef std::vector<flatbuffers::Offset<fbs::Column> > ColumnVector;
-typedef std::vector<flatbuffers::Offset<fbs::CTable> > TableVector;
 
 class TableBuilder;
 
@@ -39,44 +34,19 @@ class ColumnBuilder {
   ~ColumnBuilder();
 
   void SetValues(const ArrayMetadata& values);
-
   void SetCategory(const ArrayMetadata& levels, bool ordered = false);
-
   void SetTimestamp(TimeUnit::type unit);
   void SetTimestamp(TimeUnit::type unit, const std::string& timezone);
-
   void SetDate();
   void SetTime(TimeUnit::type unit);
-
   void SetUserMetadata(const std::string& data);
 
   void Finish();
 
-  flatbuffers::FlatBufferBuilder& fbb();
-
  private:
   TableBuilder* parent_;
-  std::string name_;
-  ArrayMetadata values_;
-
-  std::string user_metadata_;
-
-  // Column metadata
-
-  // Is this a primitive type, or one of the types having metadata? Default is
-  // primitive
-  ColumnType::type type_;
-
-  // Type-specific metadata union
-  union {
-    CategoryMetadata meta_category_;
-    DateMetadata meta_date_;
-    TimeMetadata meta_time_;
-  };
-
-  TimestampMetadata meta_timestamp_;
-
-  flatbuffers::Offset<void> CreateColumnMetadata();
+  class Impl;
+  std::shared_ptr<Impl> impl_;
 };
 
 class TableBuilder {
@@ -90,25 +60,14 @@ class TableBuilder {
   // These are accessible after calling Finish
   std::shared_ptr<Buffer> GetBuffer() const;
 
-  flatbuffers::FlatBufferBuilder& fbb();
-
-  void SetDescription(const std::string& description) {
-    description_ = description;
-  }
-
-  void SetNumRows(int64_t num_rows) {
-    num_rows_ = num_rows;
-  }
-
+  void SetDescription(const std::string& description);
+  void SetNumRows(int64_t num_rows);
  private:
   friend class ColumnBuilder;
 
-  flatbuffers::FlatBufferBuilder fbb_;
-  bool finished_;
-
-  std::string description_;
-  int64_t num_rows_;
-  ColumnVector columns_;
+  // PIMPL, to hide flatbuffers
+  class Impl;
+  std::shared_ptr<Impl> impl_;
 };
 
 // ----------------------------------------------------------------------
@@ -208,7 +167,9 @@ class Table {
 
  private:
   std::shared_ptr<Buffer> buffer_;
-  const fbs::CTable* table_;
+
+  // Opaque fbs::CTable
+  const void* table_;
 };
 
 } // namespace metadata
