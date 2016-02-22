@@ -14,11 +14,11 @@
 
 import unittest
 
-from feather.ext import FeatherReader, FeatherWriter, FeatherException
+from feather.ext import FeatherReader, FeatherWriter, FeatherError
 
 
 class TestFeatherReader(unittest.TestCase):
 
     def test_file_not_exist(self):
-        with self.assertRaises(FeatherException):
+        with self.assertRaises(FeatherError):
             FeatherReader('test_invalid_file')

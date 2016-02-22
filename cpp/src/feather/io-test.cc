@@ -58,4 +58,12 @@ TEST(TestInMemoryOutputStream, Basics) {
   ASSERT_EQ(0, memcmp(buffer->data(), &data[0], data.size()));
 }
 
+TEST(LocalFileReader, NonExistentFile) {
+  LocalFileReader reader;
+
+  Status s = reader.Open("foo");
+  ASSERT_FALSE(s.ok());
+  ASSERT_TRUE(s.IsIOError());
+}
+
 } // namespace feather

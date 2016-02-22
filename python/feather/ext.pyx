@@ -26,7 +26,17 @@ from libfeather cimport *
 from feather.compat import frombytes, tobytes
 import six
 
-cdef int
+
+class FeatherError(Exception):
+    pass
+
+
+cdef check_status(const Status& status):
+    if status.ok():
+        return
+
+    cdef string c_message = status.ToString()
+    raise FeatherError(frombytes(c_message))
 
 
 cdef class FeatherWriter:
@@ -46,4 +56,4 @@ cdef class FeatherReader:
         cdef:
             string c_name = tobytes(name)
 
-        self.reader = TableReader.OpenFile(c_name)
+        check_status(TableReader.OpenFile(c_name, &self.reader))

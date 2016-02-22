@@ -35,4 +35,62 @@ const char* Status::CopyState(const char* state) {
   return result;
 }
 
+std::string Status::ToString() const {
+  std::string result(CodeAsString());
+  if (state_ == NULL) {
+    return result;
+  }
+
+  result.append(": ");
+
+  uint32_t length;
+  memcpy(&length, state_, sizeof(length));
+  result.append(state_ + 7, length);
+  int16_t posix = posix_code();
+  if (posix != -1) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), " (error %d)", posix);
+    result.append(buf);
+  }
+  return result;
+}
+
+std::string Status::CodeAsString() const {
+  if (state_ == NULL) {
+    return "OK";
+  }
+
+  const char* type;
+  switch (code()) {
+    case StatusCode::OK:
+      type = "OK";
+      break;
+    case StatusCode::OutOfMemory:
+      type = "Out of memory";
+      break;
+    case StatusCode::KeyError:
+      type = "Key error";
+      break;
+    case StatusCode::Invalid:
+      type = "Invalid";
+      break;
+    case StatusCode::IOError:
+      type = "IO error";
+      break;
+    case StatusCode::NotImplemented:
+      type = "Not implemented";
+      break;
+  }
+  return std::string(type);
+}
+
+int16_t Status::posix_code() const {
+  if (state_ == NULL) {
+    return 0;
+  }
+  int16_t posix_code;
+  memcpy(&posix_code, state_ + 5, sizeof(posix_code));
+  return posix_code;
+}
+
 } // namespace feather

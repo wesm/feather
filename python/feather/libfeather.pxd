@@ -39,6 +39,18 @@ cdef extern from "<memory>" namespace "std" nogil:
 
 cdef extern from "feather/api.h" namespace "feather" nogil:
 
+    cdef Status Status_OK "Status::OK"()
+
+    cdef cppclass Status:
+        Status()
+
+        string ToString()
+
+        c_bool ok()
+        c_bool IsInvalid()
+        c_bool IsOutOfMemory()
+        c_bool IsIOError()
+
     enum PrimitiveType" feather::PrimitiveType::type":
         PrimitiveType_BOOL" feather::PrimitiveType::BOOL"
         PrimitiveType_INT8" feather::PrimitiveType::INT8"
@@ -138,7 +150,7 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         TableReader(const shared_ptr[RandomAccessReader]& source)
 
         @staticmethod
-        unique_ptr[TableReader] OpenFile(const string& abspath)
+        Status OpenFile(const string& abspath, unique_ptr[TableReader]* out)
 
         string GetDescription()
         c_bool HasDescription()
