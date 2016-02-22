@@ -42,10 +42,20 @@ cdef check_status(const Status& status):
 cdef class FeatherWriter:
     cdef:
         unique_ptr[TableWriter] writer
+        int64_t num_rows
 
     def __cinit__(self, object name):
         cdef:
             string c_name = tobytes(name)
+
+    def close(self):
+        pass
+
+    cdef read_pandas_array(self, int i):
+        pass
+
+    cdef write_pandas_array(self, object name, object col):
+        pass
 
 
 cdef class FeatherReader:
@@ -57,3 +67,41 @@ cdef class FeatherReader:
             string c_name = tobytes(name)
 
         check_status(TableReader.OpenFile(c_name, &self.reader))
+
+
+def write_pandas(df, path):
+    '''
+    Write a pandas.DataFrame to Feather format
+    '''
+    cdef FeatherWriter writer = FeatherWriter(path)
+
+    # TODO(wesm): pipeline conversion to Arrow memory layout
+    for name in df.columns:
+        col = df[name]
+        write_column(writer, name, col)
+
+    writer.close()
+
+
+def read_pandas(path, columns=None):
+    """
+    Read a pandas.DataFrame from Feather format
+
+    Returns
+    -------
+    df : pandas.DataFrame
+    """
+    cdef:
+        FeatherReader reader = FeatherReader(path)
+        int i
+
+    import pandas as pd
+
+    # TODO(wesm): pipeline conversion to Arrow memory layout
+    data = {}
+    for i in range(reader.num_columns):
+        name, arr = writer.read_pandas_array(i)
+        data[name] = arr
+
+    # TODO(wesm):
+    return pd.DataFrame(data)
