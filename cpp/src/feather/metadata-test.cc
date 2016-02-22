@@ -18,7 +18,6 @@
 #include <string>
 #include <vector>
 
-#include "feather/exception.h"
 #include "feather/metadata.h"
 
 namespace feather {
@@ -48,7 +47,7 @@ TEST_F(TestTableBuilder, EmptyTable) {
   Finish();
 
   ASSERT_FALSE(table_->has_description());
-  ASSERT_THROW(table_->description(), FeatherException);
+  ASSERT_EQ("", table_->description());
   ASSERT_EQ(1000, table_->num_rows());
   ASSERT_EQ(0, table_->num_columns());
 }

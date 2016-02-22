@@ -17,8 +17,8 @@
 #include <cstdint>
 
 #include "feather/buffer.h"
-#include "feather/exception.h"
 #include "feather/metadata_generated.h"
+#include "feather/status.h"
 
 namespace feather {
 
@@ -134,9 +134,9 @@ class TableBuilder::Impl {
     return fbb_;
   }
 
-  void Finish() {
+  Status Finish() {
     if (finished_) {
-      throw FeatherException("can only call this once");
+      return Status::Invalid("can only call this once");
     }
     flatbuffers::Offset<flatbuffers::String> desc = 0;
     if (!description_.empty()) {
@@ -148,6 +148,8 @@ class TableBuilder::Impl {
         fbb_.CreateVector(columns_));
     fbb_.Finish(root);
     finished_ = true;
+
+    return Status::OK();
   }
 
   void set_description(const std::string& description) {
@@ -383,9 +385,8 @@ bool Table::Open(const std::shared_ptr<Buffer>& buffer) {
 
 std::string Table::description() const {
   if (!has_description()) {
-    throw FeatherException("description is null");
+    return std::string("");
   }
-
   const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
   return table->description()->str();
 }
@@ -430,7 +431,7 @@ std::shared_ptr<Column> Table::GetColumn(size_t i) {
 }
 
 std::shared_ptr<Column> Table::GetColumnNamed(const std::string& name) {
-  FeatherException::NYI("GetColumnNamed");
+  // Not yet implemented
   return std::shared_ptr<Column>(nullptr);
 }
 

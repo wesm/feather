@@ -22,6 +22,26 @@ using std::vector;
 
 namespace feather {
 
+#define ASSERT_RAISES(ENUM, expr)               \
+  do {                                          \
+    Status s = (expr);                          \
+    ASSERT_TRUE(s.Is##ENUM());                  \
+  } while (0)
+
+
+#define ASSERT_OK(expr)                         \
+  do {                                          \
+    Status s = (expr);                          \
+    ASSERT_TRUE(s.ok());                        \
+  } while (0)
+
+
+#define EXPECT_OK(expr)                         \
+  do {                                          \
+    Status s = (expr);                          \
+    EXPECT_TRUE(s.ok());                        \
+  } while (0)
+
 namespace test {
 
 template <typename T>

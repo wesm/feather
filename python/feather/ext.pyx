@@ -26,6 +26,9 @@ from libfeather cimport *
 from feather.compat import frombytes, tobytes
 import six
 
+cdef int
+
+
 cdef class FeatherWriter:
     cdef:
         unique_ptr[TableWriter] writer

@@ -19,6 +19,7 @@
 
 #include "feather/buffer.h"
 #include "feather/io.h"
+#include "feather/status.h"
 #include "feather/test-common.h"
 
 namespace feather {
@@ -32,12 +33,13 @@ TEST(TestBufferReader, Basics) {
   ASSERT_EQ(0, reader->Tell());
   ASSERT_EQ(10, reader->size());
 
-  std::shared_ptr<Buffer> buffer = reader->Read(4);
+  std::shared_ptr<Buffer> buffer;
+  ASSERT_OK(reader->Read(4, &buffer));
   ASSERT_EQ(4, buffer->size());
   ASSERT_EQ(0, memcmp(buffer->data(), &data[0], buffer->size()));
   ASSERT_EQ(4, reader->Tell());
 
-  buffer = reader->Read(10);
+  ASSERT_OK(reader->Read(10, &buffer));
   ASSERT_EQ(6, buffer->size());
   ASSERT_EQ(0, memcmp(buffer->data(), &data[4], buffer->size()));
   ASSERT_EQ(10, reader->Tell());

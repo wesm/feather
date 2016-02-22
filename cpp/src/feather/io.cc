@@ -18,7 +18,7 @@
 #include <cstring>
 #include <sstream>
 
-#include "feather/exception.h"
+#include "feather/status.h"
 
 namespace feather {
 
@@ -28,32 +28,33 @@ namespace feather {
 // ----------------------------------------------------------------------
 // BufferReader
 
-std::shared_ptr<Buffer> RandomAccessReader::ReadAt(int64_t position,
-    int64_t nbytes) {
+Status RandomAccessReader::ReadAt(int64_t position, int64_t nbytes,
+    std::shared_ptr<Buffer>* out) {
   // TODO(wesm): boundchecking
-  Seek(position);
-  return Read(nbytes);
+  RETURN_NOT_OK(Seek(position));
+  return Read(nbytes, out);
 }
 
 int64_t BufferReader::Tell() const {
   return pos_;
 }
 
-void BufferReader::Seek(int64_t pos) {
+Status BufferReader::Seek(int64_t pos) {
   if (pos < 0 || pos >= size_) {
     std::stringstream ss;
     ss << "Cannot seek to " << pos
        << "File is length " << size_;
-    throw FeatherException(ss.str());
+    return Status::IOError(ss.str());
   }
   pos_ = pos;
+  return Status::OK();
 }
 
-std::shared_ptr<Buffer> BufferReader::Read(int64_t nbytes) {
+Status BufferReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
   int64_t bytes_available = std::min(nbytes, size_ - pos_);
-  auto result = std::make_shared<Buffer>(Head(), bytes_available);
+  *out = std::make_shared<Buffer>(Head(), bytes_available);
   pos_ += bytes_available;
-  return result;
+  return Status::OK();
 }
 
 // ----------------------------------------------------------------------
@@ -63,25 +64,25 @@ LocalFileReader::~LocalFileReader() {
   CloseFile();
 }
 
-std::unique_ptr<LocalFileReader> LocalFileReader::Open(const std::string& path) {
-  FILE* file = fopen(path.c_str(), "r");
-  if (file == nullptr) {
-    throw FeatherException("Unable to open file");
+Status LocalFileReader::Open(const std::string& path) {
+  path_ = path;
+  file_ = fopen(path.c_str(), "r");
+  if (file_ == nullptr) {
+    return Status::IOError("Unable to open file");
   }
 
   // Get and set file size
-  fseek(file, 0L, SEEK_END);
-  if (ferror(file)) {
-    throw FeatherException("Unable to seek to end of file");
+  fseek(file_, 0L, SEEK_END);
+  if (ferror(file_)) {
+    return Status::IOError("Unable to seek to end of file");
   }
 
-  int64_t size = ftell(file);
+  size_ = ftell(file_);
+  RETURN_NOT_OK(Seek(0));
 
-  auto result = std::unique_ptr<LocalFileReader>(
-      new LocalFileReader(path, size, file));
+  is_open_ = false;
 
-  result->Seek(0);
-  return result;
+  return Status::OK();
 }
 
 void LocalFileReader::CloseFile() {
@@ -91,26 +92,27 @@ void LocalFileReader::CloseFile() {
   }
 }
 
-void LocalFileReader::Seek(int64_t pos) {
+Status LocalFileReader::Seek(int64_t pos) {
   fseek(file_, pos, SEEK_SET);
+  return Status::OK();
 }
 
 int64_t LocalFileReader::Tell() const {
   return ftell(file_);
 }
 
-std::shared_ptr<Buffer> LocalFileReader::Read(int64_t nbytes) {
+Status LocalFileReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
   auto buffer = std::make_shared<OwnedMutableBuffer>(nbytes);
   int64_t bytes_read = fread(buffer->mutable_data(), 1, nbytes, file_);
   if (bytes_read < nbytes) {
     // Exception if not EOF
     if (!feof(file_)) {
-      throw FeatherException("Error reading bytes from file");
+      return Status::IOError("Error reading bytes from file");
     }
-
     buffer->Resize(bytes_read);
   }
-  return buffer;
+  *out = buffer;
+  return Status::OK();
 }
 
 // ----------------------------------------------------------------------

@@ -71,6 +71,7 @@ void TableWriter::AppendPlain(const std::string& name,
   meta.offset = stream_->Tell();
   meta.length = values.length;
   meta.null_count = values.null_count;
+  meta.total_bytes = 0;
 
   // Write the null bitmask
   if (values.null_count > 0) {
