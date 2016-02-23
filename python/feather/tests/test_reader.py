@@ -22,6 +22,7 @@ import pandas as pd
 
 import feather.ext as feather
 
+
 def guid():
     import uuid
     return uuid.uuid4().get_hex()
@@ -45,8 +46,8 @@ class TestFeatherReader(unittest.TestCase):
 
     def _check_pandas_roundtrip(self, df):
         path = guid()
-        feather.write_pandas(df, path)
-        result = feather.read_pandas(df)
+        feather.write_dataframe(df, path)
+        result = feather.read_dataframe(path)
         assert_frame_equal(result, df)
 
     def test_float_types(self):

@@ -23,12 +23,23 @@ from cython.operator cimport dereference as deref
 
 from libfeather cimport *
 
+import pandas as pd
+import pandas.core.common as pdcom
+
+from numpy cimport ndarray
+cimport numpy as cnp
+import numpy as np
+
 from feather.compat import frombytes, tobytes
 import six
 
+cnp.import_array()
 
 class FeatherError(Exception):
     pass
+
+cdef extern from "interop.h" namespace "feather::py":
+    Status pandas_to_primitive(object ao, PrimitiveArray* out)
 
 
 cdef check_status(const Status& status):
@@ -48,14 +59,24 @@ cdef class FeatherWriter:
         cdef:
             string c_name = tobytes(name)
 
+        check_status(TableWriter.OpenFile(c_name, &self.writer))
+
     def close(self):
         pass
 
-    cdef read_pandas_array(self, int i):
-        pass
+    cdef write_series(self, object name, object col):
+        if pdcom.is_categorical_dtype(col.dtype):
+            raise NotImplementedError(col.dtype)
+        else:
+            self.write_primitive(name, col)
 
-    cdef write_pandas_array(self, object name, object col):
-        pass
+    cdef write_primitive(self, name, col):
+        cdef:
+            string c_name = tobytes(name)
+            PrimitiveArray values
+
+        check_status(pandas_to_primitive(col.values, &values))
+        self.writer.get().AppendPlain(name, values)
 
 
 cdef class FeatherReader:
@@ -68,8 +89,11 @@ cdef class FeatherReader:
 
         check_status(TableReader.OpenFile(c_name, &self.reader))
 
+    cdef read_series(self, int i):
+        pass
 
-def write_pandas(df, path):
+
+def write_dataframe(df, path):
     '''
     Write a pandas.DataFrame to Feather format
     '''
@@ -78,12 +102,12 @@ def write_pandas(df, path):
     # TODO(wesm): pipeline conversion to Arrow memory layout
     for name in df.columns:
         col = df[name]
-        write_column(writer, name, col)
+        writer.write_series(name, col)
 
     writer.close()
 
 
-def read_pandas(path, columns=None):
+def read_dataframe(path, columns=None):
     """
     Read a pandas.DataFrame from Feather format
 
@@ -92,15 +116,13 @@ def read_pandas(path, columns=None):
     df : pandas.DataFrame
     """
     cdef:
-        FeatherReader reader = FeatherReader(path)
         int i
-
-    import pandas as pd
+        FeatherReader reader = FeatherReader(path)
 
     # TODO(wesm): pipeline conversion to Arrow memory layout
     data = {}
     for i in range(reader.num_columns):
-        name, arr = writer.read_pandas_array(i)
+        name, arr = reader.read_series(i)
         data[name] = arr
 
     # TODO(wesm):

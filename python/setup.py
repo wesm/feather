@@ -20,6 +20,8 @@ from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 import Cython
 
+import numpy as np
+
 import sys
 from setuptools import setup
 from distutils.command.clean import clean as _clean
@@ -81,7 +83,7 @@ else:
 
 feather_include_dir = os.path.join(prefix, 'include')
 feather_lib_dir = os.path.join(prefix, 'lib')
-INCLUDE_PATHS = [feather_include_dir]
+INCLUDE_PATHS = [feather_include_dir, 'feather', np.get_include()]
 LIBRARY_DIRS = [feather_lib_dir]
 RT_LIBRARY_DIRS = LIBRARY_DIRS
 

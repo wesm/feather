@@ -26,7 +26,11 @@ namespace feather {
 
 class TableWriter {
  public:
-  explicit TableWriter(const std::shared_ptr<OutputStream>& stream);
+  TableWriter();
+
+  Status Open(const std::shared_ptr<OutputStream>& stream);
+  static Status OpenFile(const std::string& abspath,
+      std::unique_ptr<TableWriter>* out);
 
   void SetDescription(const std::string& desc);
   void SetNumRows(int64_t num_rows);

@@ -18,12 +18,25 @@
 #include <memory>
 
 #include "feather/common.h"
+#include "feather/status.h"
 
 namespace feather {
 
-TableWriter::TableWriter(const std::shared_ptr<OutputStream>& stream) :
-    stream_(stream),
-    initialized_stream_(false) {
+TableWriter::TableWriter() :
+    initialized_stream_(false) {}
+
+Status TableWriter::Open(const std::shared_ptr<OutputStream>& stream) {
+  stream_ = stream;
+  return Status::OK();
+}
+
+Status TableWriter::OpenFile(const std::string& abspath,
+    std::unique_ptr<TableWriter>* out) {
+  auto stream = std::unique_ptr<FileOutputStream>(new FileOutputStream());
+  RETURN_NOT_OK(stream->Open(abspath));
+  std::shared_ptr<OutputStream> sink(stream.release());
+  out->reset(new TableWriter());
+  return (*out)->Open(sink);
 }
 
 void TableWriter::SetDescription(const std::string& desc) {

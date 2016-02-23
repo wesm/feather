@@ -34,7 +34,8 @@ class TestTableWriter : public ::testing::Test {
  public:
   void SetUp() {
     stream_ = std::make_shared<InMemoryOutputStream>(1024);
-    writer_.reset(new TableWriter(stream_));
+    writer_.reset(new TableWriter());
+    ASSERT_OK(writer_->Open(stream_));
   }
 
   void Finish() {

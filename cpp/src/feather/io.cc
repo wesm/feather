@@ -127,11 +127,15 @@ InMemoryOutputStream::InMemoryOutputStream(int64_t initial_capacity) :
   buffer_.reset(new OwnedMutableBuffer(initial_capacity));
 }
 
+Status InMemoryOutputStream::Close() {
+  return Status::OK();
+}
+
 uint8_t* InMemoryOutputStream::Head() {
   return buffer_->mutable_data() + size_;
 }
 
-void InMemoryOutputStream::Write(const uint8_t* data, int64_t length) {
+Status InMemoryOutputStream::Write(const uint8_t* data, int64_t length) {
   if (size_ + length > capacity_) {
     int64_t new_capacity = capacity_ * 2;
     while (new_capacity < size_ + length) {
@@ -142,6 +146,7 @@ void InMemoryOutputStream::Write(const uint8_t* data, int64_t length) {
   }
   memcpy(Head(), data, length);
   size_ += length;
+  return Status::OK();
 }
 
 int64_t InMemoryOutputStream::Tell() const {
@@ -157,6 +162,38 @@ std::shared_ptr<Buffer> InMemoryOutputStream::Finish() {
   size_ = 0;
   capacity_ = 0;
   return result;
+}
+
+// ----------------------------------------------------------------------
+// FileOutputStream
+
+Status FileOutputStream::Open(const std::string& path) {
+  path_ = path;
+  file_ = fopen(path.c_str(), "wb");
+  if (ferror(file_)) {
+    return Status::IOError("unable to open file");
+  }
+  return Status::OK();
+}
+
+Status FileOutputStream::Close() {
+  int code = fclose(file_);
+  if (code != 0) {
+    return Status::IOError("error closing file");
+  }
+  return Status::OK();
+}
+
+int64_t FileOutputStream::Tell() const {
+  return ftell(file_);
+}
+
+Status FileOutputStream::Write(const uint8_t* data, int64_t length) {
+  fwrite(data, 1, length, file_);
+  if (ferror(file_)) {
+    return Status::IOError("error writing bytes to file");
+  }
+  return Status::OK();
 }
 
 } // namespace feather

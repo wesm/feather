@@ -125,11 +125,11 @@ class MemoryMapReader : public BufferReader {
 class OutputStream {
  public:
   // Close the output stream
-  virtual void Close() = 0;
+  virtual Status Close() = 0;
 
   virtual int64_t Tell() const = 0;
 
-  virtual void Write(const uint8_t* data, int64_t length) = 0;
+  virtual Status Write(const uint8_t* data, int64_t length) = 0;
 };
 
 
@@ -138,11 +138,11 @@ class InMemoryOutputStream : public OutputStream {
  public:
   explicit InMemoryOutputStream(int64_t initial_capacity);
 
-  virtual void Close() {}
+  virtual Status Close();
 
   virtual int64_t Tell() const;
 
-  virtual void Write(const uint8_t* data, int64_t length);
+  virtual Status Write(const uint8_t* data, int64_t length);
 
   // Hand off the buffered data to a new owner
   std::shared_ptr<Buffer> Finish();
@@ -153,6 +153,28 @@ class InMemoryOutputStream : public OutputStream {
   std::shared_ptr<OwnedMutableBuffer> buffer_;
   int64_t size_;
   int64_t capacity_;
+};
+
+class FileOutputStream : public OutputStream {
+ public:
+  FileOutputStream():
+      file_(nullptr), is_open_(false) {}
+
+  Status Open(const std::string& path);
+
+  virtual Status Close();
+
+  virtual int64_t Tell() const;
+
+  virtual Status Write(const uint8_t* data, int64_t length);
+
+  // Hand off the buffered data to a new owner
+  std::shared_ptr<Buffer> Finish();
+
+ private:
+  std::string path_;
+  FILE* file_;
+  bool is_open_;
 };
 
 } // namespace feather

@@ -84,6 +84,8 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         const uint8_t* nulls
         const uint8_t* values
 
+        vector[shared_ptr[Buffer]] buffers
+
         # For UTF8 and BINARY, not used otherwise
         const int32_t* offsets
         c_bool Equals(const PrimitiveArray& other)
