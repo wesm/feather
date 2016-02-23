@@ -40,7 +40,7 @@ class TestTableWriter : public ::testing::Test {
 
   void Finish() {
     // Write table footer
-    writer_->Finalize();
+    ASSERT_OK(writer_->Finalize());
 
     output_ = stream_->Finish();
 
@@ -117,8 +117,8 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   PrimitiveArray nn_array = MakePrimitive(PrimitiveType::INT32, num_values,
       0, nullptr, &values_buffer[0], nullptr);
 
-  writer_->AppendPlain("f0", array);
-  writer_->AppendPlain("f1", nn_array);
+  ASSERT_OK(writer_->AppendPlain("f0", array));
+  ASSERT_OK(writer_->AppendPlain("f1", nn_array));
   Finish();
 
   std::shared_ptr<Column> col;
@@ -155,8 +155,8 @@ TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
   PrimitiveArray nn_array = MakePrimitive(PrimitiveType::UTF8, num_values,
       0, nullptr, &values_buffer[0], &offsets_buffer[0]);
 
-  writer_->AppendPlain("f0", array);
-  writer_->AppendPlain("f1", nn_array);
+  ASSERT_OK(writer_->AppendPlain("f0", array));
+  ASSERT_OK(writer_->AppendPlain("f1", nn_array));
   Finish();
 
   std::shared_ptr<Column> col;

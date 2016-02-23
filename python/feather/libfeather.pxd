@@ -133,13 +133,16 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         BufferReader(const shared_ptr[Buffer]& buffer)
 
     cdef cppclass TableWriter:
-        TableWriter(const shared_ptr[OutputStream]& stream)
+        TableWriter()
+
+        @staticmethod
+        Status OpenFile(const string& abspath, unique_ptr[TableWriter]* out)
 
         void SetDescription(const string& desc)
         void SetNumRows(int64_t num_rows)
 
-        void AppendPlain(const string& name, const PrimitiveArray& values)
-        void Finalize()
+        Status AppendPlain(const string& name, const PrimitiveArray& values)
+        Status Finalize()
 
     cdef cppclass Column:
         const PrimitiveArray& values()

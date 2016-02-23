@@ -62,7 +62,7 @@ cdef class FeatherWriter:
         check_status(TableWriter.OpenFile(c_name, &self.writer))
 
     def close(self):
-        pass
+        check_status(self.writer.get().Finalize())
 
     cdef write_series(self, object name, object col):
         if pdcom.is_categorical_dtype(col.dtype):
@@ -76,7 +76,7 @@ cdef class FeatherWriter:
             PrimitiveArray values
 
         check_status(pandas_to_primitive(col.values, &values))
-        self.writer.get().AppendPlain(name, values)
+        check_status(self.writer.get().AppendPlain(name, values))
 
 
 cdef class FeatherReader:
@@ -88,6 +88,11 @@ cdef class FeatherReader:
             string c_name = tobytes(name)
 
         check_status(TableReader.OpenFile(c_name, &self.reader))
+
+    property num_columns:
+
+        def __get__(self):
+            return self.reader.get().num_columns()
 
     cdef read_series(self, int i):
         pass

@@ -47,34 +47,38 @@ void TableWriter::SetNumRows(int64_t num_rows) {
   metadata_.SetNumRows(num_rows);
 }
 
-void TableWriter::Init() {
-  stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
+Status TableWriter::Init() {
+  return stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
       strlen(FEATHER_MAGIC_BYTES));
 }
 
-void TableWriter::Finalize() {
+Status TableWriter::Finalize() {
   if (!initialized_stream_) {
-    Init();
+    RETURN_NOT_OK(Init());
   }
   metadata_.Finish();
 
   auto buffer = metadata_.GetBuffer();
 
   // Writer metadata
-  stream_->Write(buffer->data(), buffer->size());
+  RETURN_NOT_OK(stream_->Write(buffer->data(), buffer->size()));
 
   uint32_t buffer_size = buffer->size();
 
   // Footer: metadata length, magic bytes
-  stream_->Write(reinterpret_cast<const uint8_t*>(&buffer_size), sizeof(uint32_t));
-  stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
-      strlen(FEATHER_MAGIC_BYTES));
+  RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(&buffer_size),
+          sizeof(uint32_t)));
+  RETURN_NOT_OK(stream_->Write(
+          reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
+          strlen(FEATHER_MAGIC_BYTES)));
+
+  return stream_->Close();
 }
 
-void TableWriter::AppendPlain(const std::string& name,
+Status TableWriter::AppendPlain(const std::string& name,
     const PrimitiveArray& values) {
   if (!initialized_stream_) {
-    Init();
+    RETURN_NOT_OK(Init());
   }
 
   // Prepare metadata payload
@@ -93,7 +97,7 @@ void TableWriter::AppendPlain(const std::string& name,
     size_t null_bytes = util::ceil_byte(values.length);
 
     meta.total_bytes += null_bytes;
-    stream_->Write(values.nulls, null_bytes);
+    RETURN_NOT_OK(stream_->Write(values.nulls, null_bytes));
   }
 
   size_t value_byte_size = ByteSize(values.type);
@@ -105,18 +109,20 @@ void TableWriter::AppendPlain(const std::string& name,
     values_bytes = values.offsets[values.length] * value_byte_size + offset_bytes;
 
     // Write the variable-length offsets
-    stream_->Write(reinterpret_cast<const uint8_t*>(values.offsets),
-        offset_bytes);
+    RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(values.offsets),
+            offset_bytes));
   } else {
     values_bytes = values.length * value_byte_size;
   }
-  stream_->Write(values.values, values_bytes);
+  RETURN_NOT_OK(stream_->Write(values.values, values_bytes));
   meta.total_bytes += values_bytes;
 
   // Append the metadata
   auto meta_builder = metadata_.AddColumn(name);
   meta_builder->SetValues(meta);
   meta_builder->Finish();
+
+  return Status::OK();
 }
 
 } // namespace feather

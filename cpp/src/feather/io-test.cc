@@ -50,9 +50,9 @@ TEST(TestInMemoryOutputStream, Basics) {
 
   std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 
-  stream->Write(&data[0], 4);
+  ASSERT_OK(stream->Write(&data[0], 4));
   ASSERT_EQ(4, stream->Tell());
-  stream->Write(&data[4], data.size() - 4);
+  ASSERT_OK(stream->Write(&data[4], data.size() - 4));
 
   std::shared_ptr<Buffer> buffer = stream->Finish();
   ASSERT_EQ(0, memcmp(buffer->data(), &data[0], data.size()));

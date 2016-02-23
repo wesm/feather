@@ -46,6 +46,7 @@ class TestFeatherReader(unittest.TestCase):
 
     def _check_pandas_roundtrip(self, df):
         path = guid()
+        self.test_files.append(path)
         feather.write_dataframe(df, path)
         result = feather.read_dataframe(path)
         assert_frame_equal(result, df)

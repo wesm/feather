@@ -124,6 +124,7 @@ class MemoryMapReader : public BufferReader {
 // Abstract output stream
 class OutputStream {
  public:
+  virtual ~OutputStream() {}
   // Close the output stream
   virtual Status Close() = 0;
 
