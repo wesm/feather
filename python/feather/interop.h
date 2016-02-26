@@ -105,7 +105,7 @@ class FeatherSerializer {
   }
 
   int stride() const {
-    return PyArray_STRIDES(arr_);
+    return PyArray_STRIDES(arr_)[0];
   }
 
   Status ConvertValues();
