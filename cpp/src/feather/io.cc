@@ -14,6 +14,7 @@
 
 #include "feather/io.h"
 
+#include <sys/mman.h>
 #include <algorithm>
 #include <cstring>
 #include <sstream>
@@ -80,7 +81,7 @@ Status LocalFileReader::Open(const std::string& path) {
   size_ = ftell(file_);
   RETURN_NOT_OK(Seek(0));
 
-  is_open_ = false;
+  is_open_ = true;
 
   return Status::OK();
 }
@@ -113,6 +114,47 @@ Status LocalFileReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
     buffer->Resize(bytes_read);
   }
   *out = buffer;
+  return Status::OK();
+}
+
+// ----------------------------------------------------------------------
+// MemoryMapReader methods
+
+MemoryMapReader::~MemoryMapReader() {
+  CloseFile();
+}
+
+Status MemoryMapReader::Open(const std::string& path) {
+  RETURN_NOT_OK(LocalFileReader::Open(path));
+  data_ = reinterpret_cast<uint8_t*>(mmap(nullptr, size_, PROT_READ,
+          MAP_SHARED, fileno(file_), 0));
+  if (data_ == nullptr) {
+    return Status::IOError("Memory mapping file failed");
+  }
+  pos_  = 0;
+  return Status::OK();
+}
+
+void MemoryMapReader::CloseFile() {
+  if (data_ != nullptr) {
+    munmap(data_, size_);
+  }
+
+  LocalFileReader::CloseFile();
+}
+
+Status MemoryMapReader::Seek(int64_t pos) {
+  pos_ = pos;
+  return Status::OK();
+}
+
+int64_t MemoryMapReader::Tell() const {
+  return pos_;
+}
+
+Status MemoryMapReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
+  nbytes = std::min(nbytes, size_ - pos_);
+  *out = std::make_shared<Buffer>(data_ + pos_, nbytes);
   return Status::OK();
 }
 

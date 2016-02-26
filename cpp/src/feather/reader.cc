@@ -67,7 +67,7 @@ Status TableReader::Open(const std::shared_ptr<RandomAccessReader>& source) {
 
 Status TableReader::OpenFile(const std::string& abspath,
     std::unique_ptr<TableReader>* out) {
-  auto reader = std::unique_ptr<LocalFileReader>(new LocalFileReader());
+  auto reader = std::unique_ptr<MemoryMapReader>(new MemoryMapReader());
   RETURN_NOT_OK(reader->Open(abspath));
   std::shared_ptr<RandomAccessReader> source(reader.release());
   out->reset(new TableReader());

@@ -78,10 +78,34 @@ class LocalFileReader : public RandomAccessReader {
   bool is_open() const { return is_open_;}
   const std::string& path() const { return path_;}
 
- private:
+ protected:
   std::string path_;
   FILE* file_;
   bool is_open_;
+};
+
+class MemoryMapReader : public LocalFileReader {
+ public:
+  MemoryMapReader() :
+      LocalFileReader(),
+      data_(nullptr),
+      pos_(0) {}
+
+  virtual ~MemoryMapReader();
+
+  Status Open(const std::string& path);
+  void CloseFile();
+
+  virtual int64_t Tell() const;
+  virtual Status Seek(int64_t pos);
+  virtual Status Read(int64_t nbytes, std::shared_ptr<Buffer>* out);
+
+  bool is_open() const { return is_open_;}
+  const std::string& path() const { return path_;}
+
+ private:
+  uint8_t* data_;
+  int64_t pos_;
 };
 
 // ----------------------------------------------------------------------
@@ -108,14 +132,6 @@ class BufferReader : public RandomAccessReader {
   std::shared_ptr<Buffer> buffer_;
   const uint8_t* data_;
   int64_t pos_;
-};
-
-// A file reader that uses a memory-mapped file as its internal buffer rather
-// than issuing operating system file commands
-class MemoryMapReader : public BufferReader {
-  MemoryMapReader();
-
-  void Open(const std::string* path);
 };
 
 // ----------------------------------------------------------------------
