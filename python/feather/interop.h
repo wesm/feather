@@ -18,6 +18,7 @@
 
 #include "feather/api.h"
 
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <sstream>
@@ -40,53 +41,25 @@ template <>
 struct npy_traits<NPY_BOOL> {
 };
 
-template <>
-struct npy_traits<NPY_INT8> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::INT8;
-  static constexpr bool supports_nulls = false;
-};
+#define NPY_INT_DECL(TYPE, T)                                           \
+  template <>                                                           \
+  struct npy_traits<NPY_##TYPE> {                                       \
+    typedef T value_type;                                               \
+    static constexpr PrimitiveType::type feather_type = PrimitiveType::TYPE; \
+    static constexpr bool supports_nulls = false;                       \
+    static inline bool isnull(T v) {                                    \
+      return false;                                                     \
+    }                                                                   \
+  };
 
-template <>
-struct npy_traits<NPY_INT16> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::INT16;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct npy_traits<NPY_INT32> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::INT32;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct npy_traits<NPY_INT64> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::INT64;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct npy_traits<NPY_UINT8> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::UINT8;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct npy_traits<NPY_UINT16> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::UINT16;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct npy_traits<NPY_UINT32> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::UINT32;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct npy_traits<NPY_UINT64> {
-  static constexpr PrimitiveType::type feather_type = PrimitiveType::UINT64;
-  static constexpr bool supports_nulls = false;
-};
+NPY_INT_DECL(INT8, int8_t);
+NPY_INT_DECL(INT16, int16_t);
+NPY_INT_DECL(INT32, int32_t);
+NPY_INT_DECL(INT64, int64_t);
+NPY_INT_DECL(UINT8, uint8_t);
+NPY_INT_DECL(UINT16, uint16_t);
+NPY_INT_DECL(UINT32, uint32_t);
+NPY_INT_DECL(UINT64, uint64_t);
 
 template <>
 struct npy_traits<NPY_FLOAT32> {
@@ -158,15 +131,25 @@ inline Status FeatherSerializer<TYPE>::ConvertValues() {
 
   out_->values = static_cast<const uint8_t*>(PyArray_DATA(arr_));
   if (traits::supports_nulls) {
-    // int null_bytes = util::ceil_byte(out_->length);
-    // auto buffer = std::make_shared<OwnedMutableBuffer>(null_bytes);
+    int null_bytes = util::ceil_byte(out_->length);
+    auto buffer = std::make_shared<OwnedMutableBuffer>();
+    buffer->Resize(null_bytes);
+    uint8_t* bitmap = buffer->mutable_data();
+    int64_t null_count = 0;
 
-    // // TODO
+    // TODO(wesm): striding
+    for (int i = 0; i < out_->length; ++i) {
+      if (traits::isnull(out_->values[i])) {
+        ++null_count;
+        util::set_bit(bitmap, i);
+      }
+    }
 
-    // out_->nulls = buffer->data();
-    // out_->buffers.push_back(buffer);
-    out_->null_count = 0;
+    out_->buffers.push_back(buffer);
+    out_->nulls = buffer->data();
+    out_->null_count = null_count;
   } else {
+    out_->nulls = nullptr;
     out_->null_count = 0;
   }
   return Status::OK();
@@ -201,8 +184,8 @@ Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
     TO_FEATHER_CASE(UINT16);
     TO_FEATHER_CASE(UINT32);
     TO_FEATHER_CASE(UINT64);
-    TO_FEATHER_CASE(FLOAT);
-    TO_FEATHER_CASE(DOUBLE);
+    TO_FEATHER_CASE(FLOAT32);
+    TO_FEATHER_CASE(FLOAT64);
     // TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
@@ -222,66 +205,50 @@ struct feather_traits {
 
 template <>
 struct feather_traits<PrimitiveType::BOOL> {
+  static constexpr int npy_type = NPY_BOOL;
+  static constexpr bool supports_nulls = false;
+  static constexpr bool is_integer = false;
+  static constexpr bool is_floating = false;
 };
 
-template <>
-struct feather_traits<PrimitiveType::INT8> {
-  static constexpr int npy_type = NPY_INT8;
-  static constexpr bool supports_nulls = false;
-};
+#define INT_DECL(TYPE)                                      \
+  template <>                                               \
+  struct feather_traits<PrimitiveType::TYPE> {              \
+    static constexpr int npy_type = NPY_##TYPE;             \
+    static constexpr bool supports_nulls = false;           \
+    static constexpr double na_value = NAN;                 \
+    static constexpr bool is_integer = true;                \
+    static constexpr bool is_floating = false;              \
+    typedef typename npy_traits<NPY_##TYPE>::value_type T;  \
+  };
 
-template <>
-struct feather_traits<PrimitiveType::INT16> {
-  static constexpr int npy_type = NPY_INT16;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct feather_traits<PrimitiveType::INT32> {
-  static constexpr int npy_type = NPY_INT32;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct feather_traits<PrimitiveType::INT64> {
-  static constexpr int npy_type = NPY_INT64;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct feather_traits<PrimitiveType::UINT8> {
-  static constexpr int npy_type = NPY_UINT8;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct feather_traits<PrimitiveType::UINT16> {
-  static constexpr int npy_type = NPY_UINT16;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct feather_traits<PrimitiveType::UINT32> {
-  static constexpr int npy_type = NPY_UINT32;
-  static constexpr bool supports_nulls = false;
-};
-
-template <>
-struct feather_traits<PrimitiveType::UINT64> {
-  static constexpr int npy_type = NPY_UINT64;
-  static constexpr bool supports_nulls = false;
-};
+INT_DECL(INT8);
+INT_DECL(INT16);
+INT_DECL(INT32);
+INT_DECL(INT64);
+INT_DECL(UINT8);
+INT_DECL(UINT16);
+INT_DECL(UINT32);
+INT_DECL(UINT64);
 
 template <>
 struct feather_traits<PrimitiveType::FLOAT> {
   static constexpr int npy_type = NPY_FLOAT32;
   static constexpr bool supports_nulls = true;
+  static constexpr float na_value = NAN;
+  static constexpr bool is_integer = false;
+  static constexpr bool is_floating = true;
+  typedef typename npy_traits<NPY_FLOAT32>::value_type T;
 };
 
 template <>
 struct feather_traits<PrimitiveType::DOUBLE> {
   static constexpr int npy_type = NPY_FLOAT64;
   static constexpr bool supports_nulls = true;
+  static constexpr double na_value = NAN;
+  static constexpr bool is_integer = false;
+  static constexpr bool is_floating = true;
+  typedef typename npy_traits<NPY_FLOAT64>::value_type T;
 };
 
 
@@ -292,28 +259,56 @@ class FeatherDeserializer {
       arr_(arr) {}
 
   PyObject* Convert() {
-    npy_intp dims[1] = {arr_->length};
-    out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
-
-    if (out_ == NULL) {
-      // Error occurred, trust that SimpleNew set the error state
-      return NULL;
-    }
-    ConvertValues();
+    ConvertValues<TYPE>();
     return out_;
   }
 
-  void ConvertValues();
+  template <int T2>
+  inline typename std::enable_if<feather_traits<T2>::is_floating, void>::type
+  ConvertValues() {
+    npy_intp dims[1] = {arr_->length};
+    out_ = PyArray_SimpleNew(1, dims, feather_traits<T2>::npy_type);
+
+    if (out_ == NULL) {
+      // Error occurred, trust that SimpleNew set the error state
+      return;
+    }
+    memcpy(PyArray_DATA(out_), arr_->values, arr_->length * ByteSize(arr_->type));
+
+    if (arr_->null_count > 0) {
+
+    }
+  }
+
+  // Integer specialization
+  template <int T2>
+  inline typename std::enable_if<feather_traits<T2>::is_integer, void>::type
+  ConvertValues() {
+    typedef typename feather_traits<T2>::T T;
+
+    npy_intp dims[1] = {arr_->length};
+    if (arr_->null_count > 0) {
+      out_ = PyArray_SimpleNew(1, dims, NPY_FLOAT64);
+      if (out_ == NULL)  return;
+
+      // Upcast to double, set NaN as appropriate
+      double* out_values = reinterpret_cast<double*>(PyArray_DATA(out_));
+      const T* in_values = reinterpret_cast<const T*>(arr_->values);
+      for (int i = 0; i < arr_->length; ++i) {
+        out_values[i] = util::get_bit(arr_->nulls, i) ? NAN : in_values[i];
+      }
+    } else {
+      out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
+      if (out_ == NULL)  return;
+      memcpy(PyArray_DATA(out_), arr_->values, arr_->length * ByteSize(arr_->type));
+    }
+  }
 
  private:
   const PrimitiveArray* arr_;
   PyObject* out_;
 };
 
-template <int TYPE>
-inline void FeatherDeserializer<TYPE>::ConvertValues() {
-  memcpy(PyArray_DATA(out_), arr_->values, arr_->length * ByteSize(arr_->type));
-}
 
 #define FROM_FEATHER_CASE(TYPE)                                 \
   case PrimitiveType::TYPE:                                     \

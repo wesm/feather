@@ -96,8 +96,8 @@ Status TableWriter::AppendPlain(const std::string& name,
     // byte boundary, and we write this much data into the stream
     size_t null_bytes = util::ceil_byte(values.length);
 
-    meta.total_bytes += null_bytes;
     RETURN_NOT_OK(stream_->Write(values.nulls, null_bytes));
+    meta.total_bytes += null_bytes;
   }
 
   size_t value_byte_size = ByteSize(values.type);

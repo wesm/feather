@@ -96,7 +96,7 @@ class MutableBuffer : public Buffer {
 // garbage-collected
 class OwnedMutableBuffer : public MutableBuffer {
  public:
-  explicit OwnedMutableBuffer(int64_t size);
+  OwnedMutableBuffer();
   void Resize(int64_t new_size);
 
  private:

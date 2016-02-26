@@ -41,7 +41,7 @@ class TestFeatherReader(unittest.TestCase):
             feather.FeatherReader('test_invalid_file')
 
     def _check_pandas_roundtrip(self, df):
-        path = guid()
+        path = 'feather_{}'.format(guid())
         self.test_files.append(path)
         feather.write_dataframe(df, path)
         if not os.path.exists(path):
@@ -56,6 +56,19 @@ class TestFeatherReader(unittest.TestCase):
 
         for dtype in numpy_dtypes:
             values = np.random.randn(num_values)
+            data[dtype] = values.astype(dtype)
+
+        df = pd.DataFrame(data)
+        self._check_pandas_roundtrip(df)
+
+    def test_float_nulls(self):
+        data = {}
+        numpy_dtypes = ['f4', 'f8']
+        num_values = 100
+
+        for dtype in numpy_dtypes:
+            values = np.random.randn(num_values)
+            values[::5] = np.nan
             data[dtype] = values.astype(dtype)
 
         df = pd.DataFrame(data)
@@ -78,4 +91,13 @@ class TestFeatherReader(unittest.TestCase):
         self._check_pandas_roundtrip(df)
 
     def test_integer_with_nulls(self):
+        # pandas requires upcast to float dtype
+        num_values = 100
+        null_mask = np.random.randint(0, 10, size=num_values) < 3
+
+    def test_boolean_no_nulls(self):
+        pass
+
+    def test_boolean_nulls(self):
+        # pandas requires upcast to object dtype
         pass

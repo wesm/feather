@@ -102,7 +102,8 @@ int64_t LocalFileReader::Tell() const {
 }
 
 Status LocalFileReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
-  auto buffer = std::make_shared<OwnedMutableBuffer>(nbytes);
+  auto buffer = std::make_shared<OwnedMutableBuffer>();
+  buffer->Resize(nbytes);
   int64_t bytes_read = fread(buffer->mutable_data(), 1, nbytes, file_);
   if (bytes_read < nbytes) {
     // Exception if not EOF
@@ -124,7 +125,8 @@ InMemoryOutputStream::InMemoryOutputStream(int64_t initial_capacity) :
   if (initial_capacity == 0) {
     initial_capacity = 1024;
   }
-  buffer_.reset(new OwnedMutableBuffer(initial_capacity));
+  buffer_.reset(new OwnedMutableBuffer());
+  buffer_->Resize(initial_capacity);
 }
 
 Status InMemoryOutputStream::Close() {
