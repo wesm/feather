@@ -38,8 +38,16 @@ class Column {
     return values_;
   }
 
+  ColumnType::type type() const {
+    return type_;
+  }
+
   const std::shared_ptr<metadata::Column>& metadata() const {
     return metadata_;
+  }
+
+  std::string name() const {
+    return metadata_->name();
   }
 
  protected:

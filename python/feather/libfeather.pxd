@@ -69,6 +69,7 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
 
     enum ColumnType" feather::ColumnType::type":
         ColumnType_PRIMITIVE" feather::ColumnType::PRIMITIVE"
+        ColumnType_CATEGORY" feather::ColumnType::CATEGORY"
 
     enum Encoding" feather::Encoding::type":
         Encoding_PLAIN" feather::Encoding::PLAIN"
@@ -146,7 +147,8 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
 
     cdef cppclass Column:
         const PrimitiveArray& values()
-        const string& name()
+        ColumnType type()
+        string name()
 
     cdef cppclass CategoryColumn(Column):
         const PrimitiveArray& levels()
@@ -163,4 +165,4 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         int64_t num_rows()
         int64_t num_columns()
 
-        shared_ptr[Column] GetColumn(int i)
+        Status GetColumn(int i, shared_ptr[Column]* out)

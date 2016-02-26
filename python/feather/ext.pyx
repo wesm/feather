@@ -40,6 +40,7 @@ class FeatherError(Exception):
 
 cdef extern from "interop.h" namespace "feather::py":
     Status pandas_to_primitive(object ao, PrimitiveArray* out)
+    object primitive_to_pandas(const PrimitiveArray& arr)
 
 
 cdef check_status(const Status& status):
@@ -95,7 +96,32 @@ cdef class FeatherReader:
             return self.reader.get().num_columns()
 
     cdef read_series(self, int i):
-        pass
+        cdef:
+            shared_ptr[Column] col
+            Column* cp
+            CategoryColumn* cat
+
+        if i < 0 or i >= self.num_columns:
+            raise IndexError(i)
+
+        check_status(self.reader.get().GetColumn(i, &col))
+
+        cp = col.get()
+
+        if cp.type() == ColumnType_PRIMITIVE:
+            values = primitive_to_pandas(cp.values())
+            return frombytes(cp.name()), values
+        elif cp.type() == ColumnType_PRIMITIVE:
+            cat = <CategoryColumn*>(cp)
+
+            values = primitive_to_pandas(cat.values())
+            levels = primitive_to_pandas(cat.levels())
+        else:
+            raise NotImplementedError(cp.type())
+
+
+cdef category_to_pandas(CategoryColumn* col):
+    pass
 
 
 def write_dataframe(df, path):

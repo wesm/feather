@@ -29,13 +29,8 @@ namespace feather {
 
 namespace py {
 
-#define DTYPE_CASE(TYPE)                                    \
-  case NPY_##TYPE:                                          \
-    {                                                       \
-      FeatherSerializer<NPY_##TYPE> converter(arr, out);    \
-      RETURN_NOT_OK(converter.Convert());                   \
-    }                                                       \
-    break;
+// ----------------------------------------------------------------------
+// Serialization
 
 template <int TYPE>
 struct npy_traits {
@@ -123,7 +118,6 @@ struct npy_traits<NPY_OBJECT> {
   static constexpr bool supports_nulls = true;
 };
 
-
 template <int TYPE>
 class FeatherSerializer {
  public:
@@ -171,6 +165,9 @@ inline Status FeatherSerializer<TYPE>::ConvertValues() {
 
     out_->nulls = buffer->data();
     out_->buffers.push_back(buffer);
+    out_->null_count = 0;
+  } else {
+    out_->null_count = 0;
   }
   return Status::OK();
 }
@@ -180,6 +177,14 @@ inline Status FeatherSerializer<NPY_OBJECT>::ConvertValues() {
   return Status::Invalid("NYI");
 }
 
+#define TO_FEATHER_CASE(TYPE)                               \
+  case NPY_##TYPE:                                          \
+    {                                                       \
+      FeatherSerializer<NPY_##TYPE> converter(arr, out);    \
+      RETURN_NOT_OK(converter.Convert());                   \
+    }                                                       \
+    break;
+
 Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
   PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(ao);
 
@@ -188,17 +193,17 @@ Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
   }
 
   switch(PyArray_DESCR(arr)->type_num) {
-    DTYPE_CASE(INT8);
-    DTYPE_CASE(INT16);
-    DTYPE_CASE(INT32);
-    DTYPE_CASE(INT64);
-    DTYPE_CASE(UINT8);
-    DTYPE_CASE(UINT16);
-    DTYPE_CASE(UINT32);
-    DTYPE_CASE(UINT64);
-    // DTYPE_CASE(FLOAT);
-    // DTYPE_CASE(DOUBLE);
-    // DTYPE_CASE(OBJECT);
+    TO_FEATHER_CASE(INT8);
+    TO_FEATHER_CASE(INT16);
+    TO_FEATHER_CASE(INT32);
+    TO_FEATHER_CASE(INT64);
+    TO_FEATHER_CASE(UINT8);
+    TO_FEATHER_CASE(UINT16);
+    TO_FEATHER_CASE(UINT32);
+    TO_FEATHER_CASE(UINT64);
+    // TO_FEATHER_CASE(FLOAT);
+    // TO_FEATHER_CASE(DOUBLE);
+    // TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
       ss << "unsupported type " << PyArray_DESCR(arr)->type_num
@@ -206,6 +211,125 @@ Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
       return Status::Invalid(ss.str());
   }
   return Status::OK();
+}
+
+// ----------------------------------------------------------------------
+// Deserialization
+
+template <int TYPE>
+struct feather_traits {
+};
+
+template <>
+struct feather_traits<PrimitiveType::BOOL> {
+};
+
+template <>
+struct feather_traits<PrimitiveType::INT8> {
+  static constexpr int npy_type = NPY_INT8;
+  static constexpr bool supports_nulls = false;
+};
+
+template <>
+struct feather_traits<PrimitiveType::INT16> {
+  static constexpr int npy_type = NPY_INT16;
+  static constexpr bool supports_nulls = false;
+};
+
+template <>
+struct feather_traits<PrimitiveType::INT32> {
+  static constexpr int npy_type = NPY_INT32;
+  static constexpr bool supports_nulls = false;
+};
+
+template <>
+struct feather_traits<PrimitiveType::INT64> {
+  static constexpr int npy_type = NPY_INT64;
+  static constexpr bool supports_nulls = false;
+};
+
+template <>
+struct feather_traits<PrimitiveType::UINT8> {
+  static constexpr int npy_type = NPY_UINT8;
+  static constexpr bool supports_nulls = false;
+};
+
+template <>
+struct feather_traits<PrimitiveType::UINT16> {
+  static constexpr int npy_type = NPY_UINT16;
+  static constexpr bool supports_nulls = false;
+};
+
+template <>
+struct feather_traits<PrimitiveType::UINT32> {
+  static constexpr int npy_type = NPY_UINT32;
+  static constexpr bool supports_nulls = false;
+};
+
+template <>
+struct feather_traits<PrimitiveType::UINT64> {
+  static constexpr int npy_type = NPY_UINT64;
+  static constexpr bool supports_nulls = false;
+};
+
+
+template <int TYPE>
+class FeatherDeserializer {
+ public:
+  FeatherDeserializer(const PrimitiveArray* arr) :
+      arr_(arr) {}
+
+  PyObject* Convert() {
+    npy_intp dims[1] = {arr_->length};
+    out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
+
+    if (out_ == NULL) {
+      // Error occurred, trust that SimpleNew set the error state
+      return NULL;
+    }
+    ConvertValues();
+    return out_;
+  }
+
+  void ConvertValues();
+
+ private:
+  const PrimitiveArray* arr_;
+  PyObject* out_;
+};
+
+template <int TYPE>
+inline void FeatherDeserializer<TYPE>::ConvertValues() {
+  memcpy(PyArray_DATA(out_), arr_->values, arr_->length * ByteSize(arr_->type));
+}
+
+#define FROM_FEATHER_CASE(TYPE)                                 \
+  case PrimitiveType::TYPE:                                     \
+    {                                                           \
+      FeatherDeserializer<PrimitiveType::TYPE> converter(&arr); \
+      return converter.Convert();                               \
+    }                                                           \
+    break;
+
+PyObject* primitive_to_pandas(const PrimitiveArray& arr) {
+  switch(arr.type) {
+    FROM_FEATHER_CASE(INT8);
+    FROM_FEATHER_CASE(INT16);
+    FROM_FEATHER_CASE(INT32);
+    FROM_FEATHER_CASE(INT64);
+    FROM_FEATHER_CASE(UINT8);
+    FROM_FEATHER_CASE(UINT16);
+    FROM_FEATHER_CASE(UINT32);
+    FROM_FEATHER_CASE(UINT64);
+    // FROM_FEATHER_CASE(FLOAT);
+    // FROM_FEATHER_CASE(DOUBLE);
+    // FROM_FEATHER_CASE(OBJECT);
+    default:
+      break;
+  }
+  PyErr_SetString(PyExc_NotImplementedError,
+      "Feather type reading not implemented");
+  return NULL;
 }
 
 } // namespace py
