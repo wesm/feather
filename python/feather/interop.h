@@ -89,7 +89,7 @@ struct npy_traits<NPY_UINT64> {
 };
 
 template <>
-struct npy_traits<NPY_FLOAT> {
+struct npy_traits<NPY_FLOAT32> {
   typedef float value_type;
 
   static constexpr PrimitiveType::type feather_type = PrimitiveType::FLOAT;
@@ -101,11 +101,11 @@ struct npy_traits<NPY_FLOAT> {
 };
 
 template <>
-struct npy_traits<NPY_DOUBLE> {
+struct npy_traits<NPY_FLOAT64> {
   typedef double value_type;
 
   static constexpr PrimitiveType::type feather_type = PrimitiveType::DOUBLE;
-  static constexpr bool supports_nulls = false;
+  static constexpr bool supports_nulls = true;
 
   static inline bool isnull(double v) {
     return v != v;
@@ -158,13 +158,13 @@ inline Status FeatherSerializer<TYPE>::ConvertValues() {
 
   out_->values = static_cast<const uint8_t*>(PyArray_DATA(arr_));
   if (traits::supports_nulls) {
-    int null_bytes = util::ceil_byte(out_->length);
-    auto buffer = std::make_shared<OwnedMutableBuffer>(null_bytes);
+    // int null_bytes = util::ceil_byte(out_->length);
+    // auto buffer = std::make_shared<OwnedMutableBuffer>(null_bytes);
 
-    // TODO
+    // // TODO
 
-    out_->nulls = buffer->data();
-    out_->buffers.push_back(buffer);
+    // out_->nulls = buffer->data();
+    // out_->buffers.push_back(buffer);
     out_->null_count = 0;
   } else {
     out_->null_count = 0;
@@ -201,8 +201,8 @@ Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
     TO_FEATHER_CASE(UINT16);
     TO_FEATHER_CASE(UINT32);
     TO_FEATHER_CASE(UINT64);
-    // TO_FEATHER_CASE(FLOAT);
-    // TO_FEATHER_CASE(DOUBLE);
+    TO_FEATHER_CASE(FLOAT);
+    TO_FEATHER_CASE(DOUBLE);
     // TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
@@ -272,6 +272,18 @@ struct feather_traits<PrimitiveType::UINT64> {
   static constexpr bool supports_nulls = false;
 };
 
+template <>
+struct feather_traits<PrimitiveType::FLOAT> {
+  static constexpr int npy_type = NPY_FLOAT32;
+  static constexpr bool supports_nulls = true;
+};
+
+template <>
+struct feather_traits<PrimitiveType::DOUBLE> {
+  static constexpr int npy_type = NPY_FLOAT64;
+  static constexpr bool supports_nulls = true;
+};
+
 
 template <int TYPE>
 class FeatherDeserializer {
@@ -321,8 +333,8 @@ PyObject* primitive_to_pandas(const PrimitiveArray& arr) {
     FROM_FEATHER_CASE(UINT16);
     FROM_FEATHER_CASE(UINT32);
     FROM_FEATHER_CASE(UINT64);
-    // FROM_FEATHER_CASE(FLOAT);
-    // FROM_FEATHER_CASE(DOUBLE);
+    FROM_FEATHER_CASE(FLOAT);
+    FROM_FEATHER_CASE(DOUBLE);
     // FROM_FEATHER_CASE(OBJECT);
     default:
       break;

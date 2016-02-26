@@ -20,12 +20,8 @@ import numpy as np
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
+from feather.compat import guid
 import feather.ext as feather
-
-
-def guid():
-    import uuid
-    return uuid.uuid4().get_hex()
 
 
 class TestFeatherReader(unittest.TestCase):
@@ -48,13 +44,24 @@ class TestFeatherReader(unittest.TestCase):
         path = guid()
         self.test_files.append(path)
         feather.write_dataframe(df, path)
+        if not os.path.exists(path):
+            raise Exception('file not written')
         result = feather.read_dataframe(path)
         assert_frame_equal(result, df)
 
-    def test_float_types(self):
-        pass
+    def test_float_no_nulls(self):
+        data = {}
+        numpy_dtypes = ['f4', 'f8']
+        num_values = 100
 
-    def test_integer_types(self):
+        for dtype in numpy_dtypes:
+            values = np.random.randn(num_values)
+            data[dtype] = values.astype(dtype)
+
+        df = pd.DataFrame(data)
+        self._check_pandas_roundtrip(df)
+
+    def test_integer_no_nulls(self):
         data = {}
 
         numpy_dtypes = ['i1', 'i2', 'i4', 'i8', 'u1', 'u2', 'u4', 'u8']

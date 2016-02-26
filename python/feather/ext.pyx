@@ -77,7 +77,7 @@ cdef class FeatherWriter:
             PrimitiveArray values
 
         check_status(pandas_to_primitive(col.values, &values))
-        check_status(self.writer.get().AppendPlain(name, values))
+        check_status(self.writer.get().AppendPlain(c_name, values))
 
 
 cdef class FeatherReader:
