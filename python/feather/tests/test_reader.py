@@ -138,7 +138,9 @@ class TestFeatherReader(unittest.TestCase):
         assert_frame_equal(result, ex_frame)
 
     def test_boolean_no_nulls(self):
-        pass
+        num_values = 100
+        df = pd.DataFrame({'bools': np.random.randn(num_values) > 0})
+        self._check_pandas_roundtrip(df)
 
     def test_boolean_nulls(self):
         # pandas requires upcast to object dtype

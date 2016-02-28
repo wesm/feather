@@ -39,6 +39,12 @@ struct npy_traits {
 
 template <>
 struct npy_traits<NPY_BOOL> {
+  typedef uint8_t value_type;
+  static constexpr PrimitiveType::type feather_type = PrimitiveType::BOOL;
+  static constexpr bool supports_nulls = false;
+  static inline bool isnull(uint8_t v) {
+    return false;
+  }
 };
 
 #define NPY_INT_DECL(TYPE, T)                                           \
@@ -201,6 +207,7 @@ Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
   }
 
   switch(PyArray_DESCR(arr)->type_num) {
+    TO_FEATHER_CASE(BOOL);
     TO_FEATHER_CASE(INT8);
     TO_FEATHER_CASE(INT16);
     TO_FEATHER_CASE(INT32);
@@ -236,6 +243,7 @@ template <>
 struct feather_traits<PrimitiveType::BOOL> {
   static constexpr int npy_type = NPY_BOOL;
   static constexpr bool supports_nulls = false;
+  static constexpr bool is_boolean = true;
   static constexpr bool is_integer = false;
   static constexpr bool is_floating = false;
 };
@@ -246,6 +254,7 @@ struct feather_traits<PrimitiveType::BOOL> {
     static constexpr int npy_type = NPY_##TYPE;             \
     static constexpr bool supports_nulls = false;           \
     static constexpr double na_value = NAN;                 \
+    static constexpr bool is_boolean = false;               \
     static constexpr bool is_integer = true;                \
     static constexpr bool is_floating = false;              \
     typedef typename npy_traits<NPY_##TYPE>::value_type T;  \
@@ -265,6 +274,7 @@ struct feather_traits<PrimitiveType::FLOAT> {
   static constexpr int npy_type = NPY_FLOAT32;
   static constexpr bool supports_nulls = true;
   static constexpr float na_value = NAN;
+  static constexpr bool is_boolean = false;
   static constexpr bool is_integer = false;
   static constexpr bool is_floating = true;
   typedef typename npy_traits<NPY_FLOAT32>::value_type T;
@@ -275,6 +285,7 @@ struct feather_traits<PrimitiveType::DOUBLE> {
   static constexpr int npy_type = NPY_FLOAT64;
   static constexpr bool supports_nulls = true;
   static constexpr double na_value = NAN;
+  static constexpr bool is_boolean = false;
   static constexpr bool is_integer = false;
   static constexpr bool is_floating = true;
   typedef typename npy_traits<NPY_FLOAT64>::value_type T;
@@ -342,6 +353,23 @@ class FeatherDeserializer {
     }
   }
 
+  // Boolean specialization
+  template <int T2>
+  inline typename std::enable_if<feather_traits<T2>::is_boolean, void>::type
+  ConvertValues() {
+    npy_intp dims[1] = {arr_->length};
+    if (arr_->null_count > 0) {
+      out_ = PyArray_SimpleNew(1, dims, NPY_OBJECT);
+      if (out_ == NULL)  return;
+      // TODO
+    } else {
+      out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
+      if (out_ == NULL)  return;
+      memcpy(PyArray_DATA(out_), arr_->values,
+          arr_->length * ByteSize(arr_->type));
+    }
+  }
+
  private:
   const PrimitiveArray* arr_;
   PyObject* out_;
@@ -358,6 +386,7 @@ class FeatherDeserializer {
 
 PyObject* primitive_to_pandas(const PrimitiveArray& arr) {
   switch(arr.type) {
+    FROM_FEATHER_CASE(BOOL);
     FROM_FEATHER_CASE(INT8);
     FROM_FEATHER_CASE(INT16);
     FROM_FEATHER_CASE(INT32);
