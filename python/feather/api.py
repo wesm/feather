@@ -1,0 +1,51 @@
+# Copyright 2016 Feather Developers
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import pandas as pd
+
+import feather.ext as ext
+
+
+def write_dataframe(df, path):
+    '''
+    Write a pandas.DataFrame to Feather format
+    '''
+    writer = ext.FeatherWriter(path)
+
+    # TODO(wesm): pipeline conversion to Arrow memory layout
+    for name in df.columns:
+        col = df[name]
+        writer.write_series(name, col)
+
+    writer.close()
+
+
+def read_dataframe(path, columns=None):
+    """
+    Read a pandas.DataFrame from Feather format
+
+    Returns
+    -------
+    df : pandas.DataFrame
+    """
+    reader = ext.FeatherReader(path)
+
+    # TODO(wesm): pipeline conversion to Arrow memory layout
+    data = {}
+    for i in range(reader.num_columns):
+        name, arr = reader.read_series(i)
+        data[name] = arr
+
+    # TODO(wesm):
+    return pd.DataFrame(data)

@@ -21,7 +21,7 @@ from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
 from feather.compat import guid
-import feather.ext as feather
+import feather
 
 
 class TestFeatherReader(unittest.TestCase):

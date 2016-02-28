@@ -99,7 +99,7 @@ ext = Extension('feather.ext',
                 include_dirs=INCLUDE_PATHS,
                 library_dirs=LIBRARY_DIRS,
                 runtime_library_dirs=RT_LIBRARY_DIRS,
-                extra_compile_args=['-std=c++11', '-O0'],
+                extra_compile_args=['-std=c++11'],
                 extra_link_args=extra_link_args)
 extensions = [ext]
 extensions = cythonize(extensions)

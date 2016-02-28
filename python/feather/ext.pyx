@@ -65,7 +65,7 @@ cdef class FeatherWriter:
     def close(self):
         check_status(self.writer.get().Finalize())
 
-    cdef write_series(self, object name, object col):
+    def write_series(self, object name, object col):
         if pdcom.is_categorical_dtype(col.dtype):
             raise NotImplementedError(col.dtype)
         else:
@@ -95,7 +95,7 @@ cdef class FeatherReader:
         def __get__(self):
             return self.reader.get().num_columns()
 
-    cdef read_series(self, int i):
+    def read_series(self, int i):
         cdef:
             shared_ptr[Column] col
             Column* cp
@@ -122,39 +122,3 @@ cdef class FeatherReader:
 
 cdef category_to_pandas(CategoryColumn* col):
     pass
-
-
-def write_dataframe(df, path):
-    '''
-    Write a pandas.DataFrame to Feather format
-    '''
-    cdef FeatherWriter writer = FeatherWriter(path)
-
-    # TODO(wesm): pipeline conversion to Arrow memory layout
-    for name in df.columns:
-        col = df[name]
-        writer.write_series(name, col)
-
-    writer.close()
-
-
-def read_dataframe(path, columns=None):
-    """
-    Read a pandas.DataFrame from Feather format
-
-    Returns
-    -------
-    df : pandas.DataFrame
-    """
-    cdef:
-        int i
-        FeatherReader reader = FeatherReader(path)
-
-    # TODO(wesm): pipeline conversion to Arrow memory layout
-    data = {}
-    for i in range(reader.num_columns):
-        name, arr = reader.read_series(i)
-        data[name] = arr
-
-    # TODO(wesm):
-    return pd.DataFrame(data)
