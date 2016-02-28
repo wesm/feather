@@ -298,10 +298,16 @@ class FeatherDeserializer {
       // Error occurred, trust that SimpleNew set the error state
       return;
     }
-    memcpy(PyArray_DATA(out_), arr_->values, arr_->length * ByteSize(arr_->type));
 
     if (arr_->null_count > 0) {
-
+      double* out_values = reinterpret_cast<double*>(PyArray_DATA(out_));
+      const double* in_values = reinterpret_cast<const double*>(arr_->values);
+      for (int64_t i = 0; i < arr_->length; ++i) {
+        out_values[i] = util::get_bit(arr_->nulls, i) ? NAN : in_values[i];
+      }
+    } else {
+      memcpy(PyArray_DATA(out_), arr_->values,
+          arr_->length * ByteSize(arr_->type));
     }
   }
 
