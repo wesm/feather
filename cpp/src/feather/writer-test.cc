@@ -18,9 +18,9 @@
 #include <vector>
 
 #include "feather/common.h"
-#include "feather/exception.h"
 #include "feather/io.h"
 #include "feather/reader.h"
+#include "feather/status.h"
 #include "feather/test-common.h"
 #include "feather/writer.h"
 
@@ -34,17 +34,19 @@ class TestTableWriter : public ::testing::Test {
  public:
   void SetUp() {
     stream_ = std::make_shared<InMemoryOutputStream>(1024);
-    writer_.reset(new TableWriter(stream_));
+    writer_.reset(new TableWriter());
+    ASSERT_OK(writer_->Open(stream_));
   }
 
   void Finish() {
     // Write table footer
-    writer_->Finalize();
+    ASSERT_OK(writer_->Finalize());
 
     output_ = stream_->Finish();
 
     shared_ptr<BufferReader> buffer(new BufferReader(output_));
-    reader_.reset(new TableReader(buffer));
+    reader_.reset(new TableReader());
+    ASSERT_OK(reader_->Open(buffer));
   }
 
  protected:
@@ -59,7 +61,7 @@ TEST_F(TestTableWriter, EmptyTable) {
   Finish();
 
   ASSERT_FALSE(reader_->HasDescription());
-  ASSERT_THROW(reader_->GetDescription(), FeatherException);
+  ASSERT_EQ("", reader_->GetDescription());
 
   ASSERT_EQ(0, reader_->num_rows());
   ASSERT_EQ(0, reader_->num_columns());
@@ -115,15 +117,16 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   PrimitiveArray nn_array = MakePrimitive(PrimitiveType::INT32, num_values,
       0, nullptr, &values_buffer[0], nullptr);
 
-  writer_->AppendPlain("f0", array);
-  writer_->AppendPlain("f1", nn_array);
+  ASSERT_OK(writer_->AppendPlain("f0", array));
+  ASSERT_OK(writer_->AppendPlain("f1", nn_array));
   Finish();
 
-  auto col = reader_->GetColumn(0);
+  std::shared_ptr<Column> col;
+  ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_TRUE(col->values().Equals(array));
   ASSERT_EQ("f0", col->metadata()->name());
 
-  col = reader_->GetColumn(1);
+  ASSERT_OK(reader_->GetColumn(1, &col));
   ASSERT_TRUE(col->values().Equals(nn_array));
   ASSERT_EQ("f1", col->metadata()->name());
 }
@@ -152,15 +155,16 @@ TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
   PrimitiveArray nn_array = MakePrimitive(PrimitiveType::UTF8, num_values,
       0, nullptr, &values_buffer[0], &offsets_buffer[0]);
 
-  writer_->AppendPlain("f0", array);
-  writer_->AppendPlain("f1", nn_array);
+  ASSERT_OK(writer_->AppendPlain("f0", array));
+  ASSERT_OK(writer_->AppendPlain("f1", nn_array));
   Finish();
 
-  auto col = reader_->GetColumn(0);
+  std::shared_ptr<Column> col;
+  ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_TRUE(col->values().Equals(array));
   ASSERT_EQ("f0", col->metadata()->name());
 
-  col = reader_->GetColumn(1);
+  ASSERT_OK(reader_->GetColumn(1, &col));
   ASSERT_TRUE(col->values().Equals(nn_array));
   ASSERT_EQ("f1", col->metadata()->name());
 }

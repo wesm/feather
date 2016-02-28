@@ -17,10 +17,10 @@
 
 #include "feather/buffer.h"
 #include "feather/common.h"
-#include "feather/exception.h"
 #include "feather/io.h"
 #include "feather/metadata.h"
 #include "feather/reader.h"
+#include "feather/status.h"
 #include "feather/types.h"
 #include "feather/writer.h"
 

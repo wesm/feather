@@ -2,9 +2,9 @@
 
 ## Build and install
 
-`libfeather` is mainly designed for static linking with some other application,
-like a Python or R extension. To build the dependencies and install a release
-build, run:
+`libfeather` is mainly designed for linking with some other application, like a
+Python or R extension. To build the dependencies and install a release build,
+run:
 
 ```shell
 ./thirdparty/download_thirdparty.sh
@@ -27,9 +27,12 @@ The core libfeather library is implemented in C++11.
 
 We use [Google C++ coding style][1] with a few changes:
 
-- We use C++ exceptions for error handling
 - Long lines are permitted up to 90 characters
 - We do not encourage anonymous namespaces
+
+We do not use C++ exceptions as handling them in Python extensions adds a lot
+of library complexity. This also makes it simpler to make libfeather accessible
+to other C users.
 
 Style is checked with `cpplint`, after generating the make files you can
 veryify the style with

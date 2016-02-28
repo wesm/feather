@@ -16,10 +16,10 @@ install(FILES
   api.h
   buffer.h
   common.h
-  exception.h
   io.h
   metadata.h
   reader.h
+  status.h
   types.h
   writer.h
   DESTINATION include/feather)

@@ -25,6 +25,14 @@ static inline size_t ceil_byte(size_t size) {
   return (size + 7) & ~7;
 }
 
+static inline bool get_bit(const uint8_t* bits, int i) {
+  return bits[i / 8] & (1 << (i & 7));
+}
+
+static inline void set_bit(uint8_t* bits, int i) {
+  bits[i / 8] |= 1 << (i & 7);
+}
+
 } // namespace util
 
 } // namespace feather

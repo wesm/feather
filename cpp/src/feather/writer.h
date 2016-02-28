@@ -26,20 +26,24 @@ namespace feather {
 
 class TableWriter {
  public:
-  explicit TableWriter(const std::shared_ptr<OutputStream>& stream);
+  TableWriter();
+
+  Status Open(const std::shared_ptr<OutputStream>& stream);
+  static Status OpenFile(const std::string& abspath,
+      std::unique_ptr<TableWriter>* out);
 
   void SetDescription(const std::string& desc);
   void SetNumRows(int64_t num_rows);
 
   // Plain-encoded data
-  void AppendPlain(const std::string& name, const PrimitiveArray& values);
+  Status AppendPlain(const std::string& name, const PrimitiveArray& values);
 
   // Dictionary-encoded primitive data. Especially useful for strings and
   // binary data
   void AppendDictEncoded(const std::string& name, const DictEncodedArray& data);
 
   // Category type data
-  void AppendCategory(const std::string& name, const PrimitiveArray& values,
+  Status AppendCategory(const std::string& name, const PrimitiveArray& values,
       const PrimitiveArray& levels, bool ordered = false);
 
   // Other primitive data types
@@ -47,10 +51,10 @@ class TableWriter {
       const TimestampMetadata& meta);
 
   // We are done, write the file metadata and footer
-  void Finalize();
+  Status Finalize();
 
  private:
-  void Init();
+  Status Init();
 
   std::shared_ptr<OutputStream> stream_;
 

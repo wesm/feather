@@ -16,9 +16,13 @@
 #define FEATHER_TYPES_H
 
 #include <cstdint>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace feather {
+
+class Buffer;
 
 // Feather enums, decoupled from some of the unpleasantness of
 // flatbuffers. This is also here so we can choose later to hide the
@@ -178,9 +182,11 @@ struct PrimitiveArray {
   int64_t length;
   int64_t null_count;
 
+  // For ownership of any memory attached to this array
+  std::vector<std::shared_ptr<Buffer> > buffers;
+
   // If null_count == 0, treated as nullptr
   const uint8_t* nulls;
-
   const uint8_t* values;
 
   // For UTF8 and BINARY, not used otherwise

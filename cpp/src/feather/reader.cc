@@ -19,44 +19,59 @@
 
 #include "feather/buffer.h"
 #include "feather/common.h"
-#include "feather/exception.h"
 #include "feather/io.h"
+#include "feather/status.h"
 
 namespace feather {
 
-TableReader::TableReader(const std::shared_ptr<RandomAccessReader>& source) :
-    source_(source) {
+TableReader::TableReader() {}
+
+Status TableReader::Open(const std::shared_ptr<RandomAccessReader>& source) {
+  source_ = source;
+
   int magic_size = strlen(FEATHER_MAGIC_BYTES);
   int footer_size = magic_size + sizeof(uint32_t);
 
   // Pathological issue where the file is smaller than
   if (source->size() < magic_size + footer_size) {
-    throw FeatherException("File is too small to be a well-formed file");
+    return Status::Invalid("File is too small to be a well-formed file");
   }
 
-  std::shared_ptr<Buffer> buffer = source->Read(magic_size);
+  std::shared_ptr<Buffer> buffer;
+  RETURN_NOT_OK(source->Read(magic_size, &buffer));
 
   if (memcmp(buffer->data(), FEATHER_MAGIC_BYTES, magic_size)) {
-    throw FeatherException("Not a feather file");
+    return Status::Invalid("Not a feather file");
   }
 
   // Now get the footer and verify
-  buffer = source->ReadAt(source->size() - footer_size, footer_size);
+  RETURN_NOT_OK(source->ReadAt(source->size() - footer_size, footer_size, &buffer));
 
   if (memcmp(buffer->data() + sizeof(uint32_t), FEATHER_MAGIC_BYTES, magic_size)) {
-    throw FeatherException("Feather file footer incomplete");
+    return Status::Invalid("Feather file footer incomplete");
   }
 
   uint32_t metadata_length = *reinterpret_cast<const uint32_t*>(buffer->data());
   if (source->size() < magic_size + footer_size + metadata_length) {
-    throw FeatherException("File is smaller than indicated metadata size");
+    return Status::Invalid("File is smaller than indicated metadata size");
   }
-  buffer = source->ReadAt(source->size() - footer_size - metadata_length,
-      metadata_length);
+  RETURN_NOT_OK(source->ReadAt(source->size() - footer_size - metadata_length,
+          metadata_length, &buffer));
 
   if (!metadata_.Open(buffer)) {
-    throw FeatherException("Invalid file metadata");
+    return Status::Invalid("Invalid file metadata");
   }
+
+  return Status::OK();
+}
+
+Status TableReader::OpenFile(const std::string& abspath,
+    std::unique_ptr<TableReader>* out) {
+  auto reader = std::unique_ptr<MemoryMapReader>(new MemoryMapReader());
+  RETURN_NOT_OK(reader->Open(abspath));
+  std::shared_ptr<RandomAccessReader> source(reader.release());
+  out->reset(new TableReader());
+  return (*out)->Open(source);
 }
 
 bool TableReader::HasDescription() const {
@@ -75,13 +90,12 @@ int64_t TableReader::num_columns() const {
   return metadata_.num_columns();
 }
 
-std::shared_ptr<Buffer> TableReader::GetPrimitiveArray(
-    const ArrayMetadata& meta, PrimitiveArray* out) {
-
+Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray* out) {
   // Buffer data from the source (may or may not perform a copy depending on
   // input source)
-  std::shared_ptr<Buffer> buffer = source_->ReadAt(meta.offset,
-      meta.total_bytes);
+  std::shared_ptr<Buffer> buffer;
+
+  RETURN_NOT_OK(source_->ReadAt(meta.offset, meta.total_bytes, &buffer));
 
   const uint8_t* data = buffer->data();
 
@@ -107,24 +121,28 @@ std::shared_ptr<Buffer> TableReader::GetPrimitiveArray(
   out->length = meta.length;
   out->null_count = meta.null_count;
 
-  return buffer;
+  // Hold on to this data
+  out->buffers.push_back(buffer);
+
+  return Status::OK();
 }
 
-std::shared_ptr<Column> TableReader::GetColumn(int i) {
+Status TableReader::GetColumn(int i, std::shared_ptr<Column>* out) {
   auto col_meta = metadata_.GetColumn(i);
   auto values_meta = col_meta->values();
 
   PrimitiveArray values;
-  std::shared_ptr<Buffer> buffer = GetPrimitiveArray(values_meta, &values);
+  RETURN_NOT_OK(GetPrimitiveArray(values_meta, &values));
 
   switch (col_meta->type()) {
     case ColumnType::PRIMITIVE:
-      return std::make_shared<Column>(ColumnType::PRIMITIVE, col_meta, values,
-          buffer);
+      *out = std::make_shared<Column>(ColumnType::PRIMITIVE, col_meta, values);
+      break;
     default:
-      return std::shared_ptr<Column>(nullptr);
+      *out = std::shared_ptr<Column>(nullptr);
       break;
   }
+  return Status::OK();
 }
 
 } // namespace feather

@@ -20,11 +20,14 @@ from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 import Cython
 
+import numpy as np
+
 import sys
 from setuptools import setup
 from distutils.command.clean import clean as _clean
 from distutils.extension import Extension
 import os
+import platform
 
 if Cython.__version__ < '0.19.1':
     raise Exception('Please upgrade to Cython 0.19.1 or newer')
@@ -81,9 +84,13 @@ else:
 
 feather_include_dir = os.path.join(prefix, 'include')
 feather_lib_dir = os.path.join(prefix, 'lib')
-INCLUDE_PATHS = [feather_include_dir]
+INCLUDE_PATHS = [feather_include_dir, 'feather', np.get_include()]
 LIBRARY_DIRS = [feather_lib_dir]
 RT_LIBRARY_DIRS = LIBRARY_DIRS
+extra_link_args = []
+
+if platform.system() == 'Darwin':
+    extra_link_args.append('-Wl,-rpath,' + feather_lib_dir)
 
 ext = Extension('feather.ext',
                 ['feather/ext.pyx'],
@@ -92,7 +99,8 @@ ext = Extension('feather.ext',
                 include_dirs=INCLUDE_PATHS,
                 library_dirs=LIBRARY_DIRS,
                 runtime_library_dirs=RT_LIBRARY_DIRS,
-                extra_compile_args=['-std=c++11'])
+                extra_compile_args=['-std=c++11'],
+                extra_link_args=extra_link_args)
 extensions = [ext]
 extensions = cythonize(extensions)
 

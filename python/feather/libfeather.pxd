@@ -39,6 +39,18 @@ cdef extern from "<memory>" namespace "std" nogil:
 
 cdef extern from "feather/api.h" namespace "feather" nogil:
 
+    cdef Status Status_OK "Status::OK"()
+
+    cdef cppclass Status:
+        Status()
+
+        string ToString()
+
+        c_bool ok()
+        c_bool IsInvalid()
+        c_bool IsOutOfMemory()
+        c_bool IsIOError()
+
     enum PrimitiveType" feather::PrimitiveType::type":
         PrimitiveType_BOOL" feather::PrimitiveType::BOOL"
         PrimitiveType_INT8" feather::PrimitiveType::INT8"
@@ -57,6 +69,7 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
 
     enum ColumnType" feather::ColumnType::type":
         ColumnType_PRIMITIVE" feather::ColumnType::PRIMITIVE"
+        ColumnType_CATEGORY" feather::ColumnType::CATEGORY"
 
     enum Encoding" feather::Encoding::type":
         Encoding_PLAIN" feather::Encoding::PLAIN"
@@ -71,6 +84,8 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         int64_t null_count
         const uint8_t* nulls
         const uint8_t* values
+
+        vector[shared_ptr[Buffer]] buffers
 
         # For UTF8 and BINARY, not used otherwise
         const int32_t* offsets
@@ -97,11 +112,57 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         InMemoryOutputStream(int64_t initial_capacity)
         shared_ptr[Buffer] Finish()
 
+    cdef cppclass RandomAccessReader:
+        int64_t Tell()
+        void Seek(int64_t pos)
+
+        shared_ptr[Buffer] ReadAt(int64_t position, int64_t nbytes)
+        shared_ptr[Buffer] Read(int64_t nbytes)
+
+        int64_t size()
+
+    cdef cppclass LocalFileReader(RandomAccessReader):
+        @staticmethod
+        unique_ptr[LocalFileReader] Open(const string& path)
+
+        void CloseFile()
+
+        c_bool is_open()
+        const string& path()
+
+    cdef cppclass BufferReader(RandomAccessReader):
+        BufferReader(const shared_ptr[Buffer]& buffer)
+
     cdef cppclass TableWriter:
-        TableWriter(const shared_ptr[OutputStream]& stream)
+        TableWriter()
+
+        @staticmethod
+        Status OpenFile(const string& abspath, unique_ptr[TableWriter]* out)
 
         void SetDescription(const string& desc)
         void SetNumRows(int64_t num_rows)
 
-        void AppendPlain(const string& name, const PrimitiveArray& values)
-        void Finalize()
+        Status AppendPlain(const string& name, const PrimitiveArray& values)
+        Status Finalize()
+
+    cdef cppclass Column:
+        const PrimitiveArray& values()
+        ColumnType type()
+        string name()
+
+    cdef cppclass CategoryColumn(Column):
+        const PrimitiveArray& levels()
+
+    cdef cppclass TableReader:
+        TableReader(const shared_ptr[RandomAccessReader]& source)
+
+        @staticmethod
+        Status OpenFile(const string& abspath, unique_ptr[TableReader]* out)
+
+        string GetDescription()
+        c_bool HasDescription()
+
+        int64_t num_rows()
+        int64_t num_columns()
+
+        Status GetColumn(int i, shared_ptr[Column]* out)

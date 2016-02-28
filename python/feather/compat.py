@@ -83,4 +83,10 @@ else:
         return o.decode('utf8')
 
 
+def guid():
+    from uuid import uuid4
+    guid = uuid4()
+    return guid.get_hex() if PY2 else guid.hex
+
+
 integer_types = six.integer_types + (np.integer,)

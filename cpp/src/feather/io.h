@@ -26,6 +26,8 @@
 
 namespace feather {
 
+class Status;
+
 // ----------------------------------------------------------------------
 // Input interfaces
 
@@ -36,17 +38,15 @@ class RandomAccessReader {
   virtual ~RandomAccessReader() {}
 
   virtual int64_t Tell() const = 0;
-  virtual void Seek(int64_t pos) = 0;
+  virtual Status Seek(int64_t pos) = 0;
 
   // Read data from source at position (seeking if necessary), returning copy
   // only if necessary. Lifetime of read data is managed by the returned Buffer
   // instance
-  //
-  // @returns: shared_ptr<Buffer>
-  std::shared_ptr<Buffer> ReadAt(int64_t position, int64_t nbytes);
+  Status ReadAt(int64_t position, int64_t nbytes, std::shared_ptr<Buffer>* out);
 
   // Read bytes from source at current position
-  virtual std::shared_ptr<Buffer> Read(int64_t nbytes) = 0;
+  virtual Status Read(int64_t nbytes, std::shared_ptr<Buffer>* out) = 0;
 
   int64_t size() {
     return size_;
@@ -61,31 +61,51 @@ class RandomAccessReader {
 // level seek and read calls.
 class LocalFileReader : public RandomAccessReader {
  public:
+  LocalFileReader() :
+      file_(nullptr),
+      is_open_(false) {}
+
   virtual ~LocalFileReader();
 
-  static std::unique_ptr<LocalFileReader> Open(const std::string& path);
-
+  Status Open(const std::string& path);
   void CloseFile();
 
   virtual int64_t Tell() const;
-  virtual void Seek(int64_t pos);
+  virtual Status Seek(int64_t pos);
 
-  virtual std::shared_ptr<Buffer> Read(int64_t nbytes);
+  virtual Status Read(int64_t nbytes, std::shared_ptr<Buffer>* out);
+
+  bool is_open() const { return is_open_;}
+  const std::string& path() const { return path_;}
+
+ protected:
+  std::string path_;
+  FILE* file_;
+  bool is_open_;
+};
+
+class MemoryMapReader : public LocalFileReader {
+ public:
+  MemoryMapReader() :
+      LocalFileReader(),
+      data_(nullptr),
+      pos_(0) {}
+
+  virtual ~MemoryMapReader();
+
+  Status Open(const std::string& path);
+  void CloseFile();
+
+  virtual int64_t Tell() const;
+  virtual Status Seek(int64_t pos);
+  virtual Status Read(int64_t nbytes, std::shared_ptr<Buffer>* out);
 
   bool is_open() const { return is_open_;}
   const std::string& path() const { return path_;}
 
  private:
-  LocalFileReader(const std::string& path, int64_t size, FILE* file) :
-      path_(path),
-      file_(file),
-      is_open_(true) {
-    size_ = size;
-  }
-
-  std::string path_;
-  FILE* file_;
-  bool is_open_;
+  uint8_t* data_;
+  int64_t pos_;
 };
 
 // ----------------------------------------------------------------------
@@ -100,9 +120,9 @@ class BufferReader : public RandomAccessReader {
   }
 
   virtual int64_t Tell() const;
-  virtual void Seek(int64_t pos);
+  virtual Status Seek(int64_t pos);
 
-  virtual std::shared_ptr<Buffer> Read(int64_t nbytes);
+  virtual Status Read(int64_t nbytes, std::shared_ptr<Buffer>* out);
 
  protected:
   const uint8_t* Head() {
@@ -114,26 +134,19 @@ class BufferReader : public RandomAccessReader {
   int64_t pos_;
 };
 
-// A file reader that uses a memory-mapped file as its internal buffer rather
-// than issuing operating system file commands
-class MemoryMapReader : public BufferReader {
-  MemoryMapReader();
-
-  void Open(const std::string* path);
-};
-
 // ----------------------------------------------------------------------
 // Output interfaces
 
 // Abstract output stream
 class OutputStream {
  public:
+  virtual ~OutputStream() {}
   // Close the output stream
-  virtual void Close() = 0;
+  virtual Status Close() = 0;
 
   virtual int64_t Tell() const = 0;
 
-  virtual void Write(const uint8_t* data, int64_t length) = 0;
+  virtual Status Write(const uint8_t* data, int64_t length) = 0;
 };
 
 
@@ -142,11 +155,11 @@ class InMemoryOutputStream : public OutputStream {
  public:
   explicit InMemoryOutputStream(int64_t initial_capacity);
 
-  virtual void Close() {}
+  virtual Status Close();
 
   virtual int64_t Tell() const;
 
-  virtual void Write(const uint8_t* data, int64_t length);
+  virtual Status Write(const uint8_t* data, int64_t length);
 
   // Hand off the buffered data to a new owner
   std::shared_ptr<Buffer> Finish();
@@ -157,6 +170,28 @@ class InMemoryOutputStream : public OutputStream {
   std::shared_ptr<OwnedMutableBuffer> buffer_;
   int64_t size_;
   int64_t capacity_;
+};
+
+class FileOutputStream : public OutputStream {
+ public:
+  FileOutputStream():
+      file_(nullptr), is_open_(false) {}
+
+  Status Open(const std::string& path);
+
+  virtual Status Close();
+
+  virtual int64_t Tell() const;
+
+  virtual Status Write(const uint8_t* data, int64_t length);
+
+  // Hand off the buffered data to a new owner
+  std::shared_ptr<Buffer> Finish();
+
+ private:
+  std::string path_;
+  FILE* file_;
+  bool is_open_;
 };
 
 } // namespace feather

@@ -27,9 +27,7 @@ std::shared_ptr<Buffer> MutableBuffer::GetImmutableView() {
   return std::make_shared<Buffer>(this->get_shared_ptr(), 0, size());
 }
 
-OwnedMutableBuffer::OwnedMutableBuffer(int64_t size) {
-  Resize(size);
-}
+OwnedMutableBuffer::OwnedMutableBuffer() {}
 
 void OwnedMutableBuffer::Resize(int64_t new_size) {
   size_ = new_size;

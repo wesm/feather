@@ -29,12 +29,18 @@ For the arrays themselves, the memory layout is type dependent.
 ```
 
 The null bitmask is byte-aligned, but contains 1 bit per value indicating null
-or not null. We use MSB left-to-right bit-numbering ([reference][1]). For
-example, an array with length 5 containing 3 nulls followed by 2 valid values
+or not null. We use LSB right-to-left bit-numbering ([reference][1]). For
+example, an array with length 6 with [valid, valid, null, valid, null, valid]
 would have a single byte with the values
 
 ```
-1 1 1 0 0 0 0 0
+0 0 1 0 1 0 1 1
+```
+
+In C, the code to check a bit looks like:
+
+``
+bits[i / 8] & (1 << (i % 8))
 ```
 
 The values is a contiguous array with elements equal to the fixed-width byte
