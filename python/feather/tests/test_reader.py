@@ -145,3 +145,6 @@ class TestFeatherReader(unittest.TestCase):
     def test_boolean_nulls(self):
         # pandas requires upcast to object dtype
         pass
+
+    def test_category(self):
+        pass

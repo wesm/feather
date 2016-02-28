@@ -218,7 +218,7 @@ Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
     TO_FEATHER_CASE(UINT64);
     TO_FEATHER_CASE(FLOAT32);
     TO_FEATHER_CASE(FLOAT64);
-    // TO_FEATHER_CASE(OBJECT);
+    TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
       ss << "unsupported type " << PyArray_DESCR(arr)->type_num
@@ -317,7 +317,6 @@ class FeatherDeserializer {
     }
 
     if (arr_->null_count > 0) {
-      std::cout << "yes nulls" << std::endl;
       T* out_values = reinterpret_cast<T*>(PyArray_DATA(out_));
       const T* in_values = reinterpret_cast<const T*>(arr_->values);
       for (int64_t i = 0; i < arr_->length; ++i) {
@@ -397,7 +396,8 @@ PyObject* primitive_to_pandas(const PrimitiveArray& arr) {
     FROM_FEATHER_CASE(UINT64);
     FROM_FEATHER_CASE(FLOAT);
     FROM_FEATHER_CASE(DOUBLE);
-    // FROM_FEATHER_CASE(OBJECT);
+    FROM_FEATHER_CASE(UTF8);
+    // FROM_FEATHER_CASE(CATEGORY);
     default:
       break;
   }
