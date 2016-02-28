@@ -21,7 +21,12 @@ from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
 from feather.compat import guid
+from feather import FeatherReader, FeatherWriter
 import feather
+
+
+def random_path():
+    return 'feather_{}'.format(guid())
 
 
 class TestFeatherReader(unittest.TestCase):
@@ -38,10 +43,10 @@ class TestFeatherReader(unittest.TestCase):
 
     def test_file_not_exist(self):
         with self.assertRaises(feather.FeatherError):
-            feather.FeatherReader('test_invalid_file')
+            FeatherReader('test_invalid_file')
 
     def _check_pandas_roundtrip(self, df):
-        path = 'feather_{}'.format(guid())
+        path = random_path()
         self.test_files.append(path)
         feather.write_dataframe(df, path)
         if not os.path.exists(path):
@@ -92,8 +97,32 @@ class TestFeatherReader(unittest.TestCase):
 
     def test_integer_with_nulls(self):
         # pandas requires upcast to float dtype
+        path = random_path()
+        self.test_files.append(path)
+
+        int_dtypes = ['i1', 'i2', 'i4', 'i8', 'u1', 'u2', 'u4', 'u8']
         num_values = 100
+
+        writer = FeatherWriter(path)
+
         null_mask = np.random.randint(0, 10, size=num_values) < 3
+        expected_cols = []
+        for name in int_dtypes:
+            values = np.random.randint(0, 100, size=num_values)
+            writer.write_array(name, values, null_mask)
+
+            expected = values.astype('f8')
+            expected[null_mask] = np.nan
+
+            expected_cols.append(expected)
+
+        ex_frame = pd.DataFrame(dict(zip(int_dtypes, expected_cols)),
+                                columns=int_dtypes)
+
+        writer.close()
+
+        result = feather.read_dataframe(path)
+        assert_frame_equal(result, ex_frame)
 
     def test_boolean_no_nulls(self):
         pass

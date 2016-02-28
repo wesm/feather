@@ -26,7 +26,7 @@ def write_dataframe(df, path):
     # TODO(wesm): pipeline conversion to Arrow memory layout
     for name in df.columns:
         col = df[name]
-        writer.write_series(name, col)
+        writer.write_array(name, col)
 
     writer.close()
 
@@ -44,7 +44,7 @@ def read_dataframe(path, columns=None):
     # TODO(wesm): pipeline conversion to Arrow memory layout
     data = {}
     for i in range(reader.num_columns):
-        name, arr = reader.read_series(i)
+        name, arr = reader.read_array(i)
         data[name] = arr
 
     # TODO(wesm):

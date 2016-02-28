@@ -94,8 +94,9 @@ struct npy_traits<NPY_OBJECT> {
 template <int TYPE>
 class FeatherSerializer {
  public:
-  FeatherSerializer(PyArrayObject* arr, PrimitiveArray* out) :
+  FeatherSerializer(PyArrayObject* arr, PyArrayObject* mask, PrimitiveArray* out) :
       arr_(arr),
+      mask_(mask),
       out_(out) {}
 
   Status Convert() {
@@ -111,12 +112,13 @@ class FeatherSerializer {
   Status ConvertValues();
 
   bool is_strided() const {
-    npy_intp* strides = PyArray_STRIDES(arr_);
-    return strides[0] != PyArray_DESCR(arr_)->elsize;
+    npy_intp* astrides = PyArray_STRIDES(arr_);
+    return astrides[0] != PyArray_DESCR(arr_)->elsize;
   }
 
  private:
   PyArrayObject* arr_;
+  PyArrayObject* mask_;
   PrimitiveArray* out_;
 };
 
@@ -130,28 +132,41 @@ inline Status FeatherSerializer<TYPE>::ConvertValues() {
   }
 
   out_->values = static_cast<const uint8_t*>(PyArray_DATA(arr_));
-  if (traits::supports_nulls) {
+
+  uint8_t* null_bitmap = nullptr;
+
+  if (mask_ != nullptr || traits::supports_nulls) {
     int null_bytes = util::ceil_byte(out_->length);
     auto buffer = std::make_shared<OwnedMutableBuffer>();
     buffer->Resize(null_bytes);
-    uint8_t* bitmap = buffer->mutable_data();
-    int64_t null_count = 0;
+    out_->buffers.push_back(buffer);
 
+    null_bitmap = buffer->mutable_data();
+    out_->nulls = buffer->data();
+  }
+
+  int64_t null_count = 0;
+  if (mask_ != nullptr) {
+    const uint8_t* mask_values = static_cast<const uint8_t*>(PyArray_DATA(mask_));
+    // TODO(wesm): strided null mask
+    for (int i = 0; i < out_->length; ++i) {
+      if (mask_values[i]) {
+        ++null_count;
+        util::set_bit(null_bitmap, i);
+      }
+    }
+    out_->null_count = null_count;
+  } else if (traits::supports_nulls) {
     // TODO(wesm): striding
     for (int i = 0; i < out_->length; ++i) {
       if (traits::isnull(out_->values[i])) {
         ++null_count;
-        util::set_bit(bitmap, i);
+        util::set_bit(null_bitmap, i);
       }
     }
-
-    out_->buffers.push_back(buffer);
-    out_->nulls = buffer->data();
-    out_->null_count = null_count;
-  } else {
-    out_->nulls = nullptr;
-    out_->null_count = 0;
   }
+  out_->nulls = null_bitmap;
+  out_->null_count = null_count;
   return Status::OK();
 }
 
@@ -160,16 +175,22 @@ inline Status FeatherSerializer<NPY_OBJECT>::ConvertValues() {
   return Status::Invalid("NYI");
 }
 
-#define TO_FEATHER_CASE(TYPE)                               \
-  case NPY_##TYPE:                                          \
-    {                                                       \
-      FeatherSerializer<NPY_##TYPE> converter(arr, out);    \
-      RETURN_NOT_OK(converter.Convert());                   \
-    }                                                       \
+#define TO_FEATHER_CASE(TYPE)                                   \
+  case NPY_##TYPE:                                              \
+    {                                                           \
+      FeatherSerializer<NPY_##TYPE> converter(arr, mask, out);  \
+      RETURN_NOT_OK(converter.Convert());                       \
+    }                                                           \
     break;
 
-Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
+Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
+    PrimitiveArray* out) {
   PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(ao);
+  PyArrayObject* mask = nullptr;
+
+  if (mo != nullptr) {
+    mask = reinterpret_cast<PyArrayObject*>(mo);
+  }
 
   if (arr->nd != 1) {
     return Status::Invalid("only handle 1-dimensional arrays");
@@ -194,6 +215,10 @@ Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
       return Status::Invalid(ss.str());
   }
   return Status::OK();
+}
+
+Status pandas_to_primitive(PyObject* ao, PrimitiveArray* out) {
+  return pandas_masked_to_primitive(ao, nullptr, out);
 }
 
 // ----------------------------------------------------------------------

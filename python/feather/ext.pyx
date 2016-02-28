@@ -40,6 +40,8 @@ class FeatherError(Exception):
 
 cdef extern from "interop.h" namespace "feather::py":
     Status pandas_to_primitive(object ao, PrimitiveArray* out)
+    Status pandas_masked_to_primitive(object ao, object mask,
+                                      PrimitiveArray* out)
     object primitive_to_pandas(const PrimitiveArray& arr)
 
 
@@ -65,18 +67,28 @@ cdef class FeatherWriter:
     def close(self):
         check_status(self.writer.get().Finalize())
 
-    def write_series(self, object name, object col):
+    def write_array(self, object name, object col, object mask=None):
         if pdcom.is_categorical_dtype(col.dtype):
             raise NotImplementedError(col.dtype)
         else:
-            self.write_primitive(name, col)
+            self.write_primitive(name, col, mask)
 
-    cdef write_primitive(self, name, col):
+    cdef write_primitive(self, name, col, mask):
         cdef:
             string c_name = tobytes(name)
             PrimitiveArray values
 
-        check_status(pandas_to_primitive(col.values, &values))
+        if isinstance(col, pd.Series):
+            col_values = col.values
+        else:
+            col_values = col
+
+        if mask is None:
+            check_status(pandas_to_primitive(col_values, &values))
+        else:
+            check_status(pandas_masked_to_primitive(
+                col_values, mask, &values))
+
         check_status(self.writer.get().AppendPlain(c_name, values))
 
 
@@ -95,7 +107,7 @@ cdef class FeatherReader:
         def __get__(self):
             return self.reader.get().num_columns()
 
-    def read_series(self, int i):
+    def read_array(self, int i):
         cdef:
             shared_ptr[Column] col
             Column* cp
@@ -110,15 +122,18 @@ cdef class FeatherReader:
 
         if cp.type() == ColumnType_PRIMITIVE:
             values = primitive_to_pandas(cp.values())
-            return frombytes(cp.name()), values
         elif cp.type() == ColumnType_PRIMITIVE:
-            cat = <CategoryColumn*>(cp)
-
-            values = primitive_to_pandas(cat.values())
-            levels = primitive_to_pandas(cat.levels())
+            values = category_to_pandas(cp)
         else:
             raise NotImplementedError(cp.type())
 
+        return frombytes(cp.name()), values
 
-cdef category_to_pandas(CategoryColumn* col):
-    pass
+
+cdef category_to_pandas(Column* col):
+    cdef CategoryColumn* cat = <CategoryColumn*>(col)
+
+    values = primitive_to_pandas(cat.values())
+    levels = primitive_to_pandas(cat.levels())
+
+    return pd.Categorical(values=values, categories=levels)
