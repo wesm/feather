@@ -125,6 +125,8 @@ class FeatherSerializer {
 template <int TYPE>
 inline Status FeatherSerializer<TYPE>::ConvertValues() {
   typedef npy_traits<TYPE> traits;
+  typedef typename traits::value_type T;
+
   out_->type = traits::feather_type;
 
   if (is_strided()) {
@@ -142,6 +144,7 @@ inline Status FeatherSerializer<TYPE>::ConvertValues() {
     out_->buffers.push_back(buffer);
 
     null_bitmap = buffer->mutable_data();
+    memset(null_bitmap, 0, null_bytes);
     out_->nulls = buffer->data();
   }
 
@@ -155,11 +158,12 @@ inline Status FeatherSerializer<TYPE>::ConvertValues() {
         util::set_bit(null_bitmap, i);
       }
     }
-    out_->null_count = null_count;
   } else if (traits::supports_nulls) {
+    const T* in_values = reinterpret_cast<const T*>(out_->values);
+
     // TODO(wesm): striding
     for (int i = 0; i < out_->length; ++i) {
-      if (traits::isnull(out_->values[i])) {
+      if (traits::isnull(in_values[i])) {
         ++null_count;
         util::set_bit(null_bitmap, i);
       }
@@ -291,6 +295,8 @@ class FeatherDeserializer {
   template <int T2>
   inline typename std::enable_if<feather_traits<T2>::is_floating, void>::type
   ConvertValues() {
+    typedef typename feather_traits<T2>::T T;
+
     npy_intp dims[1] = {arr_->length};
     out_ = PyArray_SimpleNew(1, dims, feather_traits<T2>::npy_type);
 
@@ -300,8 +306,9 @@ class FeatherDeserializer {
     }
 
     if (arr_->null_count > 0) {
-      double* out_values = reinterpret_cast<double*>(PyArray_DATA(out_));
-      const double* in_values = reinterpret_cast<const double*>(arr_->values);
+      std::cout << "yes nulls" << std::endl;
+      T* out_values = reinterpret_cast<T*>(PyArray_DATA(out_));
+      const T* in_values = reinterpret_cast<const T*>(arr_->values);
       for (int64_t i = 0; i < arr_->length; ++i) {
         out_values[i] = util::get_bit(arr_->nulls, i) ? NAN : in_values[i];
       }

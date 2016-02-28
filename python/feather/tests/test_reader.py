@@ -67,17 +67,30 @@ class TestFeatherReader(unittest.TestCase):
         self._check_pandas_roundtrip(df)
 
     def test_float_nulls(self):
-        data = {}
-        numpy_dtypes = ['f4', 'f8']
         num_values = 100
 
-        for dtype in numpy_dtypes:
-            values = np.random.randn(num_values)
-            values[::5] = np.nan
-            data[dtype] = values.astype(dtype)
+        path = random_path()
+        self.test_files.append(path)
+        writer = FeatherWriter(path)
 
-        df = pd.DataFrame(data)
-        self._check_pandas_roundtrip(df)
+        null_mask = np.random.randint(0, 10, size=num_values) < 3
+        dtypes = ['f4', 'f8']
+        expected_cols = []
+        for name in dtypes:
+            values = np.random.randn(num_values).astype(name)
+            writer.write_array(name, values, null_mask)
+
+            values[null_mask] = np.nan
+
+            expected_cols.append(values)
+
+        writer.close()
+
+        ex_frame = pd.DataFrame(dict(zip(dtypes, expected_cols)),
+                                columns=dtypes)
+
+        result = feather.read_dataframe(path)
+        assert_frame_equal(result, ex_frame)
 
     def test_integer_no_nulls(self):
         data = {}
