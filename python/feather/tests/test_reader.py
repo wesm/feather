@@ -45,14 +45,18 @@ class TestFeatherReader(unittest.TestCase):
         with self.assertRaises(feather.FeatherError):
             FeatherReader('test_invalid_file')
 
-    def _check_pandas_roundtrip(self, df):
+    def _check_pandas_roundtrip(self, df, expected=None):
         path = random_path()
         self.test_files.append(path)
         feather.write_dataframe(df, path)
         if not os.path.exists(path):
             raise Exception('file not written')
         result = feather.read_dataframe(path)
-        assert_frame_equal(result, df)
+
+        if expected is None:
+            expected = df
+
+        assert_frame_equal(result, expected)
 
     def test_float_no_nulls(self):
         data = {}
@@ -169,9 +173,17 @@ class TestFeatherReader(unittest.TestCase):
         result = feather.read_dataframe(path)
         assert_frame_equal(result, ex_frame)
 
-    # def test_strings(self):
-    #     df = pd.DataFrame({'strings': [b'foo', None, u'bar', 'qux', None]})
-    #     self._check_pandas_roundtrip(df)
+    def test_strings(self):
+        repeats = 1000
+        values = [b'foo', None, u'bar', 'qux', np.nan]
+        df = pd.DataFrame({'strings': values * repeats})
+
+        values = ['foo', None, u'bar', 'qux', None]
+        expected = pd.DataFrame({'strings': values * repeats})
+        self._check_pandas_roundtrip(df, expected)
+
+    def test_none_nan_equivalent(self):
+        pass
 
     def test_category(self):
         pass

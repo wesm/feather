@@ -106,16 +106,19 @@ Status TableWriter::AppendPlain(const std::string& name,
   if (IsVariableLength(values.type)) {
     size_t offset_bytes = sizeof(int32_t) * (values.length + 1);
 
-    values_bytes = values.offsets[values.length] * value_byte_size + offset_bytes;
+    values_bytes = values.offsets[values.length] * value_byte_size;
 
     // Write the variable-length offsets
     RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(values.offsets),
             offset_bytes));
-  } else if (values.type == PrimitiveType::BOOL) {
-    // Booleans are bit-packed
-    values_bytes = util::bytes_for_bits(values.length);
+    meta.total_bytes += offset_bytes;
   } else {
-    values_bytes = values.length * value_byte_size;
+    if (values.type == PrimitiveType::BOOL) {
+      // Booleans are bit-packed
+      values_bytes = util::bytes_for_bits(values.length);
+    } else {
+      values_bytes = values.length * value_byte_size;
+    }
   }
   RETURN_NOT_OK(stream_->Write(values.values, values_bytes));
   meta.total_bytes += values_bytes;

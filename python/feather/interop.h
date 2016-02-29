@@ -132,15 +132,66 @@ class FeatherSerializer {
   Status ConvertData();
 
   Status ConvertObjectStrings() {
+    PyObject** objects = reinterpret_cast<PyObject**>(PyArray_DATA(arr_));
+
+    auto offsets_buffer = std::make_shared<OwnedMutableBuffer>();
+    RETURN_NOT_OK(offsets_buffer->Resize(sizeof(int32_t) * (out_->length + 1)));
+    int32_t* offsets = reinterpret_cast<int32_t*>(offsets_buffer->mutable_data());
+
+    BufferBuilder data_builder;
+
+    Status s;
+    PyObject* obj;
+    int length;
+    int offset = 0;
+    int64_t null_count = 0;
+    for (int64_t i = 0; i < out_->length; ++i) {
+      obj = objects[i];
+      if (PyUnicode_Check(obj)) {
+        obj = PyUnicode_AsUTF8String(obj);
+        if (obj == NULL) {
+          PyErr_Clear();
+          return Status::Invalid("failed converting unicode to UTF8");
+        }
+        length = PyBytes_GET_SIZE(obj);
+        s = data_builder.Append(
+            reinterpret_cast<const uint8_t*>(PyBytes_AS_STRING(obj)), length);
+        Py_DECREF(obj);
+        if (!s.ok()) {
+          return s;
+        }
+      } else if (PyBytes_Check(obj)) {
+        length = PyBytes_GET_SIZE(obj);
+        RETURN_NOT_OK(data_builder.Append(
+                reinterpret_cast<const uint8_t*>(PyBytes_AS_STRING(obj)), length));
+      } else {
+        // NULL
+        util::set_bit(null_bitmap_, i);
+        // No change to offset
+        length = 0;
+        ++null_count;
+      }
+      offsets[i] = offset;
+      offset += length;
+    }
+    // End offset
+    offsets[out_->length] = offset;
+
+    std::shared_ptr<Buffer> data_buffer = data_builder.Finish();
     out_->type = PrimitiveType::UTF8;
-    const PyObject** objects = reinterpret_cast<const PyObject**>(PyArray_DATA(arr_));
+    out_->values = data_buffer->data();
+    out_->buffers.push_back(data_buffer);
+
+    out_->offsets = offsets;
+    out_->buffers.push_back(offsets_buffer);
+    out_->null_count = null_count;
 
     return Status::OK();
   }
 
   Status ConvertBooleans() {
     out_->type = PrimitiveType::BOOL;
-    const PyObject** objects = reinterpret_cast<const PyObject**>(PyArray_DATA(arr_));
+    PyObject** objects = reinterpret_cast<PyObject**>(PyArray_DATA(arr_));
 
     return Status::OK();
   }
