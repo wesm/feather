@@ -176,19 +176,6 @@ inline Status FeatherSerializer<TYPE>::Convert() {
   out_->length = PyArray_SIZE(arr_);
   out_->type = traits::feather_type;
 
-  RETURN_NOT_OK(ConvertData());
-  return Status::OK();
-}
-
-template <int TYPE>
-inline Status FeatherSerializer<TYPE>::ConvertData() {
-  typedef npy_traits<TYPE> traits;
-
-  if (is_strided()) {
-    return Status::Invalid("no support for strided data yet");
-  }
-  out_->values = static_cast<const uint8_t*>(PyArray_DATA(arr_));
-
   uint8_t* bitmap = nullptr;
   if (mask_ != nullptr || traits::supports_nulls) {
     RETURN_NOT_OK(InitNullBitmap(&bitmap));
@@ -201,6 +188,17 @@ inline Status FeatherSerializer<TYPE>::ConvertData() {
     null_count = ValuesToBitmap<TYPE>(PyArray_DATA(arr_), out_->length, bitmap);
   }
   out_->null_count = null_count;
+
+  RETURN_NOT_OK(ConvertData());
+  return Status::OK();
+}
+
+template <int TYPE>
+inline Status FeatherSerializer<TYPE>::ConvertData() {
+  if (is_strided()) {
+    return Status::Invalid("no support for strided data yet");
+  }
+  out_->values = static_cast<const uint8_t*>(PyArray_DATA(arr_));
 
   return Status::OK();
 }
@@ -226,7 +224,6 @@ inline Status FeatherSerializer<NPY_BOOL>::ConvertData() {
       util::set_bit(bitmap, i);
     }
   }
-  out_->null_count = 0;
   out_->values = bitmap;
 
   return Status::OK();
@@ -413,7 +410,21 @@ class FeatherDeserializer {
     if (arr_->null_count > 0) {
       out_ = PyArray_SimpleNew(1, dims, NPY_OBJECT);
       if (out_ == NULL)  return;
-      // TODO
+      PyObject** out_values = reinterpret_cast<PyObject**>(PyArray_DATA(out_));
+      for (int64_t i = 0; i < arr_->length; ++i) {
+        if (util::get_bit(arr_->nulls, i)) {
+          Py_INCREF(Py_None);
+          out_values[i] = Py_None;
+        } else if (util::get_bit(arr_->values, i)) {
+          // True
+          Py_INCREF(Py_True);
+          out_values[i] = Py_True;
+        } else {
+          // False
+          Py_INCREF(Py_False);
+          out_values[i] = Py_False;
+        }
+      }
     } else {
       out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
       if (out_ == NULL)  return;

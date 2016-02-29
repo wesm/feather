@@ -147,7 +147,27 @@ class TestFeatherReader(unittest.TestCase):
 
     def test_boolean_nulls(self):
         # pandas requires upcast to object dtype
-        pass
+        path = random_path()
+        self.test_files.append(path)
+
+        num_values = 100
+        np.random.seed(0)
+
+        writer = FeatherWriter(path)
+
+        mask = np.random.randint(0, 10, size=num_values) < 3
+        values = np.random.randint(0, 10, size=num_values) < 5
+        writer.write_array('bools', values, mask)
+
+        expected = values.astype(object)
+        expected[mask] = None
+
+        writer.close()
+
+        ex_frame = pd.DataFrame({'bools': expected})
+
+        result = feather.read_dataframe(path)
+        assert_frame_equal(result, ex_frame)
 
     def test_category(self):
         pass
