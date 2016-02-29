@@ -169,5 +169,9 @@ class TestFeatherReader(unittest.TestCase):
         result = feather.read_dataframe(path)
         assert_frame_equal(result, ex_frame)
 
+    # def test_strings(self):
+    #     df = pd.DataFrame({'strings': [b'foo', None, u'bar', 'qux', None]})
+    #     self._check_pandas_roundtrip(df)
+
     def test_category(self):
         pass

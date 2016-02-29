@@ -111,7 +111,7 @@ class FeatherSerializer {
     return PyArray_STRIDES(arr_)[0];
   }
 
-  Status InitNullBitmap(uint8_t** bitmap) {
+  Status InitNullBitmap() {
     int null_bytes = util::bytes_for_bits(out_->length);
     auto buffer = std::make_shared<OwnedMutableBuffer>();
     RETURN_NOT_OK(buffer->Resize(null_bytes));
@@ -119,7 +119,7 @@ class FeatherSerializer {
     memset(buffer->mutable_data(), 0, null_bytes);
     out_->nulls = buffer->data();
 
-    *bitmap = buffer->mutable_data();
+    null_bitmap_ = buffer->mutable_data();
     return Status::OK();
   }
 
@@ -131,9 +131,25 @@ class FeatherSerializer {
  private:
   Status ConvertData();
 
+  Status ConvertObjectStrings() {
+    out_->type = PrimitiveType::UTF8;
+    const PyObject** objects = reinterpret_cast<const PyObject**>(PyArray_DATA(arr_));
+
+    return Status::OK();
+  }
+
+  Status ConvertBooleans() {
+    out_->type = PrimitiveType::BOOL;
+    const PyObject** objects = reinterpret_cast<const PyObject**>(PyArray_DATA(arr_));
+
+    return Status::OK();
+  }
+
   PyArrayObject* arr_;
   PyArrayObject* mask_;
   PrimitiveArray* out_;
+
+  uint8_t* null_bitmap_;
 };
 
 // Returns null count
@@ -176,21 +192,74 @@ inline Status FeatherSerializer<TYPE>::Convert() {
   out_->length = PyArray_SIZE(arr_);
   out_->type = traits::feather_type;
 
-  uint8_t* bitmap = nullptr;
   if (mask_ != nullptr || traits::supports_nulls) {
-    RETURN_NOT_OK(InitNullBitmap(&bitmap));
+    RETURN_NOT_OK(InitNullBitmap());
   }
 
   int64_t null_count = 0;
   if (mask_ != nullptr) {
-    null_count = MaskToBitmap(mask_, out_->length, bitmap);
+    null_count = MaskToBitmap(mask_, out_->length, null_bitmap_);
   } else if (traits::supports_nulls) {
-    null_count = ValuesToBitmap<TYPE>(PyArray_DATA(arr_), out_->length, bitmap);
+    null_count = ValuesToBitmap<TYPE>(PyArray_DATA(arr_), out_->length, null_bitmap_);
   }
   out_->null_count = null_count;
 
   RETURN_NOT_OK(ConvertData());
   return Status::OK();
+}
+
+PyObject* numpy_nan = nullptr;
+
+static inline bool PyObject_is_null(const PyObject* obj) {
+  return obj == Py_None || obj == numpy_nan;
+}
+
+static inline bool PyObject_is_string(const PyObject* obj) {
+#if PY_MAJOR_VERSION >= 3
+  return PyString_Check(obj) || PyBytes_Check(obj);
+#else
+  return PyString_Check(obj) || PyUnicode_Check(obj);
+#endif
+}
+
+static inline bool PyObject_is_bool(const PyObject* obj) {
+#if PY_MAJOR_VERSION >= 3
+  return PyString_Check(obj) || PyBytes_Check(obj);
+#else
+  return PyString_Check(obj) || PyUnicode_Check(obj);
+#endif
+}
+
+template <>
+inline Status FeatherSerializer<NPY_OBJECT>::Convert() {
+  // Python object arrays are annoying, since we could have one of:
+  //
+  // * Strings
+  // * Booleans with nulls
+  // * Mixed type (not supported at the moment by feather format)
+  //
+  // Additionally, nulls may be encoded either as np.nan or None. So we have to
+  // do some type inference and conversion
+
+  out_->length = PyArray_SIZE(arr_);
+  RETURN_NOT_OK(InitNullBitmap());
+
+  // TODO: mask not supported here
+  const PyObject** objects = reinterpret_cast<const PyObject**>(PyArray_DATA(arr_));
+
+  for (int64_t i = 0; i < out_->length; ++i) {
+    if (PyObject_is_null(objects[i])) {
+      continue;
+    } else if (PyObject_is_string(objects[i])) {
+      return ConvertObjectStrings();
+    } else if (PyBool_Check(objects[i])) {
+      return ConvertBooleans();
+    } else {
+      return Status::Invalid("unhandled python type");
+    }
+  }
+
+  return Status::Invalid("Unable to infer type of object array, were all null");
 }
 
 template <int TYPE>
@@ -268,7 +337,7 @@ Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
     TO_FEATHER_CASE(UINT64);
     TO_FEATHER_CASE(FLOAT32);
     TO_FEATHER_CASE(FLOAT64);
-    // TO_FEATHER_CASE(OBJECT);
+    TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
       ss << "unsupported type " << PyArray_DESCR(arr)->type_num
@@ -341,6 +410,23 @@ struct feather_traits<PrimitiveType::DOUBLE> {
   typedef typename npy_traits<NPY_FLOAT64>::value_type T;
 };
 
+template <>
+struct feather_traits<PrimitiveType::UTF8> {
+  static constexpr int npy_type = NPY_OBJECT;
+  static constexpr bool supports_nulls = true;
+  static constexpr bool is_boolean = false;
+  static constexpr bool is_integer = false;
+  static constexpr bool is_floating = false;
+};
+
+
+static inline PyObject* make_pystring(const uint8_t* data, int32_t length) {
+#if PY_MAJOR_VERSION >= 3
+  return PyUnicode_FromStringAndSize(reinterpret_cast<const char*>(data), length);
+#else
+  return PyString_FromStringAndSize(reinterpret_cast<const char*>(data), length);
+#endif
+}
 
 template <int TYPE>
 class FeatherDeserializer {
@@ -436,11 +522,41 @@ class FeatherDeserializer {
     }
   }
 
+  // UTF8
+  template <int T2>
+  inline typename std::enable_if<T2 == PrimitiveType::UTF8, void>::type
+  ConvertValues() {
+    npy_intp dims[1] = {arr_->length};
+    out_ = PyArray_SimpleNew(1, dims, NPY_OBJECT);
+    if (out_ == NULL)  return;
+    PyObject** out_values = reinterpret_cast<PyObject**>(PyArray_DATA(out_));
+    int32_t offset;
+    int32_t length;
+    if (arr_->null_count > 0) {
+      for (int64_t i = 0; i < arr_->length; ++i) {
+        if (util::get_bit(arr_->nulls, i)) {
+          Py_INCREF(Py_None);
+          out_values[i] = Py_None;
+        } else {
+          offset = arr_->offsets[i];
+          length = arr_->offsets[i + 1] - offset;
+          out_values[i] = make_pystring(arr_->values + offset, length);
+          if (out_values[i] == nullptr) return;
+        }
+      }
+    } else {
+      for (int64_t i = 0; i < arr_->length; ++i) {
+        offset = arr_->offsets[i];
+        length = arr_->offsets[i + 1] - offset;
+        out_values[i] = make_pystring(arr_->values + offset, length);
+        if (out_values[i] == nullptr) return;
+      }
+    }
+  }
  private:
   const PrimitiveArray* arr_;
   PyObject* out_;
 };
-
 
 #define FROM_FEATHER_CASE(TYPE)                                 \
   case PrimitiveType::TYPE:                                     \
@@ -463,7 +579,7 @@ PyObject* primitive_to_pandas(const PrimitiveArray& arr) {
     FROM_FEATHER_CASE(UINT64);
     FROM_FEATHER_CASE(FLOAT);
     FROM_FEATHER_CASE(DOUBLE);
-    // FROM_FEATHER_CASE(UTF8);
+    FROM_FEATHER_CASE(UTF8);
     // FROM_FEATHER_CASE(CATEGORY);
     default:
       break;
