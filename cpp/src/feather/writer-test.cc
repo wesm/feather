@@ -102,7 +102,7 @@ PrimitiveArray MakePrimitive(PrimitiveType::type type,
 TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::ceil_byte(num_values);
+  int null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;
@@ -138,7 +138,7 @@ TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
   // UTF8 or BINARY
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::ceil_byte(num_values);
+  int null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;

@@ -139,6 +139,9 @@ class TestFeatherReader(unittest.TestCase):
 
     def test_boolean_no_nulls(self):
         num_values = 100
+
+        np.random.seed(0)
+
         df = pd.DataFrame({'bools': np.random.randn(num_values) > 0})
         self._check_pandas_roundtrip(df)
 

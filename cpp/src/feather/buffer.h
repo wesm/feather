@@ -22,6 +22,8 @@
 
 namespace feather {
 
+class Status;
+
 // ----------------------------------------------------------------------
 // Buffer classes
 
@@ -97,7 +99,7 @@ class MutableBuffer : public Buffer {
 class OwnedMutableBuffer : public MutableBuffer {
  public:
   OwnedMutableBuffer();
-  void Resize(int64_t new_size);
+  Status Resize(int64_t new_size);
 
  private:
   std::vector<uint8_t> buffer_owner_;

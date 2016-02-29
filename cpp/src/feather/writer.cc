@@ -94,7 +94,7 @@ Status TableWriter::AppendPlain(const std::string& name,
   if (values.null_count > 0) {
     // We assume there is one bit for each value in values.nulls, aligned on a
     // byte boundary, and we write this much data into the stream
-    size_t null_bytes = util::ceil_byte(values.length);
+    size_t null_bytes = util::bytes_for_bits(values.length);
 
     RETURN_NOT_OK(stream_->Write(values.nulls, null_bytes));
     meta.total_bytes += null_bytes;
@@ -111,6 +111,9 @@ Status TableWriter::AppendPlain(const std::string& name,
     // Write the variable-length offsets
     RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(values.offsets),
             offset_bytes));
+  } else if (values.type == PrimitiveType::BOOL) {
+    // Booleans are bit-packed
+    values_bytes = util::bytes_for_bits(values.length);
   } else {
     values_bytes = values.length * value_byte_size;
   }

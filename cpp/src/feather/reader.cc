@@ -102,7 +102,7 @@ Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray*
   // If there are nulls, the null bitmask is first
   if (meta.null_count > 0) {
     out->nulls = data;
-    data += util::ceil_byte(meta.length);
+    data += util::bytes_for_bits(meta.length);
   } else {
     out->nulls = nullptr;
   }

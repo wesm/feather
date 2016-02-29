@@ -104,14 +104,14 @@ int64_t LocalFileReader::Tell() const {
 
 Status LocalFileReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
   auto buffer = std::make_shared<OwnedMutableBuffer>();
-  buffer->Resize(nbytes);
+  RETURN_NOT_OK(buffer->Resize(nbytes));
   int64_t bytes_read = fread(buffer->mutable_data(), 1, nbytes, file_);
   if (bytes_read < nbytes) {
     // Exception if not EOF
     if (!feof(file_)) {
       return Status::IOError("Error reading bytes from file");
     }
-    buffer->Resize(bytes_read);
+    RETURN_NOT_OK(buffer->Resize(bytes_read));
   }
   *out = buffer;
   return Status::OK();
@@ -185,7 +185,7 @@ Status InMemoryOutputStream::Write(const uint8_t* data, int64_t length) {
     while (new_capacity < size_ + length) {
       new_capacity *= 2;
     }
-    buffer_->Resize(new_capacity);
+    RETURN_NOT_OK(buffer_->Resize(new_capacity));
     capacity_ = new_capacity;
   }
   memcpy(Head(), data, length);

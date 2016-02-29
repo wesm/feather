@@ -105,17 +105,23 @@ class FeatherSerializer {
       mask_(mask),
       out_(out) {}
 
-  Status Convert() {
-    out_->length = PyArray_SIZE(arr_);
-    ConvertValues();
-    return Status::OK();
-  }
+  Status Convert();
 
   int stride() const {
     return PyArray_STRIDES(arr_)[0];
   }
 
-  Status ConvertValues();
+  Status InitNullBitmap(uint8_t** bitmap) {
+    int null_bytes = util::bytes_for_bits(out_->length);
+    auto buffer = std::make_shared<OwnedMutableBuffer>();
+    RETURN_NOT_OK(buffer->Resize(null_bytes));
+    out_->buffers.push_back(buffer);
+    memset(buffer->mutable_data(), 0, null_bytes);
+    out_->nulls = buffer->data();
+
+    *bitmap = buffer->mutable_data();
+    return Status::OK();
+  }
 
   bool is_strided() const {
     npy_intp* astrides = PyArray_STRIDES(arr_);
@@ -123,67 +129,114 @@ class FeatherSerializer {
   }
 
  private:
+  Status ConvertData();
+
   PyArrayObject* arr_;
   PyArrayObject* mask_;
   PrimitiveArray* out_;
 };
 
+// Returns null count
+static int64_t MaskToBitmap(PyArrayObject* mask, int64_t length, uint8_t* bitmap) {
+  int64_t null_count = 0;
+  const uint8_t* mask_values = static_cast<const uint8_t*>(PyArray_DATA(mask));
+  // TODO(wesm): strided null mask
+  for (int i = 0; i < length; ++i) {
+    if (mask_values[i]) {
+      ++null_count;
+      util::set_bit(bitmap, i);
+    }
+  }
+  return null_count;
+}
+
 template <int TYPE>
-inline Status FeatherSerializer<TYPE>::ConvertValues() {
+static int64_t ValuesToBitmap(const void* data, int64_t length, uint8_t* bitmap) {
   typedef npy_traits<TYPE> traits;
   typedef typename traits::value_type T;
 
+  int64_t null_count = 0;
+  const T* values = reinterpret_cast<const T*>(data);
+
+  // TODO(wesm): striding
+  for (int i = 0; i < length; ++i) {
+    if (traits::isnull(values[i])) {
+      ++null_count;
+      util::set_bit(bitmap, i);
+    }
+  }
+
+  return null_count;
+}
+
+template <int TYPE>
+inline Status FeatherSerializer<TYPE>::Convert() {
+  typedef npy_traits<TYPE> traits;
+
+  out_->length = PyArray_SIZE(arr_);
   out_->type = traits::feather_type;
+
+  RETURN_NOT_OK(ConvertData());
+  return Status::OK();
+}
+
+template <int TYPE>
+inline Status FeatherSerializer<TYPE>::ConvertData() {
+  typedef npy_traits<TYPE> traits;
 
   if (is_strided()) {
     return Status::Invalid("no support for strided data yet");
   }
-
   out_->values = static_cast<const uint8_t*>(PyArray_DATA(arr_));
 
-  uint8_t* null_bitmap = nullptr;
-
+  uint8_t* bitmap = nullptr;
   if (mask_ != nullptr || traits::supports_nulls) {
-    int null_bytes = util::ceil_byte(out_->length);
-    auto buffer = std::make_shared<OwnedMutableBuffer>();
-    buffer->Resize(null_bytes);
-    out_->buffers.push_back(buffer);
-
-    null_bitmap = buffer->mutable_data();
-    memset(null_bitmap, 0, null_bytes);
-    out_->nulls = buffer->data();
+    RETURN_NOT_OK(InitNullBitmap(&bitmap));
   }
 
   int64_t null_count = 0;
   if (mask_ != nullptr) {
-    const uint8_t* mask_values = static_cast<const uint8_t*>(PyArray_DATA(mask_));
-    // TODO(wesm): strided null mask
-    for (int i = 0; i < out_->length; ++i) {
-      if (mask_values[i]) {
-        ++null_count;
-        util::set_bit(null_bitmap, i);
-      }
-    }
+    null_count = MaskToBitmap(mask_, out_->length, bitmap);
   } else if (traits::supports_nulls) {
-    const T* in_values = reinterpret_cast<const T*>(out_->values);
-
-    // TODO(wesm): striding
-    for (int i = 0; i < out_->length; ++i) {
-      if (traits::isnull(in_values[i])) {
-        ++null_count;
-        util::set_bit(null_bitmap, i);
-      }
-    }
+    null_count = ValuesToBitmap<TYPE>(PyArray_DATA(arr_), out_->length, bitmap);
   }
-  out_->nulls = null_bitmap;
   out_->null_count = null_count;
+
   return Status::OK();
 }
 
 template <>
-inline Status FeatherSerializer<NPY_OBJECT>::ConvertValues() {
+inline Status FeatherSerializer<NPY_BOOL>::ConvertData() {
+  if (is_strided()) {
+    return Status::Invalid("no support for strided data yet");
+  }
+
+  int nbytes = util::bytes_for_bits(out_->length);
+  auto buffer = std::make_shared<OwnedMutableBuffer>();
+  RETURN_NOT_OK(buffer->Resize(nbytes));
+  out_->buffers.push_back(buffer);
+
+  const uint8_t* values = reinterpret_cast<const uint8_t*>(PyArray_DATA(arr_));
+
+  uint8_t* bitmap = buffer->mutable_data();
+
+  memset(bitmap, 0, nbytes);
+  for (int i = 0; i < out_->length; ++i) {
+    if (values[i] > 0) {
+      util::set_bit(bitmap, i);
+    }
+  }
+  out_->null_count = 0;
+  out_->values = bitmap;
+
+  return Status::OK();
+}
+
+template <>
+inline Status FeatherSerializer<NPY_OBJECT>::ConvertData() {
   return Status::Invalid("NYI");
 }
+
 
 #define TO_FEATHER_CASE(TYPE)                                   \
   case NPY_##TYPE:                                              \
@@ -218,7 +271,7 @@ Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
     TO_FEATHER_CASE(UINT64);
     TO_FEATHER_CASE(FLOAT32);
     TO_FEATHER_CASE(FLOAT64);
-    TO_FEATHER_CASE(OBJECT);
+    // TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
       ss << "unsupported type " << PyArray_DESCR(arr)->type_num
@@ -364,8 +417,11 @@ class FeatherDeserializer {
     } else {
       out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
       if (out_ == NULL)  return;
-      memcpy(PyArray_DATA(out_), arr_->values,
-          arr_->length * ByteSize(arr_->type));
+
+      uint8_t* out_values = reinterpret_cast<uint8_t*>(PyArray_DATA(out_));
+      for (int64_t i = 0; i < arr_->length; ++i) {
+        out_values[i] = util::get_bit(arr_->values, i) ? 1 : 0;
+      }
     }
   }
 
@@ -396,7 +452,7 @@ PyObject* primitive_to_pandas(const PrimitiveArray& arr) {
     FROM_FEATHER_CASE(UINT64);
     FROM_FEATHER_CASE(FLOAT);
     FROM_FEATHER_CASE(DOUBLE);
-    FROM_FEATHER_CASE(UTF8);
+    // FROM_FEATHER_CASE(UTF8);
     // FROM_FEATHER_CASE(CATEGORY);
     default:
       break;
