@@ -44,7 +44,6 @@ cdef extern from "interop.h" namespace "feather::py":
                                       PrimitiveArray* out)
     object primitive_to_pandas(const PrimitiveArray& arr)
 
-
 cdef check_status(const Status& status):
     if status.ok():
         return
@@ -52,6 +51,7 @@ cdef check_status(const Status& status):
     cdef string c_message = status.ToString()
     raise FeatherError(frombytes(c_message))
 
+cdef object numpy_nan = np.nan
 
 cdef class FeatherWriter:
     cdef:

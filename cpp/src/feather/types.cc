@@ -39,7 +39,7 @@ bool PrimitiveArray::Equals(const PrimitiveArray& other) const {
 
   if (this->null_count > 0) {
     if (this->null_count != other.null_count ||
-        memcmp(this->nulls, other.nulls, util::ceil_byte(this->length)) != 0) {
+        memcmp(this->nulls, other.nulls, util::bytes_for_bits(this->length)) != 0) {
       return false;
     }
   }

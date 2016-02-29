@@ -20,7 +20,11 @@
 #include <memory>
 #include <vector>
 
+#include "feather/status.h"
+
 namespace feather {
+
+class Status;
 
 // ----------------------------------------------------------------------
 // Buffer classes
@@ -97,10 +101,48 @@ class MutableBuffer : public Buffer {
 class OwnedMutableBuffer : public MutableBuffer {
  public:
   OwnedMutableBuffer();
-  void Resize(int64_t new_size);
+  Status Resize(int64_t new_size);
 
  private:
   std::vector<uint8_t> buffer_owner_;
+};
+
+static constexpr int64_t MIN_BUFFER_CAPACITY = 1024;
+
+class BufferBuilder {
+ public:
+  BufferBuilder() :
+      capacity_(0),
+      size_(0) {}
+
+  Status Append(const uint8_t* data, int length) {
+    if (capacity_ < length + size_) {
+      if (capacity_ == 0) {
+        buffer_ = std::make_shared<OwnedMutableBuffer>();
+      }
+      capacity_ = std::max(MIN_BUFFER_CAPACITY, capacity_);
+      while (capacity_ < length + size_) {
+        capacity_ *= 2;
+      }
+      RETURN_NOT_OK(buffer_->Resize(capacity_));
+      data_ = buffer_->mutable_data();
+    }
+    memcpy(data_ + size_, data, length);
+    size_ += length;
+    return Status::OK();
+  }
+
+  std::shared_ptr<Buffer> Finish() {
+    auto result = buffer_;
+    buffer_ = nullptr;
+    return result;
+  }
+
+ private:
+  std::shared_ptr<OwnedMutableBuffer> buffer_;
+  uint8_t* data_;
+  int64_t capacity_;
+  int64_t size_;
 };
 
 } // namespace feather
