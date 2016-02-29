@@ -187,8 +187,9 @@ class TestFeatherReader(unittest.TestCase):
         expected = pd.DataFrame({'strings': values * repeats})
         self._check_pandas_roundtrip(df, expected)
 
-    def test_none_nan_equivalent(self):
-        pass
-
-    def test_category(self):
-        pass
+    # def test_category(self):
+    #     repeats = 1000
+    #     values = [b'foo', None, u'bar', 'qux', np.nan]
+    #     df = pd.DataFrame({'strings': values * repeats})
+    #     df['strings'] = df['strings'].astype('category')
+    #     self._check_pandas_roundtrip(df)
