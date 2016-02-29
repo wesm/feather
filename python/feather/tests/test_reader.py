@@ -173,6 +173,11 @@ class TestFeatherReader(unittest.TestCase):
         result = feather.read_dataframe(path)
         assert_frame_equal(result, ex_frame)
 
+    def test_boolean_object_nulls(self):
+        arr = np.array([False, None, True] * 100, dtype=object)
+        df = pd.DataFrame({'bools': arr})
+        self._check_pandas_roundtrip(df)
+
     def test_strings(self):
         repeats = 1000
         values = [b'foo', None, u'bar', 'qux', np.nan]

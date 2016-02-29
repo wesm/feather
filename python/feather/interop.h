@@ -193,6 +193,26 @@ class FeatherSerializer {
     out_->type = PrimitiveType::BOOL;
     PyObject** objects = reinterpret_cast<PyObject**>(PyArray_DATA(arr_));
 
+    int nbytes = util::bytes_for_bits(out_->length);
+    auto buffer = std::make_shared<OwnedMutableBuffer>();
+    RETURN_NOT_OK(buffer->Resize(nbytes));
+    out_->buffers.push_back(buffer);
+    uint8_t* bitmap = buffer->mutable_data();
+    memset(bitmap, 0, nbytes);
+
+    int64_t null_count = 0;
+    for (int64_t i = 0; i < out_->length; ++i) {
+      if (objects[i] == Py_True) {
+        util::set_bit(bitmap, i);
+      } else if (objects[i] != Py_False) {
+        util::set_bit(null_bitmap_, i);
+        ++null_count;
+      }
+    }
+    out_->type = PrimitiveType::BOOL;
+    out_->values = bitmap;
+    out_->null_count = null_count;
+
     return Status::OK();
   }
 
