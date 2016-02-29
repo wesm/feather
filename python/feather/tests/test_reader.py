@@ -45,14 +45,18 @@ class TestFeatherReader(unittest.TestCase):
         with self.assertRaises(feather.FeatherError):
             FeatherReader('test_invalid_file')
 
-    def _check_pandas_roundtrip(self, df):
+    def _check_pandas_roundtrip(self, df, expected=None):
         path = random_path()
         self.test_files.append(path)
         feather.write_dataframe(df, path)
         if not os.path.exists(path):
             raise Exception('file not written')
         result = feather.read_dataframe(path)
-        assert_frame_equal(result, df)
+
+        if expected is None:
+            expected = df
+
+        assert_frame_equal(result, expected)
 
     def test_float_no_nulls(self):
         data = {}
@@ -139,9 +143,53 @@ class TestFeatherReader(unittest.TestCase):
 
     def test_boolean_no_nulls(self):
         num_values = 100
+
+        np.random.seed(0)
+
         df = pd.DataFrame({'bools': np.random.randn(num_values) > 0})
         self._check_pandas_roundtrip(df)
 
     def test_boolean_nulls(self):
         # pandas requires upcast to object dtype
-        pass
+        path = random_path()
+        self.test_files.append(path)
+
+        num_values = 100
+        np.random.seed(0)
+
+        writer = FeatherWriter(path)
+
+        mask = np.random.randint(0, 10, size=num_values) < 3
+        values = np.random.randint(0, 10, size=num_values) < 5
+        writer.write_array('bools', values, mask)
+
+        expected = values.astype(object)
+        expected[mask] = None
+
+        writer.close()
+
+        ex_frame = pd.DataFrame({'bools': expected})
+
+        result = feather.read_dataframe(path)
+        assert_frame_equal(result, ex_frame)
+
+    def test_boolean_object_nulls(self):
+        arr = np.array([False, None, True] * 100, dtype=object)
+        df = pd.DataFrame({'bools': arr})
+        self._check_pandas_roundtrip(df)
+
+    def test_strings(self):
+        repeats = 1000
+        values = [b'foo', None, u'bar', 'qux', np.nan]
+        df = pd.DataFrame({'strings': values * repeats})
+
+        values = ['foo', None, u'bar', 'qux', None]
+        expected = pd.DataFrame({'strings': values * repeats})
+        self._check_pandas_roundtrip(df, expected)
+
+    # def test_category(self):
+    #     repeats = 1000
+    #     values = [b'foo', None, u'bar', 'qux', np.nan]
+    #     df = pd.DataFrame({'strings': values * repeats})
+    #     df['strings'] = df['strings'].astype('category')
+    #     self._check_pandas_roundtrip(df)

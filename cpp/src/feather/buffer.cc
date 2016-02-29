@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "feather/buffer.h"
+#include "feather/status.h"
 
 namespace feather {
 
@@ -29,11 +30,18 @@ std::shared_ptr<Buffer> MutableBuffer::GetImmutableView() {
 
 OwnedMutableBuffer::OwnedMutableBuffer() {}
 
-void OwnedMutableBuffer::Resize(int64_t new_size) {
+Status OwnedMutableBuffer::Resize(int64_t new_size) {
   size_ = new_size;
-  buffer_owner_.resize(new_size);
+  try {
+    buffer_owner_.resize(new_size);
+  } catch (const std::bad_alloc& e) {
+    return Status::OutOfMemory("allocation failed");
+  }
   data_ = buffer_owner_.data();
   mutable_data_ = buffer_owner_.data();
+
+  return Status::OK();
 }
+
 
 } // namespace feather

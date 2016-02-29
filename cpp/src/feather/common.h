@@ -25,6 +25,10 @@ static inline size_t ceil_byte(size_t size) {
   return (size + 7) & ~7;
 }
 
+static inline int64_t bytes_for_bits(int64_t size) {
+  return ((size + 7) & ~7) / 8;
+}
+
 static inline bool get_bit(const uint8_t* bits, int i) {
   return bits[i / 8] & (1 << (i & 7));
 }
