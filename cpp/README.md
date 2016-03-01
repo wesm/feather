@@ -10,6 +10,12 @@ run:
 ./thirdparty/download_thirdparty.sh
 ./thirdparty/build_thirdparty.sh
 
+# Sets the thirdparty build environment variables
+source develop_env.sh
+
+# Generates the flatbuffers bindings, to be automated
+./update_fbs.sh
+
 mkdir release-build
 cd release-build
 export FEATHER_HOME=$HOME/local
