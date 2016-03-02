@@ -7,8 +7,13 @@ Authors@R: c(
   )
 Description: Read and write feather files, a lightweight binary columnar
     datastore designed for maximum speed.
-Depends: R (>= 3.2.3)
+Depends:
+    R (>= 3.2.3)
 License: GPL-3
 LazyData: true
 URL: https://github.com/wesm/feather
 BugReports: https://github.com/wesm/feather/issues
+LinkingTo: Rcpp
+Imports:
+    Rcpp
+RoxygenNote: 5.0.1
