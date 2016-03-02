@@ -132,6 +132,36 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
 }
 
 TEST_F(TestTableWriter, CategoryRoundtrip) {
+  int num_values = 1000;
+  int num_nulls = 50;
+  int num_levels = 10;
+  int null_bytes = util::bytes_for_bits(num_values);
+
+    // Generate some random data
+  vector<uint8_t> null_buffer;
+  vector<uint8_t> values_buffer;
+  vector<uint8_t> levels_buffer;
+  test::random_bytes(null_bytes, 0, &null_buffer);
+  test::random_bytes(num_values * sizeof(int32_t), 0, &values_buffer);
+  test::random_bytes(num_levels * sizeof(uint8_t), 0, &levels_buffer);
+
+  PrimitiveArray values = MakePrimitive(PrimitiveType::INT32, num_values,
+      num_nulls, &null_buffer[0], &values_buffer[0], nullptr);
+
+  PrimitiveArray levels = MakePrimitive(PrimitiveType::UINT8, num_levels,
+      0, nullptr, &levels_buffer[0], nullptr);
+
+  ASSERT_OK(writer_->AppendCategory("f0", values, levels, true));
+  Finish();
+
+  std::shared_ptr<Column> col;
+  ASSERT_OK(reader_->GetColumn(0, &col));
+  ASSERT_EQ("f0", col->metadata()->name());
+  ASSERT_EQ(ColumnType::CATEGORY, col->type());
+  ASSERT_TRUE(col->values().Equals(values));
+
+  auto cat_col = static_cast<const CategoryColumn*>(col.get());
+  ASSERT_TRUE(cat_col->levels().Equals(levels));
 }
 
 TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
