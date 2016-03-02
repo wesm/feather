@@ -15,6 +15,7 @@
 #ifndef FEATHER_BUFFER_H
 #define FEATHER_BUFFER_H
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>

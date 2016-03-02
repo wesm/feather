@@ -124,6 +124,9 @@ set_target_properties(gtest PROPERTIES IMPORTED_LOCATION ${GTEST_STATIC_LIB})
 
 ## Flatbuffers
 find_package(Flatbuffers REQUIRED)
+message(STATUS "Flatbuffers include dir: ${FLATBUFFERS_INCLUDE_DIR}")
+message(STATUS "Flatbuffers static library: ${FLATBUFFERS_STATIC_LIB}")
+message(STATUS "Flatbuffers compiler: ${FLATBUFFERS_COMPILER}")
 include_directories(SYSTEM ${FLATBUFFERS_INCLUDE_DIR})
 add_library(flatbuffers STATIC IMPORTED)
 set_target_properties(flatbuffers PROPERTIES
@@ -191,45 +194,9 @@ set(FEATHER_TEST_LINK_LIBS ${FEATHER_MIN_TEST_LIBS})
 ############################################################
 # Library config
 
-set(LIBFEATHER_SRCS
-  src/feather/buffer.cc
-  src/feather/io.cc
-  src/feather/metadata.cc
-  src/feather/reader.cc
-  src/feather/status.cc
-  src/feather/types.cc
-  src/feather/writer.cc
-)
-
-set(LIBFEATHER_LINK_LIBS
-  flatbuffers
-)
-
-set(LIBFEATHER_LINKAGE "SHARED")
-
-add_library(feather
-  ${LIBFEATHER_LINKAGE}
-  ${LIBFEATHER_SRCS}
-)
-set_target_properties(feather
-  PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY "${BUILD_OUTPUT_ROOT_DIRECTORY}")
-target_link_libraries(feather ${LIBFEATHER_LINK_LIBS})
-set_target_properties(feather PROPERTIES LINKER_LANGUAGE CXX)
-
-if(APPLE)
-    set_target_properties(feather PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-endif()
-
 add_subdirectory(src/feather)
 
 add_custom_target(clean-all
    COMMAND ${CMAKE_BUILD_TOOL} clean
    COMMAND ${CMAKE_COMMAND} -P cmake_modules/clean-all.cmake
 )
-
-# installation
-
-install(TARGETS feather
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)

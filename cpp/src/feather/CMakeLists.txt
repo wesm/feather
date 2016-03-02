@@ -12,17 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-install(FILES
-  api.h
-  buffer.h
-  common.h
-  io.h
-  metadata.h
-  reader.h
-  status.h
-  types.h
-  writer.h
-  DESTINATION include/feather)
+set(LIBFEATHER_SRCS
+  buffer.cc
+  io.cc
+  metadata.cc
+  reader.cc
+  status.cc
+  types.cc
+  writer.cc
+)
+
+set(LIBFEATHER_LINK_LIBS
+  flatbuffers
+)
+
+set(LIBFEATHER_LINKAGE "SHARED")
+
+add_library(feather
+  ${LIBFEATHER_LINKAGE}
+  ${LIBFEATHER_SRCS}
+)
+
+set_target_properties(feather
+  PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${BUILD_OUTPUT_ROOT_DIRECTORY}")
+target_link_libraries(feather ${LIBFEATHER_LINK_LIBS})
+set_target_properties(feather PROPERTIES LINKER_LANGUAGE CXX)
+
+if(APPLE)
+    set_target_properties(feather PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+endif()
 
 add_library(feather_test_main
   test_main.cc)
@@ -44,3 +63,40 @@ endif()
 ADD_FEATHER_TEST(io-test)
 ADD_FEATHER_TEST(metadata-test)
 ADD_FEATHER_TEST(writer-test)
+
+# make clean will delete the generated file
+set_source_files_properties(metadata_generated.h PROPERTIES GENERATED TRUE)
+
+set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/src/feather)
+set(FBS_OUTPUT_FILES "${OUTPUT_DIR}/metadata_generated.h")
+
+set(FBS_SRC metadata.fbs)
+get_filename_component(ABS_FBS_SRC ${FBS_SRC} ABSOLUTE)
+
+add_custom_command(
+  OUTPUT ${FBS_OUTPUT_FILES}
+  COMMAND ${FLATBUFFERS_COMPILER} -c -o ${OUTPUT_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${FBS_SRC}
+  DEPENDS ${ABS_FBA_SRC}
+  COMMENT "Running flatc compiler on ${FBS_SRC}"
+  VERBATIM
+)
+
+add_custom_target(metadata_fbs DEPENDS ${FBS_OUTPUT_FILES})
+add_dependencies(feather metadata_fbs)
+
+# installation
+install(FILES
+  api.h
+  buffer.h
+  common.h
+  io.h
+  metadata.h
+  reader.h
+  status.h
+  types.h
+  writer.h
+  DESTINATION include/feather)
+
+install(TARGETS feather
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
