@@ -1,0 +1,14 @@
+Package: feather
+Title: R bindings to the feather API.
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Hadley", "Wickham", , "hadley@rstudio.com", role = c("aut", "cre")),
+    person("RStudio", role = "cph")
+  )
+Description: Read and write feather files, a lightweight binary columnar
+    datastore designed for maximum speed.
+Depends: R (>= 3.2.3)
+License: GPL-3
+LazyData: true
+URL: https://github.com/wesm/feather
+BugReports: https://github.com/wesm/feather/issues
