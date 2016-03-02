@@ -61,10 +61,7 @@ class TableWriter {
   bool initialized_stream_;
   metadata::TableBuilder metadata_;
 
-  // Append a primitive array to the file
-  void AppendPrimitiveArray();
-
-  void AppendVariableArray();
+  Status AppendPrimitive(const PrimitiveArray& values, ArrayMetadata* out);
 };
 
 } // namespace feather
