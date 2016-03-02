@@ -75,20 +75,17 @@ Status TableWriter::Finalize() {
   return stream_->Close();
 }
 
-Status TableWriter::AppendPlain(const std::string& name,
-    const PrimitiveArray& values) {
+Status TableWriter::AppendPrimitive(const PrimitiveArray& values,
+    ArrayMetadata* meta) {
   if (!initialized_stream_) {
     RETURN_NOT_OK(Init());
   }
-
-  // Prepare metadata payload
-  ArrayMetadata meta;
-  meta.type = values.type;
-  meta.encoding = Encoding::PLAIN;
-  meta.offset = stream_->Tell();
-  meta.length = values.length;
-  meta.null_count = values.null_count;
-  meta.total_bytes = 0;
+  meta->type = values.type;
+  meta->encoding = Encoding::PLAIN;
+  meta->offset = stream_->Tell();
+  meta->length = values.length;
+  meta->null_count = values.null_count;
+  meta->total_bytes = 0;
 
   // Write the null bitmask
   if (values.null_count > 0) {
@@ -97,7 +94,7 @@ Status TableWriter::AppendPlain(const std::string& name,
     size_t null_bytes = util::bytes_for_bits(values.length);
 
     RETURN_NOT_OK(stream_->Write(values.nulls, null_bytes));
-    meta.total_bytes += null_bytes;
+    meta->total_bytes += null_bytes;
   }
 
   size_t value_byte_size = ByteSize(values.type);
@@ -111,7 +108,7 @@ Status TableWriter::AppendPlain(const std::string& name,
     // Write the variable-length offsets
     RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(values.offsets),
             offset_bytes));
-    meta.total_bytes += offset_bytes;
+    meta->total_bytes += offset_bytes;
   } else {
     if (values.type == PrimitiveType::BOOL) {
       // Booleans are bit-packed
@@ -121,7 +118,16 @@ Status TableWriter::AppendPlain(const std::string& name,
     }
   }
   RETURN_NOT_OK(stream_->Write(values.values, values_bytes));
-  meta.total_bytes += values_bytes;
+  meta->total_bytes += values_bytes;
+
+  return Status::OK();
+}
+
+Status TableWriter::AppendPlain(const std::string& name,
+    const PrimitiveArray& values) {
+  // Prepare metadata payload
+  ArrayMetadata meta;
+  AppendPrimitive(values, &meta);
 
   // Append the metadata
   auto meta_builder = metadata_.AddColumn(name);
@@ -130,5 +136,23 @@ Status TableWriter::AppendPlain(const std::string& name,
 
   return Status::OK();
 }
+
+Status TableWriter::AppendCategory(const std::string& name,
+    const PrimitiveArray& values,
+    const PrimitiveArray& levels, bool ordered) {
+
+  ArrayMetadata values_meta, levels_meta;
+
+  AppendPrimitive(values, &values_meta);
+  AppendPrimitive(levels, &levels_meta);
+
+  auto meta_builder = metadata_.AddColumn(name);
+  meta_builder->SetValues(values_meta);
+  meta_builder->SetCategory(levels_meta, ordered);
+  meta_builder->Finish();
+
+  return Status::OK();
+}
+
 
 } // namespace feather
