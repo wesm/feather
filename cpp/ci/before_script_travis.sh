@@ -21,6 +21,3 @@ export GTEST_HOME=$TP_DIR/$GTEST_BASEDIR
 export FLATBUFFERS_HOME=$TP_DIR/installed
 
 FEATHER_SRC=$FEATHER_CPP/src/feather
-
-FLATC=$TP_DIR/installed/bin/flatc
-$FLATC -c -o $FEATHER_SRC $FEATHER_SRC/metadata.fbs
