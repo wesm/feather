@@ -96,6 +96,11 @@ class TableReader {
   Status GetColumn(int i, std::shared_ptr<Column>* out);
 
  private:
+  Status GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
+      std::shared_ptr<Column>* out);
+  Status GetCategory(std::shared_ptr<metadata::Column> col_meta,
+      std::shared_ptr<Column>* out);
+
   // Retrieve a primitive array from the data source
   //
   // @returns: a Buffer instance, the precise type will depend on the kind of

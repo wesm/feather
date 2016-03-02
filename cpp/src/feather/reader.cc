@@ -127,17 +127,42 @@ Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray*
   return Status::OK();
 }
 
-Status TableReader::GetColumn(int i, std::shared_ptr<Column>* out) {
-  auto col_meta = metadata_.GetColumn(i);
+Status TableReader::GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
+    std::shared_ptr<Column>* out) {
   auto values_meta = col_meta->values();
-
   PrimitiveArray values;
   RETURN_NOT_OK(GetPrimitiveArray(values_meta, &values));
+  *out = std::make_shared<Column>(ColumnType::PRIMITIVE, col_meta, values);
+  return Status::OK();
+}
 
+Status TableReader::GetCategory(std::shared_ptr<metadata::Column> col_meta,
+    std::shared_ptr<Column>* out) {
+  PrimitiveArray values, levels;
+  auto cat_meta = static_cast<metadata::CategoryColumn*>(col_meta.get());
+
+  auto values_meta = cat_meta->values();
+  RETURN_NOT_OK(GetPrimitiveArray(values_meta, &values));
+
+  auto levels_meta = cat_meta->levels();
+  RETURN_NOT_OK(GetPrimitiveArray(levels_meta, &levels));
+  *out = std::make_shared<CategoryColumn>(col_meta, values, levels);
+
+  return Status::OK();
+}
+
+Status TableReader::GetColumn(int i, std::shared_ptr<Column>* out) {
+  std::shared_ptr<metadata::Column> col_meta = metadata_.GetColumn(i);
   switch (col_meta->type()) {
     case ColumnType::PRIMITIVE:
-      *out = std::make_shared<Column>(ColumnType::PRIMITIVE, col_meta, values);
+      RETURN_NOT_OK(GetPrimitive(col_meta, out));
       break;
+    case ColumnType::CATEGORY:
+      RETURN_NOT_OK(GetCategory(col_meta, out));
+      break;
+    case ColumnType::TIMESTAMP:
+    case ColumnType::DATE:
+    case ColumnType::TIME:
     default:
       *out = std::shared_ptr<Column>(nullptr);
       break;
