@@ -1,0 +1,3 @@
+PKG_CPPFLAGS=-I/Users/hadley/local/include
+PKG_LIBS=-L/Users/hadley/local/lib -lfeather
+CXX_STD=CXX11
