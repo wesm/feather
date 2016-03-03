@@ -187,7 +187,6 @@ endif (UNIX)
 
 set(FEATHER_MIN_TEST_LIBS
   feather_test_main
-  flatbuffers
   feather)
 set(FEATHER_TEST_LINK_LIBS ${FEATHER_MIN_TEST_LIBS})
 

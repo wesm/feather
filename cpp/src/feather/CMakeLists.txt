@@ -23,7 +23,6 @@ set(LIBFEATHER_SRCS
 )
 
 set(LIBFEATHER_LINK_LIBS
-  flatbuffers
 )
 
 set(LIBFEATHER_LINKAGE "SHARED")
