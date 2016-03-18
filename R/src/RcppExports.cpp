@@ -5,13 +5,25 @@
 
 using namespace Rcpp;
 
-// magicBytes
-std::string magicBytes();
-RcppExport SEXP feather_magicBytes() {
+// feather_dim
+IntegerVector feather_dim(std::string path);
+RcppExport SEXP feather_feather_dim(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    __result = Rcpp::wrap(magicBytes());
+    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    __result = Rcpp::wrap(feather_dim(path));
+    return __result;
+END_RCPP
+}
+// feather_names
+CharacterVector feather_names(std::string path);
+RcppExport SEXP feather_feather_names(SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    __result = Rcpp::wrap(feather_names(path));
     return __result;
 END_RCPP
 }
