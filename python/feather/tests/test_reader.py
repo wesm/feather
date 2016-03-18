@@ -51,12 +51,29 @@ class TestFeatherReader(unittest.TestCase):
         feather.write_dataframe(df, path)
         if not os.path.exists(path):
             raise Exception('file not written')
-        result = feather.read_dataframe(path)
 
+        result = feather.read_dataframe(path)
         if expected is None:
             expected = df
 
         assert_frame_equal(result, expected)
+
+    def test_num_rows_attr(self):
+        df = pd.DataFrame({'foo': [1, 2, 3, 4, 5]})
+        path = random_path()
+        self.test_files.append(path)
+        feather.write_dataframe(df, path)
+
+        reader = feather.FeatherReader(path)
+        assert reader.num_rows == len(df)
+
+        df = pd.DataFrame({})
+        path = random_path()
+        self.test_files.append(path)
+        feather.write_dataframe(df, path)
+
+        reader = feather.FeatherReader(path)
+        assert reader.num_rows == 0
 
     def test_float_no_nulls(self):
         data = {}

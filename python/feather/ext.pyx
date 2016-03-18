@@ -63,11 +63,21 @@ cdef class FeatherWriter:
             string c_name = tobytes(name)
 
         check_status(TableWriter.OpenFile(c_name, &self.writer))
+        self.num_rows = -1
 
     def close(self):
+        if self.num_rows < 0:
+            self.num_rows = 0
+        self.writer.get().SetNumRows(self.num_rows)
         check_status(self.writer.get().Finalize())
 
     def write_array(self, object name, object col, object mask=None):
+        if self.num_rows >= 0:
+            if len(col) != self.num_rows:
+                raise ValueError('prior column had a different number of rows')
+        else:
+            self.num_rows = len(col)
+
         if pdcom.is_categorical_dtype(col.dtype):
             raise NotImplementedError(col.dtype)
         else:
@@ -102,6 +112,11 @@ cdef class FeatherReader:
 
         check_status(TableReader.OpenFile(c_name, &self.reader))
 
+    property num_rows:
+
+        def __get__(self):
+            return self.reader.get().num_rows()
+
     property num_columns:
 
         def __get__(self):
@@ -122,7 +137,7 @@ cdef class FeatherReader:
 
         if cp.type() == ColumnType_PRIMITIVE:
             values = primitive_to_pandas(cp.values())
-        elif cp.type() == ColumnType_PRIMITIVE:
+        elif cp.type() == ColumnType_CATEGORY:
             values = category_to_pandas(cp)
         else:
             raise NotImplementedError(cp.type())
