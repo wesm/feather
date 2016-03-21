@@ -11,12 +11,12 @@ RColType toRColType(FeatherColType x) {
   case PrimitiveType::INT8:
   case PrimitiveType::INT16:
   case PrimitiveType::INT32:
-  case PrimitiveType::INT64:
   case PrimitiveType::UINT8:
   case PrimitiveType::UINT16:
   case PrimitiveType::UINT32:
-  case PrimitiveType::UINT64:
     return R_INT;
+  case PrimitiveType::INT64:
+  case PrimitiveType::UINT64:
   case PrimitiveType::FLOAT:
   case PrimitiveType::DOUBLE:
     return R_DBL;
@@ -94,11 +94,41 @@ SEXPTYPE toSEXPTYPE(RColType x) {
 
 SEXP toSEXP(ColumnPtr x) {
   ColumnMetadataPtr meta = x->metadata();
-  PrimitiveArray val = x->values();
-  int64_t n = val.length;
+  const PrimitiveArray* val(&x->values());
+  int64_t n = val->length;
 
   RColType rType = toRColType(meta->values().type);
   SEXP out = Rf_allocVector(toSEXPTYPE(rType), n);
+
+  switch(meta->values().type) {
+  case PrimitiveType::INT8: {
+    auto int8val = reinterpret_cast<const int8_t*>(val->values);
+    for (int i = 0; i < n; ++i) {
+      INTEGER(out)[i] = int8val[i];
+    }
+    break;
+  }
+  case PrimitiveType::INT16: {
+    auto int16val = reinterpret_cast<const int16_t*>(val->values);
+    for (int i = 0; i < n; ++i) {
+      INTEGER(out)[i] = int16val[i];
+    }
+    break;
+  }
+  case PrimitiveType::INT32:
+    memcpy(INTEGER(out), val->values, n * ByteSize(val->type));
+    break;
+  case PrimitiveType::INT64: {
+    Rf_warningcall(R_NilValue, "Coercing int64 to double");
+    auto int64val = reinterpret_cast<const int64_t*>(val->values);
+    for (int i = 0; i < n; ++i) {
+      REAL(out)[i] = int64val[i];
+    }
+    break;
+  }
+  default:
+    break;
+  }
 
   return out;
 }
