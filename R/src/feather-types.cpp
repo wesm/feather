@@ -173,5 +173,20 @@ SEXP toSEXP(ColumnPtr x) {
     break;
   }
 
+  if (val->null_count > 0) {
+    for (int i = 0; i < n; ++i) {
+      if (util::get_bit(val->nulls, i)) {
+      switch(TYPEOF(out)) {
+      case LGLSXP: INTEGER(out)[i] = NA_LOGICAL; break;
+      case INTSXP: INTEGER(out)[i] = NA_INTEGER; break;
+      case REALSXP: REAL(out)[i] = NA_REAL; break;
+      case STRSXP: SET_STRING_ELT(out, i, NA_STRING); break;
+      default: break;
+      }
+      }
+    }
+  }
+
+
   return out;
 }
