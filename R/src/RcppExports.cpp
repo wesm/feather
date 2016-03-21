@@ -38,3 +38,14 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// feather_write
+void feather_write(DataFrame df, std::string path);
+RcppExport SEXP feather_feather_write(SEXP dfSEXP, SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    feather_write(df, path);
+    return R_NilValue;
+END_RCPP
+}

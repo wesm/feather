@@ -13,3 +13,7 @@ feather_read <- function(path) {
     .Call('feather_feather_read', PACKAGE = 'feather', path)
 }
 
+feather_write <- function(df, path) {
+    invisible(.Call('feather_feather_write', PACKAGE = 'feather', df, path))
+}
+
