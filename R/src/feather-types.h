@@ -3,6 +3,7 @@
 
 typedef feather::PrimitiveType::type FeatherColType;
 typedef std::shared_ptr<feather::Column> ColumnPtr;
+typedef std::shared_ptr<feather::metadata::Column> ColumnMetadataPtr;
 
 enum RColType {
   R_LGL,
@@ -20,4 +21,6 @@ RColType toRColType(FeatherColType x);
 RColType toRColType(ColumnPtr x);
 
 FeatherColType toFeatherColType(RColType x);
+
 std::string toString(RColType x);
+SEXP toSEXP(ColumnPtr x);

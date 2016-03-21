@@ -27,3 +27,14 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// feather_read
+List feather_read(std::string path);
+RcppExport SEXP feather_feather_read(SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    __result = Rcpp::wrap(feather_read(path));
+    return __result;
+END_RCPP
+}

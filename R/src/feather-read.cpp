@@ -18,6 +18,17 @@ std::unique_ptr<TableReader> openFeatherTable(std::string path) {
   return table; // silence warning
 }
 
+std::shared_ptr<Column> getColumn(std::unique_ptr<TableReader>& table, int i) {
+  std::shared_ptr<Column> col;
+
+  auto st = table->GetColumn(i, &col);
+  if (st.ok())
+    return col;
+
+  stop("Failed to retrieve column %i (%s)", i, st.CodeAsString());
+  return col; // silence warning
+}
+
 // [[Rcpp::export]]
 IntegerVector feather_dim(std::string path) {
   auto table = openFeatherTable(path);
@@ -31,18 +42,36 @@ CharacterVector feather_metadata(std::string path) {
 
   int n = table->num_columns();
   CharacterVector out(n), names(n);
-  out.attr("names") = names;
 
   for (int i = 0; i < n; ++i) {
-    std::shared_ptr<Column> col;
-    if (!table->GetColumn(i, &col).ok()) {
-      stop("Failed to retrieve column %i", i);
-    }
+    auto col = getColumn(table, i);
 
     names[i] = col->name();
     out[i] = toString(toRColType(col));
   }
 
+  out.attr("names") = names;
   return out;
 }
+
+// [[Rcpp::export]]
+List feather_read(std::string path) {
+  auto table = openFeatherTable(path);
+
+  int n = table->num_columns(), p = table->num_rows();
+  List out(n), names(n);
+
+  for (int i = 0; i < n; ++i) {
+    auto col = getColumn(table, i);
+
+    names[i] = col->name();
+    out[i] = toSEXP(col);
+  }
+
+  out.attr("names") = names;
+  out.attr("row.names") = IntegerVector::create(NA_INTEGER, -p);
+  out.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
+  return out;
+}
+
 

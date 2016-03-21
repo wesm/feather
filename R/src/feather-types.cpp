@@ -76,3 +76,29 @@ std::string toString(RColType x) {
   case R_TIME:     return "time";
   }
 }
+
+SEXPTYPE toSEXPTYPE(RColType x) {
+  switch(x) {
+  case R_LGL:      return LGLSXP;
+  case R_INT:      return INTSXP;
+  case R_DBL:      return REALSXP;
+  case R_CHR:      return STRSXP;
+  case R_RAW:      return VECSXP;
+  case R_FACTOR:   return INTSXP;
+  case R_DATE:     return INTSXP;
+  case R_DATETIME: return REALSXP;
+  case R_TIME:     return REALSXP;
+  }
+}
+
+
+SEXP toSEXP(ColumnPtr x) {
+  ColumnMetadataPtr meta = x->metadata();
+  PrimitiveArray val = x->values();
+  int64_t n = val.length;
+
+  RColType rType = toRColType(meta->values().type);
+  SEXP out = Rf_allocVector(toSEXPTYPE(rType), n);
+
+  return out;
+}
