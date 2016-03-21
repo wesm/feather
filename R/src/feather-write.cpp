@@ -7,13 +7,12 @@ using namespace feather;
 #include "feather-types.h"
 
 
-std::shared_ptr<OwnedMutableBuffer> makeNullBuffer(int n) {
-  int null_bytes = util::bytes_for_bits(n);
+std::shared_ptr<OwnedMutableBuffer> makeBoolBuffer(int n) {
+  int nbytes = util::bytes_for_bits(n);
 
   auto buffer = std::make_shared<OwnedMutableBuffer>();
-  buffer->Resize(null_bytes);
-
-  memset(buffer->mutable_data(), 0, null_bytes);
+  buffer->Resize(nbytes);
+  memset(buffer->mutable_data(), 0, nbytes);
 
   return buffer;
 }
@@ -25,7 +24,7 @@ PrimitiveArray intToPrimitiveArray(SEXP x) {
   int n = Rf_length(x);
 
 
-  auto null_buffer = makeNullBuffer(n);
+  auto null_buffer = makeBoolBuffer(n);
   auto nulls = null_buffer->mutable_data();
   uint32_t n_missing = 0;
   int* px = INTEGER(x);
