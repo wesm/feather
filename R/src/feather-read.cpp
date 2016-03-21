@@ -6,25 +6,29 @@ using namespace feather;
 
 #include "feather-types.h"
 
+std::unique_ptr<TableReader> openFeatherTable(std::string path) {
+  std::unique_ptr<TableReader> table;
+  std::string fullPath(R_ExpandFileName(path.c_str()));
+
+  Status st = TableReader::OpenFile(fullPath, &table);
+
+  if (st.ok())
+    return table;
+
+  stop("Failed to open '%s' (%s)", path, st.CodeAsString());
+  return table; // silence warnin
+}
+
 // [[Rcpp::export]]
 IntegerVector feather_dim(std::string path) {
-  std::string fullPath(R_ExpandFileName(path.c_str()));
-  std::unique_ptr<TableReader> table;
+  std::unique_ptr<TableReader> table(openFeatherTable(path));
 
-  if (!TableReader::OpenFile(fullPath, &table).ok()) {
-    stop("Failed to open '%s'", path);
-  }
   return IntegerVector::create(table->num_rows(), table->num_columns());
 }
 
 // [[Rcpp::export]]
 CharacterVector feather_metadata(std::string path) {
-  std::string fullPath(R_ExpandFileName(path.c_str()));
-  std::unique_ptr<TableReader> table;
-
-  if (!TableReader::OpenFile(fullPath, &table).ok()) {
-    stop("Failed to open '%s'", path);
-  }
+  std::unique_ptr<TableReader> table(openFeatherTable(path));
 
   int n = table->num_columns();
   CharacterVector out(n), names(n);
@@ -42,3 +46,4 @@ CharacterVector feather_metadata(std::string path) {
 
   return out;
 }
+
