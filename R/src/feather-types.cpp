@@ -92,6 +92,14 @@ SEXPTYPE toSEXPTYPE(RColType x) {
 }
 
 
+template <class PrimType, class DestType>
+void copyRecast(const PrimitiveArray* src, DestType* dest) {
+  int n = src->length;
+
+  auto recast = reinterpret_cast<const PrimType*>(src->values);
+  std::copy(&recast[0], &recast[0] + n, dest);
+}
+
 SEXP toSEXP(ColumnPtr x) {
   ColumnMetadataPtr meta = x->metadata();
   const PrimitiveArray* val(&x->values());
@@ -107,28 +115,57 @@ SEXP toSEXP(ColumnPtr x) {
     }
     break;
   }
-  case PrimitiveType::INT8: {
-    auto int8val = reinterpret_cast<const int8_t*>(val->values);
-    for (int i = 0; i < n; ++i) {
-      INTEGER(out)[i] = int8val[i];
-    }
+  case PrimitiveType::INT8:
+    copyRecast<int8_t>(val, INTEGER(out));
     break;
-  }
-  case PrimitiveType::INT16: {
-    auto int16val = reinterpret_cast<const int16_t*>(val->values);
-    for (int i = 0; i < n; ++i) {
-      INTEGER(out)[i] = int16val[i];
-    }
+  case PrimitiveType::INT16:
+    copyRecast<int16_t>(val, INTEGER(out));
     break;
-  }
   case PrimitiveType::INT32:
-    memcpy(INTEGER(out), val->values, n * ByteSize(val->type));
+    copyRecast<int32_t>(val, INTEGER(out));
     break;
-  case PrimitiveType::INT64: {
+  case PrimitiveType::UINT8:
+    copyRecast<uint8_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::UINT16:
+    copyRecast<uint16_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::UINT32:
+    copyRecast<uint32_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::INT64:
     Rf_warningcall(R_NilValue, "Coercing int64 to double");
-    auto int64val = reinterpret_cast<const int64_t*>(val->values);
+    copyRecast<int64_t>(val, REAL(out));
+    break;
+  case PrimitiveType::UINT64:
+    Rf_warningcall(R_NilValue, "Coercing uint64 to double");
+    copyRecast<int64_t>(val, REAL(out));
+    break;
+  case PrimitiveType::FLOAT:
+    copyRecast<float>(val, REAL(out));
+    break;
+  case PrimitiveType::DOUBLE:
+    copyRecast<double>(val, REAL(out));
+    break;
+
+  case PrimitiveType::UTF8: {
+    auto asChar = reinterpret_cast<const char*>(val->values);
     for (int i = 0; i < n; ++i) {
-      REAL(out)[i] = int64val[i];
+      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      SEXP string = Rf_mkCharLenCE(asChar + offset1, offset2 - offset1, CE_UTF8);
+      SET_STRING_ELT(out, i, string);
+    }
+    break;
+  }
+  case PrimitiveType::BINARY: {
+    auto asChar = reinterpret_cast<const char*>(val->values);
+    for (int i = 0; i < n; ++i) {
+      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      int32_t n = offset2 - offset1;
+
+      SEXP raw = Rf_allocVector(RAWSXP, n);
+      memcpy(RAW(out), asChar + offset1, n);
+      SET_VECTOR_ELT(out, i, raw);
     }
     break;
   }
