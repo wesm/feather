@@ -101,6 +101,12 @@ SEXP toSEXP(ColumnPtr x) {
   SEXP out = Rf_allocVector(toSEXPTYPE(rType), n);
 
   switch(meta->values().type) {
+  case PrimitiveType::BOOL: {
+    for (int i = 0; i < n; ++i) {
+      INTEGER(out)[i] = util::get_bit(val->values, i);
+    }
+    break;
+  }
   case PrimitiveType::INT8: {
     auto int8val = reinterpret_cast<const int8_t*>(val->values);
     for (int i = 0; i < n; ++i) {
