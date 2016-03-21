@@ -17,12 +17,47 @@ std::shared_ptr<OwnedMutableBuffer> makeBoolBuffer(int n) {
   return buffer;
 }
 
+PrimitiveArray lglToPrimitiveArray(SEXP x) {
+  int n = Rf_length(x), n_missing = 0;
+
+  auto null_buffer = makeBoolBuffer(n),
+       values_buffer = makeBoolBuffer(n);
+  auto nulls = null_buffer->mutable_data(),
+       values = values_buffer->mutable_data();
+
+  int* px = INTEGER(x);
+  for (int i = 0; i < n; ++i) {
+    if (px[i] == NA_LOGICAL) {
+      ++n_missing;
+      util::set_bit(nulls, i);
+    } else if (px[i]) {
+      util::set_bit(values, i);
+    }
+  }
+
+  PrimitiveArray out;
+  out.type = PrimitiveType::BOOL;
+  out.length = n;
+
+  out.buffers.push_back(values_buffer);
+  out.values = values;
+
+  if (n_missing > 0) {
+    out.null_count = n_missing;
+    out.buffers.push_back(null_buffer);
+    out.nulls = nulls;
+  } else {
+    out.null_count = 0;
+  }
+
+  return out;
+
+}
 
 // Returns an object with pointers into x, so must not be
 // used after x goes away
 PrimitiveArray intToPrimitiveArray(SEXP x) {
   int n = Rf_length(x);
-
 
   auto null_buffer = makeBoolBuffer(n);
   auto nulls = null_buffer->mutable_data();
@@ -34,7 +69,6 @@ PrimitiveArray intToPrimitiveArray(SEXP x) {
       util::set_bit(nulls, i);
     }
   }
-
 
   PrimitiveArray out;
   out.type = PrimitiveType::INT32;
@@ -67,6 +101,7 @@ PrimitiveArray dblToPrimitiveArray(SEXP x) {
 
 PrimitiveArray toPrimitiveArray(SEXP x) {
   switch(TYPEOF(x)) {
+  case LGLSXP: return lglToPrimitiveArray(x);
   case INTSXP: return intToPrimitiveArray(x);
   case REALSXP: return dblToPrimitiveArray(x);
   default:
