@@ -7,17 +7,48 @@ using namespace feather;
 #include "feather-types.h"
 
 
+std::shared_ptr<OwnedMutableBuffer> makeNullBuffer(int n) {
+  int null_bytes = util::bytes_for_bits(n);
+
+  auto buffer = std::make_shared<OwnedMutableBuffer>();
+  buffer->Resize(null_bytes);
+
+  memset(buffer->mutable_data(), 0, null_bytes);
+
+  return buffer;
+}
+
 
 // Returns an object with pointers into x, so must not be
 // used after x goes away
 PrimitiveArray intToPrimitiveArray(SEXP x) {
   int n = Rf_length(x);
 
+
+  auto null_buffer = makeNullBuffer(n);
+  auto nulls = null_buffer->mutable_data();
+  uint32_t n_missing = 0;
+  int* px = INTEGER(x);
+  for (int i = 0; i < n; ++i) {
+    if (px[i] == NA_INTEGER) {
+      ++n_missing;
+      util::set_bit(nulls, i);
+    }
+  }
+
+
   PrimitiveArray out;
   out.type = PrimitiveType::INT32;
   out.length = n;
-  out.null_count = 0;
   out.values = reinterpret_cast<uint8_t*>(INTEGER(x));
+
+  if (n_missing > 0) {
+    out.null_count = n_missing;
+    out.buffers.push_back(null_buffer);
+    out.nulls = nulls;
+  } else {
+    out.null_count = 0;
+  }
 
   return out;
 }
