@@ -98,12 +98,63 @@ PrimitiveArray dblToPrimitiveArray(SEXP x) {
   return out;
 }
 
+PrimitiveArray chrToPrimitiveArray(SEXP x) {
+  int n = Rf_length(x), n_missing = 0;
+
+  BufferBuilder data_builder;
+
+  auto offsets_buffer = std::make_shared<OwnedMutableBuffer>();
+  offsets_buffer->Resize(sizeof(int32_t) * (n + 1));
+  int32_t* offsets = reinterpret_cast<int32_t*>(offsets_buffer->mutable_data());
+  int offset = 0, length = 0;
+
+  auto null_buffer = makeBoolBuffer(n);
+  auto nulls = null_buffer->mutable_data();
+
+  for (int i = 0; i < n; ++i) {
+    SEXP xi = STRING_ELT(x, i);
+
+    if (xi == NA_STRING) {
+      util::set_bit(nulls, i);
+      ++n_missing;
+    } else {
+      const char* utf8 = Rf_translateCharUTF8(xi);
+      length = strlen(utf8);
+      data_builder.Append(reinterpret_cast<const uint8_t*>(utf8), length);
+    }
+
+    offsets[i] = offset;
+    offset += length;
+  }
+  offsets[n] = offset;
+
+  PrimitiveArray out;
+  out.type = PrimitiveType::UTF8;
+  out.length = n;
+
+  std::shared_ptr<Buffer> data_buffer = data_builder.Finish();
+  out.values = data_buffer->data();
+  out.buffers.push_back(data_buffer);
+
+  out.offsets = offsets;
+  out.buffers.push_back(offsets_buffer);
+
+  out.null_count = n_missing;
+  if (n_missing > 0){
+    out.nulls = nulls;
+    out.buffers.push_back(null_buffer);
+  }
+
+  return out;
+}
+
 
 PrimitiveArray toPrimitiveArray(SEXP x) {
   switch(TYPEOF(x)) {
   case LGLSXP: return lglToPrimitiveArray(x);
   case INTSXP: return intToPrimitiveArray(x);
   case REALSXP: return dblToPrimitiveArray(x);
+  case STRSXP: return chrToPrimitiveArray(x);
   default:
     stop("Unsupported type (%s)", Rf_type2char(TYPEOF(x)));
     throw 0;
