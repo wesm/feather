@@ -34,6 +34,22 @@ RColType toRColType(FeatherColType x) {
     return R_TIME;
   }
 };
+
+RColType toRColType(ColumnPtr x) {
+  switch(x->type()) {
+  case feather::ColumnType::PRIMITIVE:
+    return toRColType(x->metadata()->values().type);
+  case feather::ColumnType::CATEGORY:
+    return R_FACTOR;
+  case feather::ColumnType::TIMESTAMP:
+    return R_DATETIME;
+  case feather::ColumnType::DATE:
+    return R_DATE;
+  case feather::ColumnType::TIME:
+    return R_TIME;
+  }
+}
+
 FeatherColType toFeatherColType(RColType x) {
   switch(x) {
   case R_LGL:      return PrimitiveType::BOOL;

@@ -16,14 +16,14 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// feather_names
-CharacterVector feather_names(std::string path);
-RcppExport SEXP feather_feather_names(SEXP pathSEXP) {
+// feather_metadata
+CharacterVector feather_metadata(std::string path);
+RcppExport SEXP feather_feather_metadata(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
-    __result = Rcpp::wrap(feather_names(path));
+    __result = Rcpp::wrap(feather_metadata(path));
     return __result;
 END_RCPP
 }

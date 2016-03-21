@@ -5,7 +5,7 @@ feather_dim <- function(path) {
     .Call('feather_feather_dim', PACKAGE = 'feather', path)
 }
 
-feather_names <- function(path) {
-    .Call('feather_feather_names', PACKAGE = 'feather', path)
+feather_metadata <- function(path) {
+    .Call('feather_feather_metadata', PACKAGE = 'feather', path)
 }
 
