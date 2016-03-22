@@ -46,3 +46,21 @@ test_that("always coerces to UTF-8", {
   expect_identical(Encoding(x), "latin1")
   expect_identical(Encoding(y), "UTF-8")
 })
+
+
+# Factor ------------------------------------------------------------------
+
+test_that("preserves simple factor", {
+  x <- factor(c("abc", "def"))
+  expect_equal(roundtrip_vector(x), x)
+})
+
+
+test_that("preserves NA in factor and levels", {
+  x1 <- factor(c("abc", "def", NA))
+  x2 <- addNA(x1)
+
+  expect_equal(roundtrip_vector(x1), x1)
+  # expect_equal(roundtrip_vector(x2), x2)
+})
+

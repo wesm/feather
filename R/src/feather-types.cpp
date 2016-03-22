@@ -100,15 +100,12 @@ void copyRecast(const PrimitiveArray* src, DestType* dest) {
   std::copy(&recast[0], &recast[0] + n, dest);
 }
 
-SEXP toSEXP(ColumnPtr x) {
-  ColumnMetadataPtr meta = x->metadata();
-  const PrimitiveArray* val(&x->values());
+SEXP toSEXP(const PrimitiveArray* val) {
   int64_t n = val->length;
-
-  RColType rType = toRColType(meta->values().type);
+  RColType rType = toRColType(val->type);
   SEXP out = Rf_allocVector(toSEXPTYPE(rType), n);
 
-  switch(meta->values().type) {
+  switch(val->type) {
   case PrimitiveType::BOOL: {
     for (int i = 0; i < n; ++i) {
       INTEGER(out)[i] = util::get_bit(val->values, i);
@@ -189,4 +186,29 @@ SEXP toSEXP(ColumnPtr x) {
 
 
   return out;
+}
+
+SEXP toSEXP(ColumnPtr x) {
+  ColumnMetadataPtr meta = x->metadata();
+  const PrimitiveArray* val(&x->values());
+
+  switch(x->type()) {
+  case feather::ColumnType::PRIMITIVE:
+    return toSEXP(val);
+  case feather::ColumnType::CATEGORY: {
+    IntegerVector out = toSEXP(val);
+
+    auto x_cat = std::static_pointer_cast<feather::CategoryColumn>(x);
+    const PrimitiveArray* levels(&x_cat->levels());
+
+    out.attr("levels") = toSEXP(levels);
+    out.attr("class") = "factor";
+    return out;
+  }
+  case feather::ColumnType::TIMESTAMP:
+  case feather::ColumnType::DATE:
+  case feather::ColumnType::TIME:
+    stop("Not supported yet");
+    throw "";
+  }
 }

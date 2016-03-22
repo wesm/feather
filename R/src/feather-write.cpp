@@ -148,16 +148,27 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
   return out;
 }
 
-
 void addRColumn(std::unique_ptr<TableWriter>& table, std::string name, SEXP x) {
-  switch(TYPEOF(x)) {
-  case LGLSXP:  table->AppendPlain(name, lglToPrimitiveArray(x));
-  case INTSXP:  table->AppendPlain(name, intToPrimitiveArray(x));
-  case REALSXP: table->AppendPlain(name, dblToPrimitiveArray(x));
-  case STRSXP:  table->AppendPlain(name, chrToPrimitiveArray(x));
-  default:
-    stop("Unsupported type (%s)", Rf_type2char(TYPEOF(x)));
-    throw 0;
+  if (Rf_inherits(x, "factor")) {
+    SEXP x_levels = Rf_getAttrib(x, Rf_install("levels"));
+    if (TYPEOF(x_levels) != STRSXP)
+      stop("'%s' is corrupt");
+
+    auto values = intToPrimitiveArray(x);
+    auto levels = chrToPrimitiveArray(x_levels);
+    bool ordered = Rf_inherits(x, "ordered");
+
+    table->AppendCategory(name, values, levels, ordered);
+  } else {
+    switch(TYPEOF(x)) {
+    case LGLSXP:  table->AppendPlain(name, lglToPrimitiveArray(x)); break;
+    case INTSXP:  table->AppendPlain(name, intToPrimitiveArray(x)); break;
+    case REALSXP: table->AppendPlain(name, dblToPrimitiveArray(x)); break;
+    case STRSXP:  table->AppendPlain(name, chrToPrimitiveArray(x)); break;
+    default:
+      stop("Unsupported type (%s)", Rf_type2char(TYPEOF(x)));
+      throw 0;
+    }
   }
 }
 
