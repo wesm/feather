@@ -16,5 +16,8 @@ BugReports: https://github.com/wesm/feather/issues
 LinkingTo: Rcpp
 Imports:
     Rcpp
+Suggests:
+    dplyr
 SystemRequirements: C++11, GNU make
 RoxygenNote: 5.0.1
+Suggests: testthat
