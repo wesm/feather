@@ -37,3 +37,12 @@ test_that("preserves character values", {
   x <- c("this is a string", "", NA, "another string")
   expect_identical(roundtrip_vector(x), x)
 })
+
+test_that("always coerces to UTF-8", {
+  x <- iconv("é", to = "latin1")
+  y <- roundtrip_vector(x)
+
+  expect_identical(x, y) # string comparison always re-encodes first
+  expect_identical(Encoding(x), "latin1")
+  expect_identical(Encoding(y), "UTF-8")
+})
