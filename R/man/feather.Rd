@@ -12,11 +12,12 @@ write_feather(x, path)
 }
 \arguments{
 \item{path}{Path to feather file}
+
+\item{x}{A data frame to write to disk}
 }
 \value{
-Both functions return a tibble/data frame. \code{read_feather}
-  returns the input from disk. \code{write_feather} invisible returns
-  \code{x} (so you can use this function in a pipeline).
+Both functions return a tibble/data frame. \code{write_feather}
+  invisibly returns \code{x} (so you can use this function in a pipeline).
 }
 \description{
 Read and write feather files.
