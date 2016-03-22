@@ -22,4 +22,8 @@ Both functions return a tibble/data frame. \code{write_feather}
 \description{
 Read and write feather files.
 }
+\examples{
+mtcars2 <- read_feather(feather_example("mtcars.feather"))
+mtcars2
+}
 

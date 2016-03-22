@@ -9,6 +9,9 @@ NULL
 #' @name feather
 #' @return Both functions return a tibble/data frame. \code{write_feather}
 #'   invisibly returns \code{x} (so you can use this function in a pipeline).
+#' @examples
+#' mtcars2 <- read_feather(feather_example("mtcars.feather"))
+#' mtcars2
 NULL
 
 #' @rdname feather
