@@ -30,27 +30,27 @@ std::shared_ptr<Column> getColumn(std::unique_ptr<TableReader>& table, int i) {
 }
 
 // [[Rcpp::export]]
-IntegerVector dimFeather(std::string path) {
+List metadataFeather(std::string path) {
   auto table = openFeatherTable(path);
 
-  return IntegerVector::create(table->num_rows(), table->num_columns());
-}
+  int n = table->num_rows(), p = table->num_columns();
+  CharacterVector types(p), names(p);
 
-// [[Rcpp::export]]
-CharacterVector metadataFeather(std::string path) {
-  auto table = openFeatherTable(path);
+  for (int j = 0; j < p; ++j) {
+    auto col = getColumn(table, j);
 
-  int n = table->num_columns();
-  CharacterVector out(n), names(n);
-
-  for (int i = 0; i < n; ++i) {
-    auto col = getColumn(table, i);
-
-    names[i] = col->name();
-    out[i] = toString(toRColType(col));
+    names[j] = col->name();
+    types[j] = toString(toRColType(col));
   }
+  types.attr("names") = names;
 
-  out.attr("names") = names;
+  auto out = List::create(
+    _["path"] = path,
+    _["dim"] = IntegerVector::create(n, p),
+    _["types"] = types,
+    _["description"] = table->GetDescription()
+  );
+  out.attr("class") = "feather_metadata";
   return out;
 }
 

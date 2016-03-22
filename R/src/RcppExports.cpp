@@ -5,19 +5,8 @@
 
 using namespace Rcpp;
 
-// dimFeather
-IntegerVector dimFeather(std::string path);
-RcppExport SEXP feather_dimFeather(SEXP pathSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
-    __result = Rcpp::wrap(dimFeather(path));
-    return __result;
-END_RCPP
-}
 // metadataFeather
-CharacterVector metadataFeather(std::string path);
+List metadataFeather(std::string path);
 RcppExport SEXP feather_metadataFeather(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;

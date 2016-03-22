@@ -26,3 +26,24 @@ write_feather <- function(x, path) {
   writeFeather(x, path)
   invisible(x)
 }
+
+#' Retrieve metadata about a feather file
+#'
+#' Returns the dimensions, field names, and types; and optional dataset
+#' description.
+#'
+#' @param path Path to feather file
+#' @return A list with class "feather_metadata".
+#' @export
+feather_metadata <- function(path) {
+  metadataFeather(path)
+}
+
+#' @export
+print.feather_metadata <- function(x, ...) {
+  cat("<Feather file>\n")
+  cat(dim_desc(x$dim), " @ ", x$path, "\n", sep = "")
+
+  names <- format(encodeString(names(x$types), quote = "'"))
+  cat(paste0("* ", names, ": ", x$types, "\n"), sep = "")
+}
