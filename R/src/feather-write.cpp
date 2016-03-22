@@ -149,12 +149,12 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
 }
 
 
-PrimitiveArray toPrimitiveArray(SEXP x) {
+void addRColumn(std::unique_ptr<TableWriter>& table, std::string name, SEXP x) {
   switch(TYPEOF(x)) {
-  case LGLSXP: return lglToPrimitiveArray(x);
-  case INTSXP: return intToPrimitiveArray(x);
-  case REALSXP: return dblToPrimitiveArray(x);
-  case STRSXP: return chrToPrimitiveArray(x);
+  case LGLSXP:  table->AppendPlain(name, lglToPrimitiveArray(x));
+  case INTSXP:  table->AppendPlain(name, intToPrimitiveArray(x));
+  case REALSXP: table->AppendPlain(name, dblToPrimitiveArray(x));
+  case STRSXP:  table->AppendPlain(name, chrToPrimitiveArray(x));
   default:
     stop("Unsupported type (%s)", Rf_type2char(TYPEOF(x)));
     throw 0;
@@ -176,7 +176,7 @@ void writeFeather(DataFrame df, std::string path) {
   CharacterVector names = df.names();
 
   for(int i = 0; i < df.size(); ++i) {
-    table->AppendPlain(std::string(names[i]), toPrimitiveArray(df[i]));
+    addRColumn(table, std::string(names[i]), df[i]);
   }
 
   {
