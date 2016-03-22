@@ -30,14 +30,14 @@ std::shared_ptr<Column> getColumn(std::unique_ptr<TableReader>& table, int i) {
 }
 
 // [[Rcpp::export]]
-IntegerVector feather_dim(std::string path) {
+IntegerVector dimFeather(std::string path) {
   auto table = openFeatherTable(path);
 
   return IntegerVector::create(table->num_rows(), table->num_columns());
 }
 
 // [[Rcpp::export]]
-CharacterVector feather_metadata(std::string path) {
+CharacterVector metadataFeather(std::string path) {
   auto table = openFeatherTable(path);
 
   int n = table->num_columns();
@@ -55,7 +55,7 @@ CharacterVector feather_metadata(std::string path) {
 }
 
 // [[Rcpp::export]]
-List feather_read(std::string path) {
+List readFeather(std::string path) {
   auto table = openFeatherTable(path);
 
   int n = table->num_columns(), p = table->num_rows();

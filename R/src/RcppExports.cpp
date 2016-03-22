@@ -5,47 +5,47 @@
 
 using namespace Rcpp;
 
-// feather_dim
-IntegerVector feather_dim(std::string path);
-RcppExport SEXP feather_feather_dim(SEXP pathSEXP) {
+// dimFeather
+IntegerVector dimFeather(std::string path);
+RcppExport SEXP feather_dimFeather(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
-    __result = Rcpp::wrap(feather_dim(path));
+    __result = Rcpp::wrap(dimFeather(path));
     return __result;
 END_RCPP
 }
-// feather_metadata
-CharacterVector feather_metadata(std::string path);
-RcppExport SEXP feather_feather_metadata(SEXP pathSEXP) {
+// metadataFeather
+CharacterVector metadataFeather(std::string path);
+RcppExport SEXP feather_metadataFeather(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
-    __result = Rcpp::wrap(feather_metadata(path));
+    __result = Rcpp::wrap(metadataFeather(path));
     return __result;
 END_RCPP
 }
-// feather_read
-List feather_read(std::string path);
-RcppExport SEXP feather_feather_read(SEXP pathSEXP) {
+// readFeather
+List readFeather(std::string path);
+RcppExport SEXP feather_readFeather(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
-    __result = Rcpp::wrap(feather_read(path));
+    __result = Rcpp::wrap(readFeather(path));
     return __result;
 END_RCPP
 }
-// feather_write
-void feather_write(DataFrame df, std::string path);
-RcppExport SEXP feather_feather_write(SEXP dfSEXP, SEXP pathSEXP) {
+// writeFeather
+void writeFeather(DataFrame df, std::string path);
+RcppExport SEXP feather_writeFeather(SEXP dfSEXP, SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
-    feather_write(df, path);
+    writeFeather(df, path);
     return R_NilValue;
 END_RCPP
 }

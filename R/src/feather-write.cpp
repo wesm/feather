@@ -162,7 +162,7 @@ PrimitiveArray toPrimitiveArray(SEXP x) {
 }
 
 // [[Rcpp::export]]
-void feather_write(DataFrame df, std::string path) {
+void writeFeather(DataFrame df, std::string path) {
   std::unique_ptr<TableWriter> table;
   std::string fullPath(R_ExpandFileName(path.c_str()));
 
