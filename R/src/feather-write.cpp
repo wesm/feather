@@ -116,6 +116,7 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
 
     if (xi == NA_STRING) {
       util::set_bit(nulls, i);
+      length = 0;
       ++n_missing;
     } else {
       const char* utf8 = Rf_translateCharUTF8(xi);

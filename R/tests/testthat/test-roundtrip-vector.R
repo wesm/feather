@@ -38,6 +38,11 @@ test_that("preserves character values", {
   expect_identical(roundtrip_vector(x), x)
 })
 
+test_that("can have NA on end of string", {
+  x <- c("this is a string", NA)
+  expect_identical(roundtrip_vector(x), x)
+})
+
 test_that("always coerces to UTF-8", {
   x <- iconv("é", to = "latin1")
   y <- roundtrip_vector(x)
@@ -61,6 +66,6 @@ test_that("preserves NA in factor and levels", {
   x2 <- addNA(x1)
 
   expect_equal(roundtrip_vector(x1), x1)
-  # expect_equal(roundtrip_vector(x2), x2)
+  expect_equal(roundtrip_vector(x2), x2)
 })
 
