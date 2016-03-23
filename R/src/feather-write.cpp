@@ -18,6 +18,8 @@ std::shared_ptr<OwnedMutableBuffer> makeBoolBuffer(int n) {
   return buffer;
 }
 
+// Primitive arrays ------------------------------------------------------------
+
 PrimitiveArray lglToPrimitiveArray(SEXP x) {
   int n = Rf_length(x), n_missing = 0;
 
@@ -164,37 +166,47 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
   return out;
 }
 
-void addRColumn(std::unique_ptr<TableWriter>& table, const std::string& name, SEXP x) {
+// Columns ---------------------------------------------------------------------
+
+Status addPrimitiveColumn(std::unique_ptr<TableWriter>& table,
+                        const std::string& name, SEXP x) {
+  switch(TYPEOF(x)) {
+  case LGLSXP:
+    return table->AppendPlain(name, lglToPrimitiveArray(x));
+  case INTSXP:
+    return table->AppendPlain(name, intToPrimitiveArray(x));
+  case REALSXP:
+    return table->AppendPlain(name, dblToPrimitiveArray(x));
+  case STRSXP:
+    return table->AppendPlain(name, chrToPrimitiveArray(x));
+  default:
+    std::string msg = tfm::format("%s is a %s", name, Rf_type2char(TYPEOF(x)));
+    return Status::NotImplemented(msg);
+  }
+}
+
+Status addCategoryColumn(std::unique_ptr<TableWriter>& table,
+                       const std::string& name, SEXP x) {
+  if (TYPEOF(x) != INTSXP)
+    stop("'%s' is corrupt", name);
+
+  SEXP x_levels = Rf_getAttrib(x, Rf_install("levels"));
+  if (TYPEOF(x_levels) != STRSXP)
+    stop("'%s' is corrupt", name);
+
+  auto values = intToPrimitiveArray(x);
+  auto levels = chrToPrimitiveArray(x_levels);
+  bool ordered = Rf_inherits(x, "ordered");
+
+  return table->AppendCategory(name, values, levels, ordered);
+}
+
+Status addColumn(std::unique_ptr<TableWriter>& table,
+               const std::string& name, SEXP x) {
   if (Rf_inherits(x, "factor")) {
-    if (TYPEOF(x) != INTSXP)
-      stop("'%s' is corrupt", name);
-
-    SEXP x_levels = Rf_getAttrib(x, Rf_install("levels"));
-    if (TYPEOF(x_levels) != STRSXP)
-      stop("'%s' is corrupt", name);
-
-    auto values = intToPrimitiveArray(x);
-    auto levels = chrToPrimitiveArray(x_levels);
-    bool ordered = Rf_inherits(x, "ordered");
-
-    stopOnFailure(table->AppendCategory(name, values, levels, ordered));
+    return addCategoryColumn(table, name, x);
   } else {
-    switch(TYPEOF(x)) {
-    case LGLSXP:
-      stopOnFailure(table->AppendPlain(name, lglToPrimitiveArray(x)));
-      break;
-    case INTSXP:
-      stopOnFailure(table->AppendPlain(name, intToPrimitiveArray(x)));
-      break;
-    case REALSXP:
-      stopOnFailure(table->AppendPlain(name, dblToPrimitiveArray(x)));
-      break;
-    case STRSXP:
-      stopOnFailure(table->AppendPlain(name, chrToPrimitiveArray(x)));
-      break;
-    default:
-      stop("Unsupported type (%s)", Rf_type2char(TYPEOF(x)));
-    }
+    return addPrimitiveColumn(table, name, x);
   }
 }
 
@@ -209,7 +221,7 @@ void writeFeather(DataFrame df, const std::string& path) {
   CharacterVector names = df.names();
 
   for(int i = 0; i < df.size(); ++i) {
-    addRColumn(table, std::string(names[i]), df[i]);
+    stopOnFailure(addColumn(table, std::string(names[i]), df[i]));
   }
 
   stopOnFailure(table->Finalize());
