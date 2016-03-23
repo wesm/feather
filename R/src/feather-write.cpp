@@ -191,7 +191,6 @@ void addRColumn(std::unique_ptr<TableWriter>& table, const std::string& name, SE
       break;
     default:
       stop("Unsupported type (%s)", Rf_type2char(TYPEOF(x)));
-      throw 0;
     }
   }
 }

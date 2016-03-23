@@ -209,6 +209,6 @@ SEXP toSEXP(ColumnPtr x) {
   case feather::ColumnType::DATE:
   case feather::ColumnType::TIME:
     stop("Not supported yet");
-    throw "";
+    throw 0;
   }
 }

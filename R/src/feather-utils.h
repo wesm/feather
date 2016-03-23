@@ -6,5 +6,4 @@ inline void stopOnFailure(feather::Status st) {
     return;
 
   Rcpp::stop(st.ToString());
-  throw 0;
 }
