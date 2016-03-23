@@ -69,3 +69,10 @@ test_that("preserves NA in factor and levels", {
   expect_equal(roundtrip_vector(x2), x2)
 })
 
+
+# Date --------------------------------------------------------------------
+
+test_that("preserves dates", {
+  x <- as.Date("2010-01-01") + c(0, 365, NA)
+  expect_equal(roundtrip_vector(x), x)
+})

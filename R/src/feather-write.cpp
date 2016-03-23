@@ -169,7 +169,7 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
 // Columns ---------------------------------------------------------------------
 
 Status addPrimitiveColumn(std::unique_ptr<TableWriter>& table,
-                        const std::string& name, SEXP x) {
+                          const std::string& name, SEXP x) {
   switch(TYPEOF(x)) {
   case LGLSXP:
     return table->AppendPlain(name, lglToPrimitiveArray(x));
@@ -186,7 +186,7 @@ Status addPrimitiveColumn(std::unique_ptr<TableWriter>& table,
 }
 
 Status addCategoryColumn(std::unique_ptr<TableWriter>& table,
-                       const std::string& name, SEXP x) {
+                         const std::string& name, SEXP x) {
   if (TYPEOF(x) != INTSXP)
     stop("'%s' is corrupt", name);
 
@@ -201,10 +201,22 @@ Status addCategoryColumn(std::unique_ptr<TableWriter>& table,
   return table->AppendCategory(name, values, levels, ordered);
 }
 
+Status addDateColumn(std::unique_ptr<TableWriter>& table,
+                     const std::string& name, SEXP x) {
+  // dates can be stored either as integers or doubles
+  if (TYPEOF(x) != INTSXP && TYPEOF(x) != REALSXP)
+    stop("%s is corrupt", name);
+  auto values = intToPrimitiveArray(Rf_coerceVector(x, INTSXP));
+
+  return table->AppendDate(name, values);
+}
+
 Status addColumn(std::unique_ptr<TableWriter>& table,
-               const std::string& name, SEXP x) {
+                 const std::string& name, SEXP x) {
   if (Rf_inherits(x, "factor")) {
     return addCategoryColumn(table, name, x);
+  } else if (Rf_inherits(x, "Date")) {
+    return addDateColumn(table, name, x);
   } else {
     return addPrimitiveColumn(table, name, x);
   }

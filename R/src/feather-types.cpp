@@ -205,8 +205,12 @@ SEXP toSEXP(ColumnPtr x) {
     out.attr("class") = "factor";
     return out;
   }
+  case feather::ColumnType::DATE: {
+    IntegerVector out = toSEXP(val);
+    out.attr("class") = "Date";
+    return out;
+  }
   case feather::ColumnType::TIMESTAMP:
-  case feather::ColumnType::DATE:
   case feather::ColumnType::TIME:
     stop("Not supported yet");
     return 0;
