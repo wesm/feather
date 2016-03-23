@@ -5,13 +5,14 @@ using namespace Rcpp;
 using namespace feather;
 
 #include "feather-types.h"
+#include "feather-utils.h"
 
 
 std::shared_ptr<OwnedMutableBuffer> makeBoolBuffer(int n) {
   int nbytes = util::bytes_for_bits(n);
 
   auto buffer = std::make_shared<OwnedMutableBuffer>();
-  buffer->Resize(nbytes);
+  stopOnFailure(buffer->Resize(nbytes));
   memset(buffer->mutable_data(), 0, nbytes);
 
   return buffer;
@@ -118,7 +119,7 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
   BufferBuilder data_builder;
 
   auto offsets_buffer = std::make_shared<OwnedMutableBuffer>();
-  offsets_buffer->Resize(sizeof(int32_t) * (n + 1));
+  stopOnFailure(offsets_buffer->Resize(sizeof(int32_t) * (n + 1)));
   int32_t* offsets = reinterpret_cast<int32_t*>(offsets_buffer->mutable_data());
   int offset = 0, length = 0;
 
@@ -173,13 +174,21 @@ void addRColumn(std::unique_ptr<TableWriter>& table, const std::string& name, SE
     auto levels = chrToPrimitiveArray(x_levels);
     bool ordered = Rf_inherits(x, "ordered");
 
-    table->AppendCategory(name, values, levels, ordered);
+    stopOnFailure(table->AppendCategory(name, values, levels, ordered));
   } else {
     switch(TYPEOF(x)) {
-    case LGLSXP:  table->AppendPlain(name, lglToPrimitiveArray(x)); break;
-    case INTSXP:  table->AppendPlain(name, intToPrimitiveArray(x)); break;
-    case REALSXP: table->AppendPlain(name, dblToPrimitiveArray(x)); break;
-    case STRSXP:  table->AppendPlain(name, chrToPrimitiveArray(x)); break;
+    case LGLSXP:
+      stopOnFailure(table->AppendPlain(name, lglToPrimitiveArray(x)));
+      break;
+    case INTSXP:
+      stopOnFailure(table->AppendPlain(name, intToPrimitiveArray(x)));
+      break;
+    case REALSXP:
+      stopOnFailure(table->AppendPlain(name, dblToPrimitiveArray(x)));
+      break;
+    case STRSXP:
+      stopOnFailure(table->AppendPlain(name, chrToPrimitiveArray(x)));
+      break;
     default:
       stop("Unsupported type (%s)", Rf_type2char(TYPEOF(x)));
       throw 0;
@@ -192,11 +201,7 @@ void writeFeather(DataFrame df, const std::string& path) {
   std::unique_ptr<TableWriter> table;
   std::string fullPath(R_ExpandFileName(path.c_str()));
 
-  {
-    auto st = TableWriter::OpenFile(fullPath, &table);
-    if (!st.ok())
-      stop("Failed to open '%s' (%s)", path, st.CodeAsString());
-  }
+  stopOnFailure(TableWriter::OpenFile(fullPath, &table));
 
   table->SetNumRows(df.nrows());
   CharacterVector names = df.names();
@@ -205,9 +210,5 @@ void writeFeather(DataFrame df, const std::string& path) {
     addRColumn(table, std::string(names[i]), df[i]);
   }
 
-  {
-    auto st = table->Finalize();
-    if (!st.ok())
-      stop("Failed to close '%s' (%s)", path, st.CodeAsString());
-  }
+  stopOnFailure(table->Finalize());
 }

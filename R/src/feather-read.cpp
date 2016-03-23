@@ -5,28 +5,21 @@ using namespace Rcpp;
 using namespace feather;
 
 #include "feather-types.h"
+#include "feather-utils.h"
 
 std::unique_ptr<TableReader> openFeatherTable(const std::string& path) {
   std::unique_ptr<TableReader> table;
   std::string fullPath(R_ExpandFileName(path.c_str()));
 
-  auto st = TableReader::OpenFile(fullPath, &table);
-  if (st.ok())
-    return table;
-
-  stop("Failed to open '%s' (%s)", path, st.CodeAsString());
-  return table; // silence warning
+  stopOnFailure(TableReader::OpenFile(fullPath, &table));
+  return table;
 }
 
 std::shared_ptr<Column> getColumn(std::unique_ptr<TableReader>& table, int i) {
   std::shared_ptr<Column> col;
 
-  auto st = table->GetColumn(i, &col);
-  if (st.ok())
-    return col;
-
-  stop("Failed to retrieve column %i (%s)", i, st.CodeAsString());
-  return col; // silence warning
+  stopOnFailure(table->GetColumn(i, &col));
+  return col;
 }
 
 // [[Rcpp::export]]
