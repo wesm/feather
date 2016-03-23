@@ -166,9 +166,12 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
 
 void addRColumn(std::unique_ptr<TableWriter>& table, const std::string& name, SEXP x) {
   if (Rf_inherits(x, "factor")) {
+    if (TYPEOF(x) != INTSXP)
+      stop("'%s' is corrupt", name);
+
     SEXP x_levels = Rf_getAttrib(x, Rf_install("levels"));
     if (TYPEOF(x_levels) != STRSXP)
-      stop("'%s' is corrupt");
+      stop("'%s' is corrupt", name);
 
     auto values = intToPrimitiveArray(x);
     auto levels = chrToPrimitiveArray(x_levels);
