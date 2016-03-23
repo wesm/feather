@@ -76,3 +76,11 @@ test_that("preserves dates", {
   x <- as.Date("2010-01-01") + c(0, 365, NA)
   expect_equal(roundtrip_vector(x), x)
 })
+
+
+# Time --------------------------------------------------------------------
+
+test_that("preserves times", {
+  x <- structure(1:100, class = "time")
+  expect_equal(roundtrip_vector(x), x)
+})

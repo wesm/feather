@@ -87,6 +87,62 @@ PrimitiveArray intToPrimitiveArray(SEXP x) {
   return out;
 }
 
+PrimitiveArray rescaleToInt64(SEXP x, double scale) {
+  int n = Rf_length(x);
+
+  auto null_buffer = makeBoolBuffer(n);
+  auto nulls = null_buffer->mutable_data();
+
+  auto values_buffer = std::make_shared<OwnedMutableBuffer>();
+  stopOnFailure(values_buffer->Resize(n * sizeof(int64_t) / sizeof(int8_t)));
+  memset(values_buffer->mutable_data(), 0, n);
+  auto values = reinterpret_cast<int64_t*>(values_buffer->mutable_data());
+
+  uint32_t n_missing = 0;
+  switch(TYPEOF(x)) {
+  case INTSXP: {
+    int* px = INTEGER(x);
+    for (int i = 0; i < n; ++i) {
+      if (px[i] == NA_INTEGER) {
+        ++n_missing;
+        util::set_bit(nulls, i);
+      } else {
+        values[i] = px[i] * scale;
+      }
+    }
+    break;
+  }
+  case REALSXP: {
+    double* px = REAL(x);
+    for (int i = 0; i < n; ++i) {
+      if (R_IsNA(px[i])) {
+        ++n_missing;
+        util::set_bit(nulls, i);
+      } else {
+        values[i] = px[i] * scale;
+      }
+    }
+    break;
+  }
+  default: stop("Unsupported type");
+  }
+
+  PrimitiveArray out;
+  out.type = PrimitiveType::INT64;
+  out.length = n;
+
+  out.buffers.push_back(values_buffer);
+  out.values = values_buffer->data();
+
+  out.null_count = n_missing;
+  if (n_missing > 0) {
+    out.buffers.push_back(null_buffer);
+    out.nulls = nulls;
+  }
+
+  return out;
+}
+
 PrimitiveArray dblToPrimitiveArray(SEXP x) {
   int n = Rf_length(x);
 
@@ -211,12 +267,27 @@ Status addDateColumn(std::unique_ptr<TableWriter>& table,
   return table->AppendDate(name, values);
 }
 
+Status addTimeColumn(std::unique_ptr<TableWriter>& table,
+                     const std::string& name, SEXP x) {
+  if (TYPEOF(x) != INTSXP && TYPEOF(x) != REALSXP)
+    stop("%s is corrupt", name);
+  auto values = rescaleToInt64(x, 1e6);
+
+  TimeMetadata metadata;
+  metadata.unit = TimeUnit::MICROSECOND;
+
+  return table->AppendTime(name, values, metadata);
+}
+
+
 Status addColumn(std::unique_ptr<TableWriter>& table,
                  const std::string& name, SEXP x) {
   if (Rf_inherits(x, "factor")) {
     return addCategoryColumn(table, name, x);
   } else if (Rf_inherits(x, "Date")) {
     return addDateColumn(table, name, x);
+  } else if (Rf_inherits(x, "time")) {
+    return addTimeColumn(table, name, x);
   } else {
     return addPrimitiveColumn(table, name, x);
   }
