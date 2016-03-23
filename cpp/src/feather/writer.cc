@@ -154,5 +154,44 @@ Status TableWriter::AppendCategory(const std::string& name,
   return Status::OK();
 }
 
+Status TableWriter::AppendTimestamp(const std::string& name,
+    const PrimitiveArray& values,
+    const TimestampMetadata& meta) {
+
+  ArrayMetadata values_meta;
+  AppendPrimitive(values, &values_meta);
+
+  auto meta_builder = metadata_.AddColumn(name);
+  meta_builder->SetValues(values_meta);
+  meta_builder->SetTimestamp(meta.unit, meta.timezone);
+  meta_builder->Finish();
+  return Status::OK();
+}
+
+Status TableWriter::AppendTime(const std::string& name, const PrimitiveArray& values,
+    const TimeMetadata& meta) {
+
+  ArrayMetadata values_meta;
+  AppendPrimitive(values, &values_meta);
+
+  auto meta_builder = metadata_.AddColumn(name);
+  meta_builder->SetValues(values_meta);
+  meta_builder->SetTime(meta.unit);
+  meta_builder->Finish();
+  return Status::OK();
+}
+
+Status TableWriter::AppendDate(const std::string& name,
+    const PrimitiveArray& values) {
+
+  ArrayMetadata values_meta;
+  AppendPrimitive(values, &values_meta);
+
+  auto meta_builder = metadata_.AddColumn(name);
+  meta_builder->SetValues(values_meta);
+  meta_builder->SetDate();
+  meta_builder->Finish();
+  return Status::OK();
+}
 
 } // namespace feather

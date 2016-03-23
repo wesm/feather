@@ -75,6 +75,54 @@ class CategoryColumn : public Column {
   PrimitiveArray levels_;
 };
 
+class TimestampColumn : public Column {
+ public:
+  TimestampColumn(const std::shared_ptr<metadata::Column>& metadata,
+      const PrimitiveArray& values) :
+      Column(ColumnType::TIMESTAMP, metadata, values)  {
+    timestamp_meta_ = static_cast<const metadata::TimestampColumn*>(metadata.get());
+  }
+
+  TimeUnit::type unit() const {
+    return timestamp_meta_->unit();
+  }
+
+  std::string timezone() const {
+    return timestamp_meta_->timezone();
+  }
+
+ private:
+  const metadata::TimestampColumn* timestamp_meta_;
+};
+
+class DateColumn : public Column {
+ public:
+  DateColumn(const std::shared_ptr<metadata::Column>& metadata,
+      const PrimitiveArray& values) :
+      Column(ColumnType::DATE, metadata, values)  {
+    date_meta_ = static_cast<const metadata::DateColumn*>(metadata.get());
+  }
+
+ private:
+  const metadata::DateColumn* date_meta_;
+};
+
+class TimeColumn : public Column {
+ public:
+  TimeColumn(const std::shared_ptr<metadata::Column>& metadata,
+      const PrimitiveArray& values) :
+      Column(ColumnType::TIME, metadata, values)  {
+    time_meta_ = static_cast<const metadata::TimeColumn*>(metadata.get());
+  }
+
+  TimeUnit::type unit() const {
+    return time_meta_->unit();
+  }
+
+ private:
+  const metadata::TimeColumn* time_meta_;
+};
+
 class TableReader {
  public:
   TableReader();
@@ -99,6 +147,15 @@ class TableReader {
   Status GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
       std::shared_ptr<Column>* out);
   Status GetCategory(std::shared_ptr<metadata::Column> col_meta,
+      std::shared_ptr<Column>* out);
+
+  Status GetTimestamp(std::shared_ptr<metadata::Column> col_meta,
+      std::shared_ptr<Column>* out);
+
+  Status GetTime(std::shared_ptr<metadata::Column> col_meta,
+      std::shared_ptr<Column>* out);
+
+  Status GetDate(std::shared_ptr<metadata::Column> col_meta,
       std::shared_ptr<Column>* out);
 
   // Retrieve a primitive array from the data source
