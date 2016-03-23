@@ -149,7 +149,7 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
   return out;
 }
 
-void addRColumn(std::unique_ptr<TableWriter>& table, std::string name, SEXP x) {
+void addRColumn(std::unique_ptr<TableWriter>& table, const std::string& name, SEXP x) {
   if (Rf_inherits(x, "factor")) {
     SEXP x_levels = Rf_getAttrib(x, Rf_install("levels"));
     if (TYPEOF(x_levels) != STRSXP)
@@ -174,7 +174,7 @@ void addRColumn(std::unique_ptr<TableWriter>& table, std::string name, SEXP x) {
 }
 
 // [[Rcpp::export]]
-void writeFeather(DataFrame df, std::string path) {
+void writeFeather(DataFrame df, const std::string& path) {
   std::unique_ptr<TableWriter> table;
   std::string fullPath(R_ExpandFileName(path.c_str()));
 

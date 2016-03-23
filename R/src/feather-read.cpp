@@ -6,7 +6,7 @@ using namespace feather;
 
 #include "feather-types.h"
 
-std::unique_ptr<TableReader> openFeatherTable(std::string path) {
+std::unique_ptr<TableReader> openFeatherTable(const std::string& path) {
   std::unique_ptr<TableReader> table;
   std::string fullPath(R_ExpandFileName(path.c_str()));
 
@@ -30,7 +30,7 @@ std::shared_ptr<Column> getColumn(std::unique_ptr<TableReader>& table, int i) {
 }
 
 // [[Rcpp::export]]
-List metadataFeather(std::string path) {
+List metadataFeather(const std::string& path) {
   auto table = openFeatherTable(path);
 
   int n = table->num_rows(), p = table->num_columns();
@@ -55,7 +55,7 @@ List metadataFeather(std::string path) {
 }
 
 // [[Rcpp::export]]
-List readFeather(std::string path) {
+List readFeather(const std::string& path) {
   auto table = openFeatherTable(path);
 
   int n = table->num_columns(), p = table->num_rows();

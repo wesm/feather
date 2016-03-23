@@ -6,34 +6,34 @@
 using namespace Rcpp;
 
 // metadataFeather
-List metadataFeather(std::string path);
+List metadataFeather(const std::string& path);
 RcppExport SEXP feather_metadataFeather(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
     __result = Rcpp::wrap(metadataFeather(path));
     return __result;
 END_RCPP
 }
 // readFeather
-List readFeather(std::string path);
+List readFeather(const std::string& path);
 RcppExport SEXP feather_readFeather(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
     __result = Rcpp::wrap(readFeather(path));
     return __result;
 END_RCPP
 }
 // writeFeather
-void writeFeather(DataFrame df, std::string path);
+void writeFeather(DataFrame df, const std::string& path);
 RcppExport SEXP feather_writeFeather(SEXP dfSEXP, SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
     writeFeather(df, path);
     return R_NilValue;
 END_RCPP
