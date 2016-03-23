@@ -75,12 +75,10 @@ PrimitiveArray intToPrimitiveArray(SEXP x) {
   out.length = n;
   out.values = reinterpret_cast<uint8_t*>(INTEGER(x));
 
+  out.null_count = n_missing;
   if (n_missing > 0) {
-    out.null_count = n_missing;
     out.buffers.push_back(null_buffer);
     out.nulls = nulls;
-  } else {
-    out.null_count = 0;
   }
 
   return out;
@@ -89,11 +87,27 @@ PrimitiveArray intToPrimitiveArray(SEXP x) {
 PrimitiveArray dblToPrimitiveArray(SEXP x) {
   int n = Rf_length(x);
 
+  auto null_buffer = makeBoolBuffer(n);
+  auto nulls = null_buffer->mutable_data();
+  uint32_t n_missing = 0;
+  double* px = REAL(x);
+  for (int i = 0; i < n; ++i) {
+    if (R_IsNA(px[i])) {
+      ++n_missing;
+      util::set_bit(nulls, i);
+    }
+  }
+
   PrimitiveArray out;
   out.type = PrimitiveType::DOUBLE;
   out.length = n;
-  out.null_count = 0;
+  out.null_count = n_missing;
   out.values = reinterpret_cast<uint8_t*>(REAL(x));
+
+  if (n_missing > 0) {
+    out.buffers.push_back(null_buffer);
+    out.nulls = nulls;
+  }
 
   return out;
 }
