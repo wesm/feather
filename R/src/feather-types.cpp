@@ -200,7 +200,7 @@ int64_t timeScale(TimeUnit::type unit) {
 // Used to convert INT64 TIME and TIMESTAMP to a double vector.
 // This loses precision, but I don't know of a better approach given
 // the absense of an INT64 type in R.
-SEXP rescaleFromInt64(const PrimitiveArray* pArray, int64_t scale = 1) {
+SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
   if (pArray->type != PrimitiveType::INT64)
     stop("Not an INT64");
 
@@ -250,7 +250,16 @@ SEXP toSEXP(ColumnPtr x) {
     out.attr("class") = "time";
     return out;
   }
-  case feather::ColumnType::TIMESTAMP:
+  case feather::ColumnType::TIMESTAMP: {
+    auto x_time = std::static_pointer_cast<feather::TimestampColumn>(x);
+
+    DoubleVector out = rescaleFromInt64(val, timeScale(x_time->unit()));
+    out.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
+    out.attr("tzone") = x_time->timezone();
+    return out;
+
+
+  }
     stop("Not supported yet");
     return 0;
   }

@@ -87,7 +87,7 @@ PrimitiveArray intToPrimitiveArray(SEXP x) {
   return out;
 }
 
-PrimitiveArray rescaleToInt64(SEXP x, double scale) {
+PrimitiveArray rescaleToInt64(SEXP x, int64_t scale) {
   int n = Rf_length(x);
 
   auto null_buffer = makeBoolBuffer(n);
@@ -280,6 +280,23 @@ Status addTimeColumn(std::unique_ptr<TableWriter>& table,
 }
 
 
+Status addTimestampColumn(std::unique_ptr<TableWriter>& table,
+                          const std::string& name, SEXP x) {
+  if (TYPEOF(x) != INTSXP && TYPEOF(x) != REALSXP)
+    stop("%s is corrupt", name);
+  auto values = rescaleToInt64(x, 1e6);
+
+  SEXP tzoneR = Rf_getAttrib(x, Rf_install("tzone"));
+  std::string tzone = Rf_isNull(tzoneR) ? "UTC" : Rf_translateCharUTF8(STRING_ELT(tzoneR, 0));
+
+  TimestampMetadata metadata;
+  metadata.unit = TimeUnit::MICROSECOND;
+  metadata.timezone = tzone;
+
+  return table->AppendTimestamp(name, values, metadata);
+}
+
+
 Status addColumn(std::unique_ptr<TableWriter>& table,
                  const std::string& name, SEXP x) {
   if (Rf_inherits(x, "factor")) {
@@ -288,6 +305,11 @@ Status addColumn(std::unique_ptr<TableWriter>& table,
     return addDateColumn(table, name, x);
   } else if (Rf_inherits(x, "time")) {
     return addTimeColumn(table, name, x);
+  } else if (Rf_inherits(x, "POSIXct")) {
+    return addTimestampColumn(table, name, x);
+  } else if (Rf_inherits(x, "POSIXlt")) {
+    stop("Can not write POSIXlt (%s). Convert to POSIXct first.", name);
+    return Status::NotImplemented("");
   } else {
     return addPrimitiveColumn(table, name, x);
   }

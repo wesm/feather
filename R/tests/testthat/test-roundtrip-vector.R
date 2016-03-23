@@ -77,10 +77,37 @@ test_that("preserves dates", {
   expect_equal(roundtrip_vector(x), x)
 })
 
-
 # Time --------------------------------------------------------------------
 
 test_that("preserves times", {
   x <- structure(1:100, class = "time")
   expect_equal(roundtrip_vector(x), x)
+})
+
+
+# Timestamp/POSIXct -------------------------------------------------------
+
+test_that("preserves times", {
+  x1 <- ISOdate(2001, 10, 10, tz = "US/Pacific")
+  x2 <- roundtrip_vector(x1)
+
+  expect_equal(attr(x1, "tzone"), attr(x2, "tzone"))
+  expect_equal(attr(x1, "class"), attr(x1, "class"))
+  expect_equal(unclass(x1), unclass(x2))
+})
+
+test_that("throws error on POSIXlt", {
+  df <- data.frame(x = Sys.time())
+  df$x <- as.POSIXlt(df$x)
+
+  expect_error(roundtrip(df), "Can not write POSIXlt")
+})
+
+
+test_that("doesn't lose undue precision", {
+  base <- ISOdate(2001, 10, 10)
+  x1 <- base + 1e-6 * (0:3)
+  x2 <- roundtrip_vector(x1)
+
+  expect_identical(x1, x2)
 })
