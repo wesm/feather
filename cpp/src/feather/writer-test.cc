@@ -164,6 +164,91 @@ TEST_F(TestTableWriter, CategoryRoundtrip) {
   ASSERT_TRUE(cat_col->levels().Equals(levels));
 }
 
+TEST_F(TestTableWriter, TimestampRoundtrip) {
+  int num_values = 1000;
+  int num_nulls = 50;
+  int null_bytes = util::bytes_for_bits(num_values);
+
+    // Generate some random data
+  vector<uint8_t> null_buffer;
+  vector<uint8_t> values_buffer;
+  test::random_bytes(null_bytes, 0, &null_buffer);
+  test::random_bytes(num_values * sizeof(int64_t), 0, &values_buffer);
+
+  PrimitiveArray values = MakePrimitive(PrimitiveType::INT64, num_values,
+      num_nulls, &null_buffer[0], &values_buffer[0], nullptr);
+
+  TimestampMetadata metadata;
+  metadata.unit = TimeUnit::SECOND;
+  metadata.timezone = std::string("America/Los_Angeles");
+
+  ASSERT_OK(writer_->AppendTimestamp("f0", values, metadata));
+  Finish();
+
+  std::shared_ptr<Column> col;
+  ASSERT_OK(reader_->GetColumn(0, &col));
+  ASSERT_EQ("f0", col->metadata()->name());
+  ASSERT_EQ(ColumnType::TIMESTAMP, col->type());
+  ASSERT_TRUE(col->values().Equals(values));
+
+  auto ts_col = static_cast<const TimestampColumn*>(col.get());
+  ASSERT_EQ(metadata.unit, ts_col->unit());
+  ASSERT_EQ(metadata.timezone, ts_col->timezone());
+}
+
+TEST_F(TestTableWriter, DateRoundtrip) {
+  int num_values = 1000;
+  int num_nulls = 50;
+  int null_bytes = util::bytes_for_bits(num_values);
+
+    // Generate some random data
+  vector<uint8_t> null_buffer;
+  vector<uint8_t> values_buffer;
+  test::random_bytes(null_bytes, 0, &null_buffer);
+  test::random_bytes(num_values * sizeof(int64_t), 0, &values_buffer);
+
+  PrimitiveArray values = MakePrimitive(PrimitiveType::INT32, num_values,
+      num_nulls, &null_buffer[0], &values_buffer[0], nullptr);
+
+  ASSERT_OK(writer_->AppendDate("f0", values));
+  Finish();
+
+  std::shared_ptr<Column> col;
+  ASSERT_OK(reader_->GetColumn(0, &col));
+  ASSERT_EQ("f0", col->metadata()->name());
+  ASSERT_EQ(ColumnType::DATE, col->type());
+  ASSERT_TRUE(col->values().Equals(values));
+}
+
+TEST_F(TestTableWriter, TimeRoundtrip) {
+  int num_values = 1000;
+  int num_nulls = 50;
+  int null_bytes = util::bytes_for_bits(num_values);
+
+    // Generate some random data
+  vector<uint8_t> null_buffer;
+  vector<uint8_t> values_buffer;
+  test::random_bytes(null_bytes, 0, &null_buffer);
+  test::random_bytes(num_values * sizeof(int64_t), 0, &values_buffer);
+
+  PrimitiveArray values = MakePrimitive(PrimitiveType::INT64, num_values,
+      num_nulls, &null_buffer[0], &values_buffer[0], nullptr);
+
+  TimeMetadata metadata;
+  metadata.unit = TimeUnit::SECOND;
+  ASSERT_OK(writer_->AppendTime("f0", values, metadata));
+  Finish();
+
+  std::shared_ptr<Column> col;
+  ASSERT_OK(reader_->GetColumn(0, &col));
+  ASSERT_EQ("f0", col->metadata()->name());
+  ASSERT_EQ(ColumnType::TIME, col->type());
+  ASSERT_TRUE(col->values().Equals(values));
+
+  auto ts_col = static_cast<const TimeColumn*>(col.get());
+  ASSERT_EQ(metadata.unit, ts_col->unit());
+}
+
 TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
   // UTF8 or BINARY
   int num_values = 1000;

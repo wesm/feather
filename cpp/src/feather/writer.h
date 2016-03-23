@@ -47,8 +47,13 @@ class TableWriter {
       const PrimitiveArray& levels, bool ordered = false);
 
   // Other primitive data types
-  void AppendTimestamp(const std::string& name, const PrimitiveArray& values,
+  Status AppendTimestamp(const std::string& name, const PrimitiveArray& values,
       const TimestampMetadata& meta);
+
+  Status AppendDate(const std::string& name, const PrimitiveArray& values);
+
+  Status AppendTime(const std::string& name, const PrimitiveArray& values,
+      const TimeMetadata& meta);
 
   // We are done, write the file metadata and footer
   Status Finalize();

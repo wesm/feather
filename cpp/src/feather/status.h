@@ -26,6 +26,16 @@ namespace feather {
     if (!_s.ok()) return _s;                    \
   } while (0);
 
+#define STOP_IF_ERROR(STMT, MESSAGE_PREFIX) do {    \
+    Status _s = (STMT);                             \
+    if (!_s.ok()) {                                 \
+      std::stringstream ss;                         \
+      ss << MESSAGE_PREFIX;                         \
+      ss << " C++ error: " << _s.ToString();        \
+      std::string msg = ss.str();                   \
+      stop(msg.c_str()));                           \
+  } while (0);p
+
 enum class StatusCode: char {
   OK = 0,
   OutOfMemory = 1,
