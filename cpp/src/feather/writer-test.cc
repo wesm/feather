@@ -162,6 +162,7 @@ TEST_F(TestTableWriter, CategoryRoundtrip) {
 
   auto cat_col = static_cast<const CategoryColumn*>(col.get());
   ASSERT_TRUE(cat_col->levels().Equals(levels));
+  ASSERT_TRUE(cat_col->ordered());
 }
 
 TEST_F(TestTableWriter, TimestampRoundtrip) {
