@@ -3,8 +3,9 @@
 Feather is a binary columnar serialization for data frames. It is designed to
 read and write data frames very efficiently, and to make it possible to 
 efficiently share data across multiple data analysis languages. The initial 
-version of feather comes with bindings for [python](python/) (written by @wesm) 
-and [R](R/) (written by @hadley).
+version of feather comes with bindings for [python](python/) (written by 
+[Wes McKinney](https://github.com/wesm) and [R](R/) (written by 
+[Hadley Wickham](https://github.com/hadley/)).
 
 Feather uses the [Apache Arrow](https://arrow.apache.org) columnar memory
 specification to representing binary data on disk in a way that can be read
