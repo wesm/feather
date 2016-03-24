@@ -1,5 +1,21 @@
 ## Feather core C++ library
 
+Feather is a binary columnar serialization for data frames. It is designed to read and write data frames as efficiently as possible, and is designed to work across multiple languages. The initial version of feather comes with two bindings, for python and for R.
+
+Feather is a relative of [Apache Arrow](https://arrow.apache.org). EXPLAIN DIFFERENCES BETWEEN ARROW AND FEATHER HERE.
+
+Feather currently supports the following column types:
+
+* A wide range of numeric types (int8, int16, int32, int64, uint8, uint16, 
+  uint32, uint64, float, double).
+* Logical/boolean values.
+* UTF-8 encoded strings.
+* Dates, times, and timestamps.
+* Factors/categorical variables with fixed set of possible values.
+* Arbitrary binary data.
+
+All column types support missing/null values.
+
 ## Build and install
 
 `libfeather` is mainly designed for linking with some other application, like a
@@ -37,8 +53,8 @@ We use [Google C++ coding style][1] with a few changes:
 - We do not encourage anonymous namespaces
 
 We do not use C++ exceptions as handling them in Python extensions adds a lot
-of library complexity. This also makes it simpler to make libfeather accessible
-to other C users.
+of library complexity. Instead return a `Status` object. This also makes it 
+simpler to make libfeather accessible to other C users. 
 
 Style is checked with `cpplint`, after generating the make files you can
 veryify the style with
