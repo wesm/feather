@@ -1,5 +1,6 @@
-## R Feather Format API
+## Feather for R
 
+Feather is file format designed for efficient on-disk serialisation of data frames that can be shared across programming languages (e.g. Python and R).
 
 ## Bootstrapping
 

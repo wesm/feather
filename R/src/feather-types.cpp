@@ -11,12 +11,12 @@ RColType toRColType(FeatherColType x) {
   case PrimitiveType::INT8:
   case PrimitiveType::INT16:
   case PrimitiveType::INT32:
-  case PrimitiveType::INT64:
   case PrimitiveType::UINT8:
   case PrimitiveType::UINT16:
   case PrimitiveType::UINT32:
-  case PrimitiveType::UINT64:
     return R_INT;
+  case PrimitiveType::INT64:
+  case PrimitiveType::UINT64:
   case PrimitiveType::FLOAT:
   case PrimitiveType::DOUBLE:
     return R_DBL;
@@ -74,5 +74,193 @@ std::string toString(RColType x) {
   case R_DATE:     return "date";
   case R_DATETIME: return "datetime";
   case R_TIME:     return "time";
+  }
+}
+
+SEXPTYPE toSEXPTYPE(RColType x) {
+  switch(x) {
+  case R_LGL:      return LGLSXP;
+  case R_INT:      return INTSXP;
+  case R_DBL:      return REALSXP;
+  case R_CHR:      return STRSXP;
+  case R_RAW:      return VECSXP;
+  case R_FACTOR:   return INTSXP;
+  case R_DATE:     return INTSXP;
+  case R_DATETIME: return REALSXP;
+  case R_TIME:     return REALSXP;
+  }
+}
+
+
+template <class PrimType, class DestType>
+void copyRecast(const PrimitiveArray* src, DestType* dest) {
+  int n = src->length;
+
+  auto recast = reinterpret_cast<const PrimType*>(src->values);
+  std::copy(&recast[0], &recast[0] + n, dest);
+}
+
+SEXP toSEXP(const PrimitiveArray* val) {
+  int64_t n = val->length;
+  RColType rType = toRColType(val->type);
+  SEXP out = Rf_allocVector(toSEXPTYPE(rType), n);
+
+  switch(val->type) {
+  case PrimitiveType::BOOL: {
+    for (int i = 0; i < n; ++i) {
+      INTEGER(out)[i] = util::get_bit(val->values, i);
+    }
+    break;
+  }
+  case PrimitiveType::INT8:
+    copyRecast<int8_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::INT16:
+    copyRecast<int16_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::INT32:
+    copyRecast<int32_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::UINT8:
+    copyRecast<uint8_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::UINT16:
+    copyRecast<uint16_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::UINT32:
+    copyRecast<uint32_t>(val, INTEGER(out));
+    break;
+  case PrimitiveType::INT64:
+    Rf_warningcall(R_NilValue, "Coercing int64 to double");
+    copyRecast<int64_t>(val, REAL(out));
+    break;
+  case PrimitiveType::UINT64:
+    Rf_warningcall(R_NilValue, "Coercing uint64 to double");
+    copyRecast<int64_t>(val, REAL(out));
+    break;
+  case PrimitiveType::FLOAT:
+    copyRecast<float>(val, REAL(out));
+    break;
+  case PrimitiveType::DOUBLE:
+    copyRecast<double>(val, REAL(out));
+    break;
+
+  case PrimitiveType::UTF8: {
+    auto asChar = reinterpret_cast<const char*>(val->values);
+    for (int i = 0; i < n; ++i) {
+      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      SEXP string = Rf_mkCharLenCE(asChar + offset1, offset2 - offset1, CE_UTF8);
+      SET_STRING_ELT(out, i, string);
+    }
+    break;
+  }
+  case PrimitiveType::BINARY: {
+    auto asChar = reinterpret_cast<const char*>(val->values);
+    for (int i = 0; i < n; ++i) {
+      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      int32_t n = offset2 - offset1;
+
+      SEXP raw = Rf_allocVector(RAWSXP, n);
+      memcpy(RAW(out), asChar + offset1, n);
+      SET_VECTOR_ELT(out, i, raw);
+    }
+    break;
+  }
+  default:
+    break;
+  }
+
+  if (val->null_count > 0) {
+    for (int i = 0; i < n; ++i) {
+      if (util::get_bit(val->nulls, i)) {
+        switch(TYPEOF(out)) {
+        case LGLSXP: INTEGER(out)[i] = NA_LOGICAL; break;
+        case INTSXP: INTEGER(out)[i] = NA_INTEGER; break;
+        case REALSXP: REAL(out)[i] = NA_REAL; break;
+        case STRSXP: SET_STRING_ELT(out, i, NA_STRING); break;
+        default: break;
+        }
+      }
+    }
+  }
+
+
+  return out;
+}
+
+int64_t timeScale(TimeUnit::type unit) {
+  switch(unit) {
+  case TimeUnit::SECOND:      return 1;
+  case TimeUnit::MILLISECOND: return 1e3;
+  case TimeUnit::MICROSECOND: return 1e6;
+  case TimeUnit::NANOSECOND:  return 1e9;
+  }
+}
+
+// Used to convert INT64 TIME and TIMESTAMP to a double vector.
+// This loses precision, but I don't know of a better approach given
+// the absense of an INT64 type in R.
+SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
+  if (pArray->type != PrimitiveType::INT64)
+    stop("Not an INT64");
+
+  auto pValues = reinterpret_cast<const int64_t*>(pArray->values);
+  int n = pArray->length;
+
+  SEXP out = Rf_allocVector(REALSXP, n);
+  double* pOut = REAL(out);
+
+  if (scale == 1) {
+    std::copy(&pValues[0], &pValues[0] + n, pOut);
+  } else {
+    for (int i = 0; i < n; ++i) {
+      pOut[i] = pValues[i] / scale;
+    }
+  }
+
+  return out;
+}
+
+SEXP toSEXP(ColumnPtr x) {
+  ColumnMetadataPtr meta = x->metadata();
+  const PrimitiveArray* val(&x->values());
+
+  switch(x->type()) {
+  case feather::ColumnType::PRIMITIVE:
+    return toSEXP(val);
+  case feather::ColumnType::CATEGORY: {
+    IntegerVector out = toSEXP(val);
+
+    auto x_cat = std::static_pointer_cast<feather::CategoryColumn>(x);
+    const PrimitiveArray* levels(&x_cat->levels());
+
+    out.attr("levels") = toSEXP(levels);
+    out.attr("class") = "factor";
+    return out;
+  }
+  case feather::ColumnType::DATE: {
+    IntegerVector out = toSEXP(val);
+    out.attr("class") = "Date";
+    return out;
+  }
+  case feather::ColumnType::TIME: {
+    auto x_time = std::static_pointer_cast<feather::TimeColumn>(x);
+
+    DoubleVector out = rescaleFromInt64(val, timeScale(x_time->unit()));
+    out.attr("class") = "time";
+    return out;
+  }
+  case feather::ColumnType::TIMESTAMP: {
+    auto x_time = std::static_pointer_cast<feather::TimestampColumn>(x);
+
+    DoubleVector out = rescaleFromInt64(val, timeScale(x_time->unit()));
+    out.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
+    out.attr("tzone") = x_time->timezone();
+    return out;
+
+
+  }
+    stop("Not supported yet");
+    return 0;
   }
 }

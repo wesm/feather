@@ -5,40 +5,66 @@ using namespace Rcpp;
 using namespace feather;
 
 #include "feather-types.h"
+#include "feather-utils.h"
 
-// [[Rcpp::export]]
-IntegerVector feather_dim(std::string path) {
-  std::string fullPath(R_ExpandFileName(path.c_str()));
+std::unique_ptr<TableReader> openFeatherTable(const std::string& path) {
   std::unique_ptr<TableReader> table;
+  std::string fullPath(R_ExpandFileName(path.c_str()));
 
-  if (!TableReader::OpenFile(fullPath, &table).ok()) {
-    stop("Failed to open '%s'", path);
-  }
-  return IntegerVector::create(table->num_rows(), table->num_columns());
+  stopOnFailure(TableReader::OpenFile(fullPath, &table));
+  return table;
+}
+
+std::shared_ptr<Column> getColumn(std::unique_ptr<TableReader>& table, int i) {
+  std::shared_ptr<Column> col;
+
+  stopOnFailure(table->GetColumn(i, &col));
+  return col;
 }
 
 // [[Rcpp::export]]
-CharacterVector feather_metadata(std::string path) {
-  std::string fullPath(R_ExpandFileName(path.c_str()));
-  std::unique_ptr<TableReader> table;
+List metadataFeather(const std::string& path) {
+  auto table = openFeatherTable(path);
 
-  if (!TableReader::OpenFile(fullPath, &table).ok()) {
-    stop("Failed to open '%s'", path);
+  int n = table->num_rows(), p = table->num_columns();
+  CharacterVector types(p), names(p);
+
+  for (int j = 0; j < p; ++j) {
+    auto col = getColumn(table, j);
+
+    names[j] = col->name();
+    types[j] = toString(toRColType(col));
   }
+  types.attr("names") = names;
 
-  int n = table->num_columns();
-  CharacterVector out(n), names(n);
-  out.attr("names") = names;
-
-  for (int i = 0; i < n; ++i) {
-    std::shared_ptr<Column> col;
-    if (!table->GetColumn(i, &col).ok()) {
-      stop("Failed to retrieve column %i", i);
-    }
-
-    names[i] = col->name();
-    out[i] = toString(toRColType(col));
-  }
-
+  auto out = List::create(
+    _["path"] = path,
+    _["dim"] = IntegerVector::create(n, p),
+    _["types"] = types,
+    _["description"] = table->GetDescription()
+  );
+  out.attr("class") = "feather_metadata";
   return out;
 }
+
+// [[Rcpp::export]]
+List readFeather(const std::string& path) {
+  auto table = openFeatherTable(path);
+
+  int n = table->num_columns(), p = table->num_rows();
+  List out(n), names(n);
+
+  for (int i = 0; i < n; ++i) {
+    auto col = getColumn(table, i);
+
+    names[i] = col->name();
+    out[i] = toSEXP(col);
+  }
+
+  out.attr("names") = names;
+  out.attr("row.names") = IntegerVector::create(NA_INTEGER, -p);
+  out.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
+  return out;
+}
+
+

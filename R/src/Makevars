@@ -1,4 +1,10 @@
 CXX_STD=CXX11
 PKG_CPPFLAGS += -I.
-SOURCES=feather-types.cpp feather-read.cpp RcppExports.cpp feather/buffer.cc feather/io.cc feather/metadata.cc feather/reader.cc feather/status.cc feather/types.cc feather/writer.cc
-OBJECTS=feather-types.o feather-read.o RcppExports.o feather/buffer.o feather/io.o feather/metadata.o feather/reader.o feather/status.o feather/types.o feather/writer.o
+
+SOURCES.feather =    $(wildcard *.cpp)
+SOURCES.libfeather = $(wildcard feather/*.cc)
+SOURCES =            $(SOURCES.feather) $(SOURCES.libfeather)
+
+OBJECTS.feather    = $(SOURCES.feather:.cpp=.o)
+OBJECTS.libfeather = $(SOURCES.libfeather:.cc=.o)
+OBJECTS =            $(OBJECTS.feather) $(OBJECTS.libfeather)
