@@ -10,7 +10,4 @@ cmake_install.cmake
 Makefile
 install_manifest.txt
 
-# Flatbuffers generated files
-*_generated.h
-
 thirdparty

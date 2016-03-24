@@ -2,18 +2,6 @@
 
 Feather is file format designed for efficient on-disk serialisation of data frames that can be shared across programming languages (e.g. Python and R).
 
-## Bootstrapping
-
-```sh
-mkdir -p src/libfeather
-cp ../cpp/src/feather/*.h src/feather
-cp ../cpp/src/feather/*.cc src/feather
-rm src/feather/*-test.cc src/feather/test_main.cc src/feather/test-common.h
-
-mkdir -p src/flatbuffers
-cp ../cpp/thirdparty/flatbuffers-1.3.0/include/flatbuffers/flatbuffers.h src/flatbuffers/
-```
-
 ## Installation
 
 Install from Github with:
@@ -22,3 +10,5 @@ Install from Github with:
 # install.packages("devtools")
 devtools::install_github("wesm/feather/R")
 ```
+
+Feather uses C++11, so if you're on windows, you'll require the [experimental gcc 4.93 toolchain](https://github.com/rwinlib/r-base/wiki/Testing-Packages-with-Experimental-R-Devel-Build-for-Windows). This should become official when R 3.3.0 is released, which is also when we'll submit it to CRAN, so installation will eventually painless.
