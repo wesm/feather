@@ -6,8 +6,8 @@ if [ -d "../cpp/src/feather" ]; then
   rm src/feather/*-test.cc src/feather/test_main.cc src/feather/test-common.h
 fi
 
-if [ -d "../cpp/thirdparty/flatbuffers-1.3.0" ]; then
+if [ -d "../cpp/src/flatbuffers" ]; then
   mkdir -p src/flatbuffers
 
-  cp -p ../cpp/thirdparty/flatbuffers-1.3.0/include/flatbuffers/flatbuffers.h src/flatbuffers/
+  cp -p ../cpp/src/flatbuffers/flatbuffers.h src/flatbuffers/
 fi
