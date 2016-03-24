@@ -9,3 +9,7 @@ feather_metadata <- function(path) {
     .Call('feather_feather_metadata', PACKAGE = 'feather', path)
 }
 
+feather_read <- function(path) {
+    .Call('feather_feather_read', PACKAGE = 'feather', path)
+}
+
