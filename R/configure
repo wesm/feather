@@ -1,0 +1,13 @@
+if [ -d "../cpp/src/feather" ]; then
+  mkdir -p src/feather
+
+  cp -p ../cpp/src/feather/*.h src/feather
+  cp -p ../cpp/src/feather/*.cc src/feather
+  rm src/feather/*-test.cc src/feather/test_main.cc src/feather/test-common.h
+fi
+
+if [ -d "../cpp/thirdparty/flatbuffers-1.3.0" ]; then
+  mkdir -p src/flatbuffers
+
+  cp -p ../cpp/thirdparty/flatbuffers-1.3.0/include/flatbuffers/flatbuffers.h src/flatbuffers/
+fi
