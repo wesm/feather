@@ -146,7 +146,8 @@ Status TableReader::GetCategory(std::shared_ptr<metadata::Column> col_meta,
 
   auto levels_meta = cat_meta->levels();
   RETURN_NOT_OK(GetPrimitiveArray(levels_meta, &levels));
-  *out = std::make_shared<CategoryColumn>(col_meta, values, levels);
+  *out = std::make_shared<CategoryColumn>(col_meta, values, levels,
+    cat_meta->ordered());
 
   return Status::OK();
 }

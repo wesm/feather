@@ -60,9 +60,11 @@ class CategoryColumn : public Column {
  public:
   CategoryColumn(const std::shared_ptr<metadata::Column>& metadata,
       const PrimitiveArray& values,
-      const PrimitiveArray& levels) :
+      const PrimitiveArray& levels,
+      bool ordered = false) :
       Column(ColumnType::CATEGORY, metadata, values),
-      levels_(levels) {
+      levels_(levels),
+      ordered_(ordered) {
     category_meta_ = static_cast<const metadata::CategoryColumn*>(metadata.get());
   }
 
@@ -70,9 +72,14 @@ class CategoryColumn : public Column {
     return levels_;
   }
 
+  bool ordered() const {
+    return ordered_;
+  }
+
  private:
   const metadata::CategoryColumn* category_meta_;
   PrimitiveArray levels_;
+  bool ordered_;
 };
 
 class TimestampColumn : public Column {
