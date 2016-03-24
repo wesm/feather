@@ -20,7 +20,5 @@ enum RColType {
 RColType toRColType(FeatherColType x);
 RColType toRColType(ColumnPtr x);
 
-FeatherColType toFeatherColType(RColType x);
-
 std::string toString(RColType x);
 SEXP toSEXP(ColumnPtr x);

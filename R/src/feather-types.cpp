@@ -24,14 +24,6 @@ RColType toRColType(FeatherColType x) {
     return R_CHR;
   case PrimitiveType::BINARY:
     return R_RAW;
-  case PrimitiveType::CATEGORY:
-    return R_FACTOR;
-  case PrimitiveType::TIMESTAMP:
-    return R_DATETIME;
-  case PrimitiveType::DATE:
-    return R_DATE;
-  case PrimitiveType::TIME:
-    return R_TIME;
   }
 };
 
@@ -50,19 +42,6 @@ RColType toRColType(ColumnPtr x) {
   }
 }
 
-FeatherColType toFeatherColType(RColType x) {
-  switch(x) {
-  case R_LGL:      return PrimitiveType::BOOL;
-  case R_INT:      return PrimitiveType::INT32;
-  case R_DBL:      return PrimitiveType::DOUBLE;
-  case R_CHR:      return PrimitiveType::UTF8;
-  case R_RAW:      return PrimitiveType::BINARY;
-  case R_FACTOR:   return PrimitiveType::CATEGORY;
-  case R_DATE:     return PrimitiveType::DATE;
-  case R_DATETIME: return PrimitiveType::TIMESTAMP;
-  case R_TIME:     return PrimitiveType::TIME;
-  }
-}
 std::string toString(RColType x) {
   switch(x) {
   case R_LGL:      return "logical";
@@ -234,7 +213,7 @@ SEXP toSEXP(ColumnPtr x) {
     auto x_cat = std::static_pointer_cast<feather::CategoryColumn>(x);
     const PrimitiveArray* levels(&x_cat->levels());
 
-    out.attr("levels") = toSEXP(levels);
+    out.attr("levels") = Rf_coerceVector(toSEXP(levels), STRSXP);
     out.attr("class") = "factor";
     return out;
   }
