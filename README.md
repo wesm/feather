@@ -28,6 +28,6 @@ All column types support NA/null values.
 
 ## License and Copyrights
 
-This library is released under the Apache License, Version 2.0.
+This library is released under the [Apache License, Version 2.0](LICENSE.txt).
 
-See `NOTICE` for details about the library's copyright holders.
+See [`NOTICE`](NOITICE) for details about the library's copyright holders.
