@@ -141,6 +141,9 @@ Status TableWriter::AppendCategory(const std::string& name,
     const PrimitiveArray& values,
     const PrimitiveArray& levels, bool ordered) {
 
+  if (values.type != PrimitiveType::INT32)
+    return Status::Invalid("Category values must be INT32");
+
   ArrayMetadata values_meta, levels_meta;
 
   AppendPrimitive(values, &values_meta);
@@ -158,6 +161,9 @@ Status TableWriter::AppendTimestamp(const std::string& name,
     const PrimitiveArray& values,
     const TimestampMetadata& meta) {
 
+  if (values.type != PrimitiveType::INT64)
+    return Status::Invalid("Timestamp values must be INT64");
+
   ArrayMetadata values_meta;
   AppendPrimitive(values, &values_meta);
 
@@ -171,6 +177,9 @@ Status TableWriter::AppendTimestamp(const std::string& name,
 Status TableWriter::AppendTime(const std::string& name, const PrimitiveArray& values,
     const TimeMetadata& meta) {
 
+  if (values.type != PrimitiveType::INT64)
+    return Status::Invalid("Timestamp values must be INT64");
+
   ArrayMetadata values_meta;
   AppendPrimitive(values, &values_meta);
 
@@ -183,6 +192,9 @@ Status TableWriter::AppendTime(const std::string& name, const PrimitiveArray& va
 
 Status TableWriter::AppendDate(const std::string& name,
     const PrimitiveArray& values) {
+
+  if (values.type != PrimitiveType::INT32)
+    return Status::Invalid("Date values must be INT32");
 
   ArrayMetadata values_meta;
   AppendPrimitive(values, &values_meta);

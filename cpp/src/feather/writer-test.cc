@@ -141,14 +141,14 @@ TEST_F(TestTableWriter, CategoryRoundtrip) {
   vector<uint8_t> null_buffer;
   vector<uint8_t> values_buffer;
   vector<uint8_t> levels_buffer;
+
   test::random_bytes(null_bytes, 0, &null_buffer);
   test::random_bytes(num_values * sizeof(int32_t), 0, &values_buffer);
   test::random_bytes(num_levels * sizeof(uint8_t), 0, &levels_buffer);
 
   PrimitiveArray values = MakePrimitive(PrimitiveType::INT32, num_values,
       num_nulls, &null_buffer[0], &values_buffer[0], nullptr);
-
-  PrimitiveArray levels = MakePrimitive(PrimitiveType::UINT8, num_levels,
+  PrimitiveArray levels = MakePrimitive(PrimitiveType::INT8, num_levels,
       0, nullptr, &levels_buffer[0], nullptr);
 
   ASSERT_OK(writer_->AppendCategory("f0", values, levels, true));

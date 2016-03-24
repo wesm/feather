@@ -48,12 +48,6 @@ struct PrimitiveType {
     UTF8 = 11,
 
     BINARY = 12,
-
-    CATEGORY = 13,
-
-    TIMESTAMP = 14,
-    DATE = 15,
-    TIME = 16
   };
 };
 
@@ -93,12 +87,6 @@ static inline int ByteSize(PrimitiveType::type type) {
     case PrimitiveType::UTF8:
     case PrimitiveType::BINARY:
       return TYPE_BYTE_SIZE[static_cast<int>(type)];
-    case PrimitiveType::CATEGORY:
-      return 0;
-    case PrimitiveType::TIMESTAMP:
-    case PrimitiveType::DATE:
-    case PrimitiveType::TIME:
-      return 8;
     default:
       return 0;
   }
