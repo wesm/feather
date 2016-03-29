@@ -51,7 +51,7 @@ BRANCH_PREFIX = "PR_TOOL"
 
 os.chdir(FEATHER_HOME)
 
-auth_required = True
+auth_required = False
 
 if auth_required:
     GITHUB_USERNAME = os.environ['GITHUB_USER']
