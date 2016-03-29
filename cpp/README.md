@@ -37,8 +37,8 @@ We use [Google C++ coding style][1] with a few changes:
 - We do not encourage anonymous namespaces
 
 We do not use C++ exceptions as handling them in Python extensions adds a lot
-of library complexity. This also makes it simpler to make libfeather accessible
-to other C users.
+of library complexity. Instead return a `Status` object. This also makes it
+simpler to make libfeather accessible to other C users.
 
 Style is checked with `cpplint`, after generating the make files you can
 veryify the style with
