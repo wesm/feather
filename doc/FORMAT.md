@@ -29,9 +29,10 @@ For the arrays themselves, the memory layout is type dependent.
 ```
 
 The null bitmask is byte-aligned, but contains 1 bit per value indicating null
-or not null. We use LSB right-to-left bit-numbering ([reference][1]). For
-example, an array with length 6 with [valid, valid, null, valid, null, valid]
-would have a single byte with the values
+(0) or not null (1) (this is also how [PostgreSQL stores nulls][2]). We use LSB
+right-to-left bit-numbering ([reference][1]). For example, an array with length
+6 with [valid, valid, null, valid, null, valid] would have a single byte with
+the values
 
 ```
 0 0 1 0 1 0 1 1
@@ -72,3 +73,4 @@ The `total_bytes` stored in the metadata is the cumulative size of all of these
 pieces of data.
 
 [1]: https://en.wikipedia.org/wiki/Bit_numbering
+[2]: http://www.postgresql.org/docs/9.5/static/storage-page-layout.html

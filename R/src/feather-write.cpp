@@ -32,9 +32,12 @@ PrimitiveArray lglToPrimitiveArray(SEXP x) {
   for (int i = 0; i < n; ++i) {
     if (px[i] == NA_LOGICAL) {
       ++n_missing;
+    } else {
+      // Valid
       util::set_bit(nulls, i);
-    } else if (px[i]) {
-      util::set_bit(values, i);
+      if (px[i]) {
+        util::set_bit(values, i);
+      }
     }
   }
 
@@ -69,6 +72,8 @@ PrimitiveArray intToPrimitiveArray(SEXP x) {
   for (int i = 0; i < n; ++i) {
     if (px[i] == NA_INTEGER) {
       ++n_missing;
+    } else {
+      // Valid
       util::set_bit(nulls, i);
     }
   }
@@ -105,8 +110,9 @@ PrimitiveArray rescaleToInt64(SEXP x, int64_t scale) {
     for (int i = 0; i < n; ++i) {
       if (px[i] == NA_INTEGER) {
         ++n_missing;
-        util::set_bit(nulls, i);
       } else {
+        // Valid
+        util::set_bit(nulls, i);
         values[i] = px[i] * scale;
       }
     }
@@ -117,8 +123,9 @@ PrimitiveArray rescaleToInt64(SEXP x, int64_t scale) {
     for (int i = 0; i < n; ++i) {
       if (R_IsNA(px[i])) {
         ++n_missing;
-        util::set_bit(nulls, i);
       } else {
+        // Valid
+        util::set_bit(nulls, i);
         values[i] = px[i] * scale;
       }
     }
@@ -153,6 +160,8 @@ PrimitiveArray dblToPrimitiveArray(SEXP x) {
   for (int i = 0; i < n; ++i) {
     if (R_IsNA(px[i])) {
       ++n_missing;
+    } else {
+      // Valid
       util::set_bit(nulls, i);
     }
   }
@@ -188,10 +197,11 @@ PrimitiveArray chrToPrimitiveArray(SEXP x) {
     SEXP xi = STRING_ELT(x, i);
 
     if (xi == NA_STRING) {
-      util::set_bit(nulls, i);
       length = 0;
       ++n_missing;
     } else {
+      // Valid
+      util::set_bit(nulls, i);
       const char* utf8 = Rf_translateCharUTF8(xi);
       length = strlen(utf8);
       data_builder.Append(reinterpret_cast<const uint8_t*>(utf8), length);

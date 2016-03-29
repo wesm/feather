@@ -161,13 +161,14 @@ class FeatherSerializer {
         if (!s.ok()) {
           return s;
         }
+        util::set_bit(null_bitmap_, i);
       } else if (PyBytes_Check(obj)) {
         length = PyBytes_GET_SIZE(obj);
         RETURN_NOT_OK(data_builder.Append(
                 reinterpret_cast<const uint8_t*>(PyBytes_AS_STRING(obj)), length));
+        util::set_bit(null_bitmap_, i);
       } else {
         // NULL
-        util::set_bit(null_bitmap_, i);
         // No change to offset
         length = 0;
         ++null_count;
@@ -205,8 +206,10 @@ class FeatherSerializer {
     for (int64_t i = 0; i < out_->length; ++i) {
       if (objects[i] == Py_True) {
         util::set_bit(bitmap, i);
-      } else if (objects[i] != Py_False) {
         util::set_bit(null_bitmap_, i);
+      } else if (objects[i] == Py_False) {
+        util::set_bit(null_bitmap_, i);
+      } else {
         ++null_count;
       }
     }
@@ -232,6 +235,7 @@ static int64_t MaskToBitmap(PyArrayObject* mask, int64_t length, uint8_t* bitmap
   for (int i = 0; i < length; ++i) {
     if (mask_values[i]) {
       ++null_count;
+    } else {
       util::set_bit(bitmap, i);
     }
   }
@@ -250,6 +254,7 @@ static int64_t ValuesToBitmap(const void* data, int64_t length, uint8_t* bitmap)
   for (int i = 0; i < length; ++i) {
     if (traits::isnull(values[i])) {
       ++null_count;
+    } else {
       util::set_bit(bitmap, i);
     }
   }
@@ -534,7 +539,7 @@ class FeatherDeserializer {
       T* out_values = reinterpret_cast<T*>(PyArray_DATA(out_));
       const T* in_values = reinterpret_cast<const T*>(arr_->values);
       for (int64_t i = 0; i < arr_->length; ++i) {
-        out_values[i] = util::get_bit(arr_->nulls, i) ? NAN : in_values[i];
+        out_values[i] = util::bit_not_set(arr_->nulls, i) ? NAN : in_values[i];
       }
     } else {
       memcpy(PyArray_DATA(out_), arr_->values,
@@ -557,7 +562,7 @@ class FeatherDeserializer {
       double* out_values = reinterpret_cast<double*>(PyArray_DATA(out_));
       const T* in_values = reinterpret_cast<const T*>(arr_->values);
       for (int i = 0; i < arr_->length; ++i) {
-        out_values[i] = util::get_bit(arr_->nulls, i) ? NAN : in_values[i];
+        out_values[i] = util::bit_not_set(arr_->nulls, i) ? NAN : in_values[i];
       }
     } else {
       out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
@@ -576,7 +581,7 @@ class FeatherDeserializer {
       if (out_ == NULL)  return;
       PyObject** out_values = reinterpret_cast<PyObject**>(PyArray_DATA(out_));
       for (int64_t i = 0; i < arr_->length; ++i) {
-        if (util::get_bit(arr_->nulls, i)) {
+        if (util::bit_not_set(arr_->nulls, i)) {
           Py_INCREF(Py_None);
           out_values[i] = Py_None;
         } else if (util::get_bit(arr_->values, i)) {
@@ -612,7 +617,7 @@ class FeatherDeserializer {
     int32_t length;
     if (arr_->null_count > 0) {
       for (int64_t i = 0; i < arr_->length; ++i) {
-        if (util::get_bit(arr_->nulls, i)) {
+        if (util::bit_not_set(arr_->nulls, i)) {
           Py_INCREF(Py_None);
           out_values[i] = Py_None;
         } else {
