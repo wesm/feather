@@ -40,7 +40,7 @@ the values
 
 In C, the code to check a bit looks like:
 
-``
+```
 bits[i / 8] & (1 << (i % 8))
 ```
 
