@@ -24,8 +24,8 @@ def write_dataframe(df, path):
     writer = ext.FeatherWriter(path)
 
     # TODO(wesm): pipeline conversion to Arrow memory layout
-    for name in df.columns:
-        col = df[name]
+    for i, name in enumerate(df.columns):
+        col = df.iloc[:, i]
         writer.write_array(name, col)
 
     writer.close()

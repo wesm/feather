@@ -43,6 +43,8 @@ cdef extern from "interop.h" namespace "feather::py":
     Status pandas_masked_to_primitive(object ao, object mask,
                                       PrimitiveArray* out)
     object primitive_to_pandas(const PrimitiveArray& arr)
+    void set_numpy_nan(object nan)
+
 
 cdef check_status(const Status& status):
     if status.ok():
@@ -51,7 +53,7 @@ cdef check_status(const Status& status):
     cdef string c_message = status.ToString()
     raise FeatherError(frombytes(c_message))
 
-cdef object numpy_nan = np.nan
+set_numpy_nan(np.nan)
 
 cdef class FeatherWriter:
     cdef:
