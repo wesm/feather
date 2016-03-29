@@ -103,7 +103,8 @@ class FeatherSerializer {
   FeatherSerializer(PyArrayObject* arr, PyArrayObject* mask, PrimitiveArray* out) :
       arr_(arr),
       mask_(mask),
-      out_(out) {}
+      out_(out),
+      null_bitmap_(nullptr) {}
 
   Status Convert();
 

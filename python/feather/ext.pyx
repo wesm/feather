@@ -81,9 +81,31 @@ cdef class FeatherWriter:
             self.num_rows = len(col)
 
         if pdcom.is_categorical_dtype(col.dtype):
-            raise NotImplementedError(col.dtype)
+            self.write_category(name, col, mask)
         else:
             self.write_primitive(name, col, mask)
+
+    cdef write_category(self, name, col, mask):
+        cdef:
+            string c_name = tobytes(name)
+            PrimitiveArray values
+            PrimitiveArray levels
+
+        if isinstance(col, pd.Series):
+            col_values = col.values
+        else:
+            col_values = col
+
+        if mask is None:
+            check_status(pandas_to_primitive(col_values.codes, &values))
+        else:
+            check_status(pandas_masked_to_primitive(
+                col_values.codes, mask, &values))
+
+        check_status(pandas_to_primitive(np.asarray(col_values.categories),
+                                         &levels))
+        check_status(self.writer.get().AppendCategory(c_name, values, levels,
+                                                      col_values.ordered))
 
     cdef write_primitive(self, name, col, mask):
         cdef:
@@ -153,4 +175,5 @@ cdef category_to_pandas(Column* col):
     values = primitive_to_pandas(cat.values())
     levels = primitive_to_pandas(cat.levels())
 
-    return pd.Categorical(values=values, categories=levels)
+    return pd.Categorical(values, categories=levels,
+                          fastpath=True)
