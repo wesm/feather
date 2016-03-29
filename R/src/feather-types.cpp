@@ -151,7 +151,7 @@ SEXP toSEXP(const PrimitiveArray* val) {
 
   if (val->null_count > 0) {
     for (int i = 0; i < n; ++i) {
-      if (util::get_bit(val->nulls, i)) {
+      if (util::bit_not_set(val->nulls, i)) {
         switch(TYPEOF(out)) {
         case LGLSXP: INTEGER(out)[i] = NA_LOGICAL; break;
         case INTSXP: INTEGER(out)[i] = NA_INTEGER; break;

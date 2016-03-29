@@ -212,7 +212,7 @@ class TestFeatherReader(unittest.TestCase):
 
     def test_category(self):
         repeats = 1000
-        values = [b'foo', None, u'bar', 'qux', np.nan]
+        values = ['foo', None, u'bar', 'qux', np.nan]
         df = pd.DataFrame({'strings': values * repeats})
         df['strings'] = df['strings'].astype('category')
         self._check_pandas_roundtrip(df)
