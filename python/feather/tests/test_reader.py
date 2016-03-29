@@ -204,9 +204,29 @@ class TestFeatherReader(unittest.TestCase):
         expected = pd.DataFrame({'strings': values * repeats})
         self._check_pandas_roundtrip(df, expected)
 
-    # def test_category(self):
-    #     repeats = 1000
-    #     values = [b'foo', None, u'bar', 'qux', np.nan]
-    #     df = pd.DataFrame({'strings': values * repeats})
-    #     df['strings'] = df['strings'].astype('category')
-    #     self._check_pandas_roundtrip(df)
+    def test_nan_as_null(self):
+        # Create a nan that is not numpy.nan
+        values = np.array(['foo', np.nan, np.nan * 2, 'bar'] * 10)
+        df = pd.DataFrame({'strings': values})
+        self._check_pandas_roundtrip(df)
+
+    def test_category(self):
+        repeats = 1000
+        values = [b'foo', None, u'bar', 'qux', np.nan]
+        df = pd.DataFrame({'strings': values * repeats})
+        df['strings'] = df['strings'].astype('category')
+        self._check_pandas_roundtrip(df)
+
+    def test_timestamp(self):
+        df = pd.DataFrame({'naive': pd.date_range('2016-03-28', periods=10)})
+        df['with_tz'] = (df.naive.dt.tz_localize('utc')
+                         .dt.tz_convert('America/Los_Angeles'))
+
+        self._check_pandas_roundtrip(df)
+
+    def test_non_string_columns(self):
+        df = pd.DataFrame({0: [1, 2, 3, 4],
+                           1: [True, False, True, False]})
+
+        expected = df.rename(columns=str)
+        self._check_pandas_roundtrip(df, expected)

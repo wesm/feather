@@ -103,7 +103,8 @@ class FeatherSerializer {
   FeatherSerializer(PyArrayObject* arr, PyArrayObject* mask, PrimitiveArray* out) :
       arr_(arr),
       mask_(mask),
-      out_(out) {}
+      out_(out),
+      null_bitmap_(nullptr) {}
 
   Status Convert();
 
@@ -281,21 +282,25 @@ inline Status FeatherSerializer<TYPE>::Convert() {
 
 PyObject* numpy_nan = nullptr;
 
+void set_numpy_nan(PyObject* nan) {
+  Py_INCREF(nan);
+  numpy_nan = nan;
+}
+
 static inline bool PyObject_is_null(const PyObject* obj) {
-  return obj == Py_None || obj == numpy_nan;
+  if (obj == Py_None || obj == numpy_nan) {
+    return true;
+  }
+  if (PyFloat_Check(obj)) {
+    double val = PyFloat_AS_DOUBLE(obj);
+    return val != val;
+  }
+  return false;
 }
 
 static inline bool PyObject_is_string(const PyObject* obj) {
 #if PY_MAJOR_VERSION >= 3
-  return PyString_Check(obj) || PyBytes_Check(obj);
-#else
-  return PyString_Check(obj) || PyUnicode_Check(obj);
-#endif
-}
-
-static inline bool PyObject_is_bool(const PyObject* obj) {
-#if PY_MAJOR_VERSION >= 3
-  return PyString_Check(obj) || PyBytes_Check(obj);
+  return PyUnicode_Check(obj) || PyBytes_Check(obj);
 #else
   return PyString_Check(obj) || PyUnicode_Check(obj);
 #endif
@@ -326,7 +331,9 @@ inline Status FeatherSerializer<NPY_OBJECT>::Convert() {
     } else if (PyBool_Check(objects[i])) {
       return ConvertBooleans();
     } else {
-      return Status::Invalid("unhandled python type");
+      std::stringstream ss;
+      ss << "unhandled python type, index " << i;
+      return Status::Invalid(ss.str());
     }
   }
 

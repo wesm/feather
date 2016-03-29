@@ -70,10 +70,24 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
     enum ColumnType" feather::ColumnType::type":
         ColumnType_PRIMITIVE" feather::ColumnType::PRIMITIVE"
         ColumnType_CATEGORY" feather::ColumnType::CATEGORY"
+        ColumnType_TIMESTAMP" feather::ColumnType::TIMESTAMP"
 
     enum Encoding" feather::Encoding::type":
         Encoding_PLAIN" feather::Encoding::PLAIN"
         Encoding_DICTIONARY" feather::Encoding::DICTIONARY"
+
+    enum TimeUnit" feather::TimeUnit::type":
+        TimeUnit_SECOND" feather::TimeUnit::SECOND"
+        TimeUnit_MILLISECOND" feather::TimeUnit::MILLISECOND"
+        TimeUnit_MICROSECOND" feather::TimeUnit::MICROSECOND"
+        TimeUnit_NANOSECOND" feather::TimeUnit::NANOSECOND"
+
+    cdef cppclass TimestampMetadata:
+        TimeUnit unit
+        string timezone
+
+    cdef cppclass TimeMetadata:
+        TimeUnit unit
 
     cdef cppclass Buffer:
         pass
@@ -133,6 +147,8 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
     cdef cppclass BufferReader(RandomAccessReader):
         BufferReader(const shared_ptr[Buffer]& buffer)
 
+
+
     cdef cppclass TableWriter:
         TableWriter()
 
@@ -143,6 +159,18 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         void SetNumRows(int64_t num_rows)
 
         Status AppendPlain(const string& name, const PrimitiveArray& values)
+        Status AppendCategory(const string& name, const PrimitiveArray& values,
+                              const PrimitiveArray& levels, c_bool ordered)
+
+        Status AppendTimestamp(const string& name,
+                               const PrimitiveArray& values,
+                               const TimestampMetadata& meta)
+
+        Status AppendDate(const string& name, const PrimitiveArray& values)
+
+        Status AppendTime(const string& name, const PrimitiveArray& values,
+                          const TimeMetadata& meta)
+
         Status Finalize()
 
     cdef cppclass Column:
@@ -152,6 +180,10 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
 
     cdef cppclass CategoryColumn(Column):
         const PrimitiveArray& levels()
+
+    cdef cppclass TimestampColumn(Column):
+        TimeUnit unit()
+        string timezone()
 
     cdef cppclass TableReader:
         TableReader(const shared_ptr[RandomAccessReader]& source)

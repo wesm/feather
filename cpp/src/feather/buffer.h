@@ -113,6 +113,7 @@ static constexpr int64_t MIN_BUFFER_CAPACITY = 1024;
 class BufferBuilder {
  public:
   BufferBuilder() :
+      data_(nullptr),
       capacity_(0),
       size_(0) {}
 

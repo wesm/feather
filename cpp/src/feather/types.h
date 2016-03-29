@@ -71,6 +71,11 @@ static inline bool IsVariableLength(PrimitiveType::type type) {
   return type == PrimitiveType::UTF8 || type == PrimitiveType::BINARY;
 }
 
+static inline bool IsInteger(PrimitiveType::type type) {
+  return (static_cast<int>(type) >= static_cast<int>(PrimitiveType::INT8)) &&
+    (static_cast<int>(type) <= static_cast<int>(PrimitiveType::UINT64));
+}
+
 static inline int ByteSize(PrimitiveType::type type) {
   switch (type) {
     case PrimitiveType::BOOL:

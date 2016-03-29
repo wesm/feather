@@ -141,8 +141,9 @@ Status TableWriter::AppendCategory(const std::string& name,
     const PrimitiveArray& values,
     const PrimitiveArray& levels, bool ordered) {
 
-  if (values.type != PrimitiveType::INT32)
-    return Status::Invalid("Category values must be INT32");
+  if (!IsInteger(values.type)) {
+    return Status::Invalid("Category values must be integers");
+  }
 
   ArrayMetadata values_meta, levels_meta;
 

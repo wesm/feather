@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 import pandas as pd
 
 import feather.ext as ext
@@ -24,8 +26,12 @@ def write_dataframe(df, path):
     writer = ext.FeatherWriter(path)
 
     # TODO(wesm): pipeline conversion to Arrow memory layout
-    for name in df.columns:
-        col = df[name]
+    for i, name in enumerate(df.columns):
+        col = df.iloc[:, i]
+
+        if not isinstance(name, six.string_types):
+            name = str(name)
+
         writer.write_array(name, col)
 
     writer.close()
