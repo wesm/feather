@@ -44,3 +44,6 @@ coverage.xml
 
 # automatically generated during local development
 feather/version.py
+
+# Symlink to cpp/src for packaging
+src

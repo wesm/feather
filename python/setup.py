@@ -36,7 +36,7 @@ MAJOR = 0
 MINOR = 1
 MICRO = 0
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-ISRELEASED = False
+ISRELEASED = True
 
 setup_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -66,41 +66,68 @@ class clean(_clean):
             except OSError:
                 pass
 
-if 'FEATHER_HOME' in os.environ:
-    prefix = os.environ['FEATHER_HOME']
-    sys.stderr.write("Building from configured libfeather prefix {0}\n"
-                     .format(prefix))
+FEATHER_SOURCES = ['feather/ext.pyx']
+
+INCLUDE_PATHS = ['feather', np.get_include()]
+LIBRARIES = []
+EXTRA_LINK_ARGS = []
+
+FEATHER_STATIC_BUILD = True
+
+if FEATHER_STATIC_BUILD:
+    INCLUDE_PATHS.append(os.path.join(setup_dir, 'src'))
+
+    FEATHER_SOURCES.extend([
+        'src/feather/buffer.cc',
+        'src/feather/io.cc',
+        'src/feather/metadata.cc',
+        'src/feather/reader.cc',
+        'src/feather/status.cc',
+        'src/feather/types.cc',
+        'src/feather/writer.cc'
+    ])
+
+    LIBRARY_DIRS = []
 else:
-    if os.path.exists("/usr/local/include/feather"):
-        prefix = "/usr/local"
-    elif os.path.exists("/usr/include/feather"):
-        prefix = "/usr"
+    # Library build
+    if 'FEATHER_HOME' in os.environ:
+        prefix = os.environ['FEATHER_HOME']
+        sys.stderr.write("Building from configured libfeather prefix {0}\n"
+                         .format(prefix))
     else:
-        sys.stderr.write("Cannot find installed libfeather core library.\n")
-        sys.exit(1)
-    sys.stderr.write("Building from system prefix {0}\n".format(prefix))
-    feather_include_dir = prefix + "/include"
-    feather_lib_dir = prefix + "/lib"
+        if os.path.exists("/usr/local/include/feather"):
+            prefix = "/usr/local"
+        elif os.path.exists("/usr/include/feather"):
+            prefix = "/usr"
+        else:
+            sys.stderr.write("Cannot find installed libfeather "
+                             "core library.\n")
+            sys.exit(1)
+        sys.stderr.write("Building from system prefix {0}\n".format(prefix))
 
-feather_include_dir = os.path.join(prefix, 'include')
-feather_lib_dir = os.path.join(prefix, 'lib')
-INCLUDE_PATHS = [feather_include_dir, 'feather', np.get_include()]
-LIBRARY_DIRS = [feather_lib_dir]
+    feather_include_dir = os.path.join(prefix, 'include')
+    feather_lib_dir = os.path.join(prefix, 'lib')
+
+    INCLUDE_PATHS.append(feather_include_dir)
+
+    LIBRARIES.append('feather')
+    LIBRARY_DIRS = [feather_lib_dir]
+
+    if platform.system() == 'Darwin':
+        EXTRA_LINK_ARGS.append('-Wl,-rpath,' + feather_lib_dir)
+
+
 RT_LIBRARY_DIRS = LIBRARY_DIRS
-extra_link_args = []
-
-if platform.system() == 'Darwin':
-    extra_link_args.append('-Wl,-rpath,' + feather_lib_dir)
 
 ext = Extension('feather.ext',
-                ['feather/ext.pyx'],
+                FEATHER_SOURCES,
                 language='c++',
-                libraries=['feather'],
+                libraries=LIBRARIES,
                 include_dirs=INCLUDE_PATHS,
                 library_dirs=LIBRARY_DIRS,
                 runtime_library_dirs=RT_LIBRARY_DIRS,
-                extra_compile_args=['-std=c++11', '-O0'],
-                extra_link_args=extra_link_args)
+                extra_compile_args=['-std=c++11', '-O3'],
+                extra_link_args=EXTRA_LINK_ARGS)
 extensions = [ext]
 extensions = cythonize(extensions)
 
@@ -121,8 +148,10 @@ CLASSIFIERS = [
     'Programming Language :: Cython'
 ]
 
+URL = 'http://github.com/wesm/feather'
+
 setup(
-    name="feather-python",
+    name="feather-format",
     packages=['feather', 'feather.tests'],
     version=VERSION,
     package_data={'feather': ['*.pxd', '*.pyx']},
@@ -137,6 +166,7 @@ setup(
     license='Apache License, Version 2.0',
     classifiers=CLASSIFIERS,
     author="Wes McKinney",
-    maintainer_email="wesm@apache.org",
+    author_email="wesm@apache.org",
+    url=URL,
     test_suite="feather.tests"
 )
