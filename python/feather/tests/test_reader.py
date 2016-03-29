@@ -223,3 +223,10 @@ class TestFeatherReader(unittest.TestCase):
                          .dt.tz_convert('America/Los_Angeles'))
 
         self._check_pandas_roundtrip(df)
+
+    def test_non_string_columns(self):
+        df = pd.DataFrame({0: [1, 2, 3, 4],
+                           1: [True, False, True, False]})
+
+        expected = df.rename(columns=str)
+        self._check_pandas_roundtrip(df, expected)
