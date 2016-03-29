@@ -1,5 +1,7 @@
 ## Python interface to the Apache Arrow-based Feather File Format
 
+Feather efficiently stores pandas DataFrame objects on disk.
+
 ## Build
 
 Building Feather requires a C++11 compiler. We've simplified the PyPI packaging
