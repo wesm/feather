@@ -1,0 +1,15 @@
+include MANIFEST.in
+include ../LICENSE.txt
+include README.md
+include setup.py
+include requirements.txt
+
+graft feather
+graft src
+
+global-exclude *.so
+global-exclude *.pyc
+global-exclude *~
+global-exclude \#*
+global-exclude .git*
+global-exclude .DS_Store

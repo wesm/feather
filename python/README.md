@@ -1,5 +1,11 @@
 ## Python interface to the Apache Arrow-based Feather File Format
 
+## Build
+
+Building Feather requires a C++11 compiler. We've simplified the PyPI packaging
+to include libfeather (the C++ core library) to be built statically as part of
+the Python extension build, but this may change in the future.
+
 ## Limitations
 
 Some features of pandas are not supported in Feather:
