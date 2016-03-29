@@ -148,6 +148,8 @@ CLASSIFIERS = [
     'Programming Language :: Cython'
 ]
 
+URL = 'http://github.com/wesm/feather'
+
 setup(
     name="feather-format",
     packages=['feather', 'feather.tests'],
@@ -164,6 +166,7 @@ setup(
     license='Apache License, Version 2.0',
     classifiers=CLASSIFIERS,
     author="Wes McKinney",
-    maintainer_email="wesm@apache.org",
+    author_email="wesm@apache.org",
+    url=URL,
     test_suite="feather.tests"
 )
