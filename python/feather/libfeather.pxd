@@ -70,6 +70,7 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
     enum ColumnType" feather::ColumnType::type":
         ColumnType_PRIMITIVE" feather::ColumnType::PRIMITIVE"
         ColumnType_CATEGORY" feather::ColumnType::CATEGORY"
+        ColumnType_TIMESTAMP" feather::ColumnType::TIMESTAMP"
 
     enum Encoding" feather::Encoding::type":
         Encoding_PLAIN" feather::Encoding::PLAIN"
@@ -179,6 +180,10 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
 
     cdef cppclass CategoryColumn(Column):
         const PrimitiveArray& levels()
+
+    cdef cppclass TimestampColumn(Column):
+        TimeUnit unit()
+        string timezone()
 
     cdef cppclass TableReader:
         TableReader(const shared_ptr[RandomAccessReader]& source)

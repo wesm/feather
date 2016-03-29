@@ -216,3 +216,10 @@ class TestFeatherReader(unittest.TestCase):
         df = pd.DataFrame({'strings': values * repeats})
         df['strings'] = df['strings'].astype('category')
         self._check_pandas_roundtrip(df)
+
+    def test_timestamp(self):
+        df = pd.DataFrame({'naive': pd.date_range('2016-03-28', periods=10)})
+        df['with_tz'] = (df.naive.dt.tz_localize('utc')
+                         .dt.tz_convert('America/Los_Angeles'))
+
+        self._check_pandas_roundtrip(df)
