@@ -148,28 +148,28 @@ class TableReader {
   int64_t num_rows() const;
   int64_t num_columns() const;
 
-  Status GetColumn(int i, std::shared_ptr<Column>* out);
+  Status GetColumn(int i, std::shared_ptr<Column>* out) const;
 
  private:
   Status GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out);
+      std::shared_ptr<Column>* out) const;
   Status GetCategory(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out);
+      std::shared_ptr<Column>* out) const;
 
   Status GetTimestamp(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out);
+      std::shared_ptr<Column>* out) const;
 
   Status GetTime(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out);
+      std::shared_ptr<Column>* out) const;
 
   Status GetDate(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out);
+      std::shared_ptr<Column>* out) const;
 
   // Retrieve a primitive array from the data source
   //
   // @returns: a Buffer instance, the precise type will depend on the kind of
   // input data source (which may or may not have memory-map like semantics)
-  Status GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray* out);
+  Status GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray* out) const;
 
   std::shared_ptr<RandomAccessReader> source_;
   metadata::Table metadata_;
