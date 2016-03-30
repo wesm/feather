@@ -8,6 +8,19 @@ Building Feather requires a C++11 compiler. We've simplified the PyPI packaging
 to include libfeather (the C++ core library) to be built statically as part of
 the Python extension build, but this may change in the future.
 
+### Building a statically linked package
+
+To build the Python package with libfeather statically linked, run:
+
+```shell
+# Symlink the C++ library for the static build
+ln -s ../cpp/src src
+python setup.py build
+
+# To install it locally
+python setup.py install
+```
+
 ## Limitations
 
 Some features of pandas are not supported in Feather:
