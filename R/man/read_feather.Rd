@@ -12,7 +12,7 @@ write_feather(x, path)
 \arguments{
 \item{path}{Path to feather file}
 
-\item{columns}{Columns to read (names or indexes)}
+\item{columns}{Columns to read (names or indexes). Default: Read all columns.}
 
 \item{x}{A data frame to write to disk}
 }

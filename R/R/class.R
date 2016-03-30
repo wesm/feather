@@ -12,15 +12,12 @@ feather <- function(path) {
   openFeather(path)
 }
 
-#' @rdname feather
 #' @export
 row.names.feather <- function(x) as.character(seq_len(nrow(x)))
 
-#' @rdname feather
 #' @export
 dimnames.feather <- function(x) list(row.names(x), names(x))
 
-#' @rdname feather
 #' @export
 dim.feather <- function(x) c(rowsFeather(x), length(x))
 
@@ -46,7 +43,6 @@ dim.feather <- function(x) c(rowsFeather(x), length(x))
   j
 }
 
-#' @rdname feather
 #' @export
 `[[.feather` <- function(x, i, exact = TRUE) {
   if (is.character(i) && length(i) == 1L && !(i %in% names(x))) {
@@ -59,7 +55,6 @@ dim.feather <- function(x) c(rowsFeather(x), length(x))
   x[i][[1L]]
 }
 
-#' @rdname feather
 #' @export
 `$.feather` <- function(x, i) {
   if (is.character(i) && !(i %in% names(x))) {
@@ -70,7 +65,6 @@ dim.feather <- function(x) c(rowsFeather(x), length(x))
   x[[i]]
 }
 
-#' @rdname feather
 #' @export
 `[.feather` <- function(x, i, j, drop = FALSE) {
   if (drop) warning("drop ignored", call. = FALSE)
@@ -103,7 +97,6 @@ dim.feather <- function(x) c(rowsFeather(x), length(x))
 
 # Coercion ----------------------------------------------------------------
 
-#' @rdname feather
 #' @export
 #' @importFrom tibble as_data_frame
 as.data.frame.feather <- function(x, row.names = NULL, optional = FALSE, ...) {
@@ -112,13 +105,11 @@ as.data.frame.feather <- function(x, row.names = NULL, optional = FALSE, ...) {
   as.data.frame(as_data_frame(x))
 }
 
-#' @rdname feather
 #' @export
 as_data_frame.feather <- function(x, ...) {
   x[]
 }
 
-#' @rdname feather
 #' @export
 as.list.feather <- function(x, ...) {
   as.list(as_data_frame(x))
@@ -127,7 +118,6 @@ as.list.feather <- function(x, ...) {
 
 # Output ------------------------------------------------------------------
 
-#' @rdname feather
 #' @export
 print.feather <- function(x, ...) {
   cat("Source: feather store ", dim_desc(dim(x)), "\n\n", sep = "")

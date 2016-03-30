@@ -1,5 +1,7 @@
 ## Feather: fast, interoperable data frame storage
 
+[![Travis-CI Build Status](https://travis-ci.org/wesm/feather.svg?branch=master)](https://travis-ci.org/wesm/feather) [![Coverage Status](https://img.shields.io/codecov/c/github/wesm/feather/master.svg)](https://codecov.io/github/wesm/feather?branch=master)
+
 Feather is binary columnar serialization for data frames. It is designed to
 read and write data frames very efficiently, and to make it easy to share data
 across multiple data analysis languages. The initial version of Feather comes
