@@ -132,9 +132,6 @@ class TimestampColumn : public Column {
 class DateColumn : public Column {
  public:
   static std::shared_ptr<Column> Make(const void* fbs_column);
-
- private:
-  DateMetadata metadata_;
 };
 
 class TimeColumn : public Column {

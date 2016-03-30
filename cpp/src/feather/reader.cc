@@ -90,7 +90,8 @@ int64_t TableReader::num_columns() const {
   return metadata_.num_columns();
 }
 
-Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray* out) const {
+Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta,
+    PrimitiveArray* out) const {
   // Buffer data from the source (may or may not perform a copy depending on
   // input source)
   std::shared_ptr<Buffer> buffer;
