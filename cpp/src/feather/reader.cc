@@ -90,7 +90,7 @@ int64_t TableReader::num_columns() const {
   return metadata_.num_columns();
 }
 
-Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray* out) {
+Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray* out) const {
   // Buffer data from the source (may or may not perform a copy depending on
   // input source)
   std::shared_ptr<Buffer> buffer;
@@ -128,7 +128,7 @@ Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta, PrimitiveArray*
 }
 
 Status TableReader::GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
-    std::shared_ptr<Column>* out) {
+    std::shared_ptr<Column>* out) const {
   auto values_meta = col_meta->values();
   PrimitiveArray values;
   RETURN_NOT_OK(GetPrimitiveArray(values_meta, &values));
@@ -137,7 +137,7 @@ Status TableReader::GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
 }
 
 Status TableReader::GetCategory(std::shared_ptr<metadata::Column> col_meta,
-    std::shared_ptr<Column>* out) {
+    std::shared_ptr<Column>* out) const {
   PrimitiveArray values, levels;
   auto cat_meta = static_cast<metadata::CategoryColumn*>(col_meta.get());
 
@@ -153,7 +153,7 @@ Status TableReader::GetCategory(std::shared_ptr<metadata::Column> col_meta,
 }
 
 Status TableReader::GetTimestamp(std::shared_ptr<metadata::Column> col_meta,
-    std::shared_ptr<Column>* out) {
+    std::shared_ptr<Column>* out) const {
   PrimitiveArray values;
   auto ts_meta = static_cast<metadata::TimestampColumn*>(col_meta.get());
 
@@ -164,7 +164,7 @@ Status TableReader::GetTimestamp(std::shared_ptr<metadata::Column> col_meta,
 }
 
 Status TableReader::GetTime(std::shared_ptr<metadata::Column> col_meta,
-    std::shared_ptr<Column>* out) {
+    std::shared_ptr<Column>* out) const {
   PrimitiveArray values;
   auto time_meta = static_cast<metadata::TimeColumn*>(col_meta.get());
 
@@ -174,7 +174,7 @@ Status TableReader::GetTime(std::shared_ptr<metadata::Column> col_meta,
   return Status::OK();
 }
 
-Status TableReader::GetColumn(int i, std::shared_ptr<Column>* out) {
+Status TableReader::GetColumn(int i, std::shared_ptr<Column>* out) const {
   std::shared_ptr<metadata::Column> col_meta = metadata_.GetColumn(i);
   switch (col_meta->type()) {
     case ColumnType::PRIMITIVE:
