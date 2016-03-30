@@ -7,21 +7,17 @@ NULL
 #'
 #' @param path Path to feather file
 #' @param x A data frame to write to disk
-#' @name feather
 #' @return Both functions return a tibble/data frame. \code{write_feather}
 #'   invisibly returns \code{x} (so you can use this function in a pipeline).
 #' @examples
 #' mtcars2 <- read_feather(feather_example("mtcars.feather"))
 #' mtcars2
-NULL
-
-#' @rdname feather
 #' @export
 read_feather <- function(path) {
   readFeather(path)
 }
 
-#' @rdname feather
+#' @rdname read_feather
 #' @export
 write_feather <- function(x, path) {
   if (!is.data.frame(x)) {
