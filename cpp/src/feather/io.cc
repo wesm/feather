@@ -14,7 +14,15 @@
 
 #include "feather/io.h"
 
+#ifdef __MINGW32__
+#include "feather/mman.h"
+#undef Realloc
+#undef Free
+#include <windows.h>
+#else
 #include <sys/mman.h>
+#endif
+
 #include <algorithm>
 #include <cstring>
 #include <sstream>
