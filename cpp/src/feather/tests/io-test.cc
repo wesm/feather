@@ -20,7 +20,7 @@
 #include "feather/buffer.h"
 #include "feather/io.h"
 #include "feather/status.h"
-#include "feather/test-common.h"
+#include "feather/tests/test-common.h"
 
 namespace feather {
 

@@ -43,7 +43,7 @@ if(APPLE)
 endif()
 
 add_library(feather_test_main
-  test_main.cc)
+  tests/test_main.cc)
 
 if (APPLE)
   target_link_libraries(feather_test_main
@@ -59,9 +59,9 @@ else()
   )
 endif()
 
-ADD_FEATHER_TEST(io-test)
-ADD_FEATHER_TEST(metadata-test)
-ADD_FEATHER_TEST(writer-test)
+ADD_FEATHER_TEST(tests/io-test)
+ADD_FEATHER_TEST(tests/metadata-test)
+ADD_FEATHER_TEST(tests/writer-test)
 
 # make clean will delete the generated file
 set_source_files_properties(metadata_generated.h PROPERTIES GENERATED TRUE)

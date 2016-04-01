@@ -21,8 +21,8 @@
 #include "feather/io.h"
 #include "feather/reader.h"
 #include "feather/status.h"
-#include "feather/test-common.h"
 #include "feather/writer.h"
+#include "feather/tests/test-common.h"
 
 using std::shared_ptr;
 using std::unique_ptr;
