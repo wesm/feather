@@ -2,7 +2,6 @@ if [ -d "../cpp/src/feather" ]; then
   mkdir -p src/feather
   cp -upv src/feather/*.h src/feather/*.cc ../cpp/src/feather/ || true
   cp -upv ../cpp/src/feather/*.h ../cpp/src/feather/*.cc src/feather/
-  rm src/feather/*-test.cc src/feather/test_main.cc src/feather/test-common.h
 fi
 
 if [ -d "../cpp/src/flatbuffers" ]; then
