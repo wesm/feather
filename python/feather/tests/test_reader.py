@@ -204,6 +204,10 @@ class TestFeatherReader(unittest.TestCase):
         expected = pd.DataFrame({'strings': values * repeats})
         self._check_pandas_roundtrip(df, expected)
 
+    def test_empty_strings(self):
+        df = pd.DataFrame({'strings': [''] * 10})
+        self._check_pandas_roundtrip(df)
+
     def test_nan_as_null(self):
         # Create a nan that is not numpy.nan
         values = np.array(['foo', np.nan, np.nan * 2, 'bar'] * 10)

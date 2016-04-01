@@ -129,13 +129,20 @@ class BufferBuilder {
       RETURN_NOT_OK(buffer_->Resize(capacity_));
       data_ = buffer_->mutable_data();
     }
-    memcpy(data_ + size_, data, length);
-    size_ += length;
+    if (length > 0) {
+      memcpy(data_ + size_, data, length);
+      size_ += length;
+    }
     return Status::OK();
   }
 
   std::shared_ptr<Buffer> Finish() {
-    auto result = buffer_;
+    std::shared_ptr<Buffer> result;
+    if (data_ == nullptr) {
+      result = std::make_shared<Buffer>(nullptr, 0);
+    } else {
+      result = buffer_;
+    }
     buffer_ = nullptr;
     return result;
   }
