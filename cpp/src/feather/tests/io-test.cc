@@ -73,4 +73,17 @@ TEST(FileOutputStream, NonExistentDirectory) {
   ASSERT_TRUE(s.IsIOError());
 }
 
+TEST(BufferBuilder, EmptyStrings) {
+  BufferBuilder builder;
+
+  builder.Append(nullptr, 0);
+  builder.Append(nullptr, 0);
+  builder.Append(nullptr, 0);
+
+  std::shared_ptr<Buffer> result = builder.Finish();
+
+  ASSERT_EQ(nullptr, result->data());
+  ASSERT_EQ(0, result->size());
+}
+
 } // namespace feather
