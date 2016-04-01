@@ -1,7 +1,7 @@
 if [ -d "../cpp/src/feather" ]; then
   mkdir -p src/feather
-  cp -upv src/feather/*.h src/feather/*.cc ../cpp/src/feather/ || true
-  cp -upv ../cpp/src/feather/*.h ../cpp/src/feather/*.cc src/feather/
+  rsync -urv src/feather/ ../cpp/src/feather/ --include="*.cc" --include="*.h" || true
+  cp -pv ../cpp/src/feather/*.h ../cpp/src/feather/*.cc src/feather/
 fi
 
 if [ -d "../cpp/src/flatbuffers" ]; then
