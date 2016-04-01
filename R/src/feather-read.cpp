@@ -68,30 +68,7 @@ List readFeather(const std::string& path) {
 }
 
 
-// [[Rcpp::export]]
-XPtr<feather::TableReader> openFeather(const std::string& path) {
-  return XPtr<TableReader>(openFeatherTable(path).release(), true);
-}
-
-
-// [[Rcpp::export]]
-double colsFeather(List feather) {
-  auto table = Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
-  return (double)table->num_columns();
-}
-
-
-// [[Rcpp::export]]
-double rowsFeather(List feather) {
-  auto table = Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
-  return (double)table->num_rows();
-}
-
-
-// [[Rcpp::export]]
-CharacterVector colnamesFeather(List feather) {
-  auto table = *Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
-
+CharacterVector colnamesAsCharacterVector(const TableReader& table) {
   int n = table.num_columns();
   CharacterVector names(n);
 
@@ -106,8 +83,34 @@ CharacterVector colnamesFeather(List feather) {
 
 
 // [[Rcpp::export]]
-List coldataFeather(List feather, IntegerVector indexes) {
-  auto table = Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
+List openFeather(const std::string& path) {
+  auto table = openFeatherTable(path);
+
+  int n = table->num_columns();
+  List out(n);
+
+  out.attr("names") = colnamesAsCharacterVector(*table);
+  out.attr("table") = XPtr<TableReader>(table.release(), true);
+  out.attr("class") = "feather";
+  return out;
+}
+
+
+TableReader* getTableFromFeather(const List& feather) {
+  return Rcpp::as<XPtr<TableReader> >(feather.attr("table"));
+}
+
+
+// [[Rcpp::export]]
+double rowsFeather(const List& feather) {
+  auto table = getTableFromFeather(feather);
+  return (double)table->num_rows();
+}
+
+
+// [[Rcpp::export]]
+List coldataFeather(const List& feather, const IntegerVector& indexes) {
+  auto table = getTableFromFeather(feather);
 
   int n = indexes.length(), p = table->num_rows();
   List out(n), names(n);

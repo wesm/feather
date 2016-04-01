@@ -9,11 +9,7 @@
 feather <- function(path) {
   path <- normalizePath(path, mustWork = TRUE)
 
-  ptr <- openFeather(path)
-
-  structure(
-    list(ptr = ptr),
-    class = c("feather"))
+  openFeather(path)
 }
 
 #' @rdname feather
@@ -22,11 +18,11 @@ row.names.feather <- function(x) as.character(seq_len(nrow(x)))
 
 #' @rdname feather
 #' @export
-dimnames.feather <- function(x) list(row.names(x), colnamesFeather(x))
+dimnames.feather <- function(x) list(row.names(x), names(x))
 
 #' @rdname feather
 #' @export
-dim.feather <- function(x) c(rowsFeather(x), colsFeather(x))
+dim.feather <- function(x) c(rowsFeather(x), length(x))
 
 .column_indexes_feather <- function(x, j) {
   if( is.character(j) ) {
@@ -104,6 +100,9 @@ dim.feather <- function(x) c(rowsFeather(x), colsFeather(x))
     df[i, ]
 }
 
+
+# Coercion ----------------------------------------------------------------
+
 #' @rdname feather
 #' @export
 #' @importFrom tibble as_data_frame
@@ -118,6 +117,15 @@ as.data.frame.feather <- function(x, row.names = NULL, optional = FALSE, ...) {
 as_data_frame.feather <- function(x, ...) {
   x[]
 }
+
+#' @rdname feather
+#' @export
+as.list.feather <- function(x, ...) {
+  as.list(as_data_frame(x))
+}
+
+
+# Output ------------------------------------------------------------------
 
 #' @rdname feather
 #' @export

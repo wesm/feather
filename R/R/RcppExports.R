@@ -13,16 +13,8 @@ openFeather <- function(path) {
     .Call('feather_openFeather', PACKAGE = 'feather', path)
 }
 
-colsFeather <- function(feather) {
-    .Call('feather_colsFeather', PACKAGE = 'feather', feather)
-}
-
 rowsFeather <- function(feather) {
     .Call('feather_rowsFeather', PACKAGE = 'feather', feather)
-}
-
-colnamesFeather <- function(feather) {
-    .Call('feather_colnamesFeather', PACKAGE = 'feather', feather)
 }
 
 coldataFeather <- function(feather, indexes) {
