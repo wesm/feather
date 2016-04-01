@@ -66,4 +66,11 @@ TEST(LocalFileReader, NonExistentFile) {
   ASSERT_TRUE(s.IsIOError());
 }
 
+TEST(FileOutputStream, NonExistentDirectory) {
+  FileOutputStream writer;
+  Status s = writer.Open("dir-does-not-exist/foo.feather");
+  ASSERT_FALSE(s.ok());
+  ASSERT_TRUE(s.IsIOError());
+}
+
 } // namespace feather

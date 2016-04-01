@@ -222,9 +222,10 @@ std::shared_ptr<Buffer> InMemoryOutputStream::Finish() {
 Status FileOutputStream::Open(const std::string& path) {
   path_ = path;
   file_ = fopen(path.c_str(), "wb");
-  if (ferror(file_)) {
-    return Status::IOError("unable to open file");
+  if (file_ == nullptr || ferror(file_)) {
+    return Status::IOError("Unable to open file");
   }
+
   return Status::OK();
 }
 
