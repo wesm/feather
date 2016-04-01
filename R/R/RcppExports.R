@@ -9,6 +9,18 @@ readFeather <- function(path) {
     .Call('feather_readFeather', PACKAGE = 'feather', path)
 }
 
+openFeather <- function(path) {
+    .Call('feather_openFeather', PACKAGE = 'feather', path)
+}
+
+rowsFeather <- function(feather) {
+    .Call('feather_rowsFeather', PACKAGE = 'feather', feather)
+}
+
+coldataFeather <- function(feather, indexes) {
+    .Call('feather_coldataFeather', PACKAGE = 'feather', feather, indexes)
+}
+
 writeFeather <- function(df, path) {
     invisible(.Call('feather_writeFeather', PACKAGE = 'feather', df, path))
 }
