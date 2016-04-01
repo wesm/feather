@@ -47,26 +47,6 @@ List metadataFeather(const std::string& path) {
   return out;
 }
 
-// [[Rcpp::export]]
-List readFeather(const std::string& path) {
-  auto table = openFeatherTable(path);
-
-  int n = table->num_columns(), p = table->num_rows();
-  List out(n), names(n);
-
-  for (int i = 0; i < n; ++i) {
-    auto col = getColumn(*table, i);
-
-    names[i] = col->name();
-    out[i] = toSEXP(col);
-  }
-
-  out.attr("names") = names;
-  out.attr("row.names") = IntegerVector::create(NA_INTEGER, -p);
-  out.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
-  return out;
-}
-
 
 // [[Rcpp::export]]
 XPtr<feather::TableReader> openFeather(const std::string& path) {

@@ -5,12 +5,14 @@
 \alias{write_feather}
 \title{Read and write feather files.}
 \usage{
-read_feather(path)
+read_feather(path, columns = NULL)
 
 write_feather(x, path)
 }
 \arguments{
 \item{path}{Path to feather file}
+
+\item{columns}{Columns to read (names or indexes)}
 
 \item{x}{A data frame to write to disk}
 }

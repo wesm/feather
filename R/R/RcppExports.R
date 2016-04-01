@@ -5,10 +5,6 @@ metadataFeather <- function(path) {
     .Call('feather_metadataFeather', PACKAGE = 'feather', path)
 }
 
-readFeather <- function(path) {
-    .Call('feather_readFeather', PACKAGE = 'feather', path)
-}
-
 openFeather <- function(path) {
     .Call('feather_openFeather', PACKAGE = 'feather', path)
 }

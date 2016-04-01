@@ -17,17 +17,6 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// readFeather
-List readFeather(const std::string& path);
-RcppExport SEXP feather_readFeather(SEXP pathSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
-    __result = Rcpp::wrap(readFeather(path));
-    return __result;
-END_RCPP
-}
 // openFeather
 XPtr<feather::TableReader> openFeather(const std::string& path);
 RcppExport SEXP feather_openFeather(SEXP pathSEXP) {
