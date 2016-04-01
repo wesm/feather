@@ -18,7 +18,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // openFeather
-XPtr<feather::TableReader> openFeather(const std::string& path);
+List openFeather(const std::string& path);
 RcppExport SEXP feather_openFeather(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
@@ -28,47 +28,25 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// colsFeather
-double colsFeather(List feather);
-RcppExport SEXP feather_colsFeather(SEXP featherSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< List >::type feather(featherSEXP);
-    __result = Rcpp::wrap(colsFeather(feather));
-    return __result;
-END_RCPP
-}
 // rowsFeather
-double rowsFeather(List feather);
+double rowsFeather(const List& feather);
 RcppExport SEXP feather_rowsFeather(SEXP featherSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< List >::type feather(featherSEXP);
+    Rcpp::traits::input_parameter< const List& >::type feather(featherSEXP);
     __result = Rcpp::wrap(rowsFeather(feather));
     return __result;
 END_RCPP
 }
-// colnamesFeather
-CharacterVector colnamesFeather(List feather);
-RcppExport SEXP feather_colnamesFeather(SEXP featherSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< List >::type feather(featherSEXP);
-    __result = Rcpp::wrap(colnamesFeather(feather));
-    return __result;
-END_RCPP
-}
 // coldataFeather
-List coldataFeather(List feather, IntegerVector indexes);
+List coldataFeather(const List& feather, const IntegerVector& indexes);
 RcppExport SEXP feather_coldataFeather(SEXP featherSEXP, SEXP indexesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< List >::type feather(featherSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type indexes(indexesSEXP);
+    Rcpp::traits::input_parameter< const List& >::type feather(featherSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type indexes(indexesSEXP);
     __result = Rcpp::wrap(coldataFeather(feather, indexes));
     return __result;
 END_RCPP

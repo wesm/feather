@@ -12,13 +12,18 @@ test_that("basic access", {
   expect_equal(dim(mtcars.f), dim(mtcars))
   expect_equal(dimnames(iris.f), dimnames(iris))
   expect_equal(colnames(iris.f), colnames(iris))
+  expect_equal(names(iris.f), names(iris))
   expect_equal(iris.f[1:5, 1:5], iris.tbl[1:5, 1:5])
   expect_equal(iris.f[, 1:5], iris.tbl[, 1:5])
   expect_equal(iris.f[1:5, ], iris.tbl[1:5, ])
   expect_equal(iris.f[1:5], iris.tbl[1:5])
   expect_equal(iris.f[], iris.tbl[])
-  expect_equal(tibble::as_data_frame(iris.f), iris.tbl)
-  expect_equal(as.data.frame(iris.f), iris)
+})
+
+test_that("coercion", {
+  expect_identical(tibble::as_data_frame(iris.f), iris.tbl)
+  expect_identical(as.data.frame(iris.f), iris)
+  expect_identical(as.list(iris.f), as.list(iris))
 })
 
 test_that("invalid column indexes", {
