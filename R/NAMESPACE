@@ -2,8 +2,10 @@
 
 S3method(print,feather_metadata)
 export(feather_example)
+export(feather_examples)
 export(feather_metadata)
 export(read_feather)
 export(write_feather)
 importFrom(Rcpp,sourceCpp)
+importFrom(tibble,tibble)
 useDynLib(feather)

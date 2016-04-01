@@ -2,12 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{feather_example}
 \alias{feather_example}
+\alias{feather_examples}
 \title{Get path to feather example files}
 \usage{
 feather_example(x)
+
+feather_examples()
+}
+\arguments{
+\item{x}{example file}
 }
 \description{
-Get path to feather example files
+\code{feather_example} gets the path of a specific example
+
+\code{feather_examples} gets the path of all examples
 }
 \keyword{internal}
 

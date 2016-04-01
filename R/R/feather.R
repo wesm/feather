@@ -1,5 +1,6 @@
 #' @useDynLib feather
 #' @importFrom Rcpp sourceCpp
+#' @importFrom tibble tibble
 NULL
 
 #' Read and write feather files.

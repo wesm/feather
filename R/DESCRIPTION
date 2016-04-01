@@ -14,9 +14,10 @@ URL: https://github.com/wesm/feather
 BugReports: https://github.com/wesm/feather/issues
 LinkingTo: Rcpp
 Imports:
-    Rcpp
-SystemRequirements: C++11, GNU make
-RoxygenNote: 5.0.1
+    Rcpp,
+    tibble
 Suggests:
     testthat,
     dplyr
+SystemRequirements: C++11, GNU make
+RoxygenNote: 5.0.1
