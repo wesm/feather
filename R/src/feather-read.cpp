@@ -15,10 +15,10 @@ std::unique_ptr<TableReader> openFeatherTable(const std::string& path) {
   return table;
 }
 
-std::shared_ptr<Column> getColumn(std::unique_ptr<TableReader>& table, int i) {
+std::shared_ptr<Column> getColumn(const TableReader& table, int i) {
   std::shared_ptr<Column> col;
 
-  stopOnFailure(table->GetColumn(i, &col));
+  stopOnFailure(table.GetColumn(i, &col));
   return col;
 }
 
@@ -30,7 +30,7 @@ List metadataFeather(const std::string& path) {
   CharacterVector types(p), names(p);
 
   for (int j = 0; j < p; ++j) {
-    auto col = getColumn(table, j);
+    auto col = getColumn(*table, j);
 
     names[j] = col->name();
     types[j] = toString(toRColType(col));
@@ -47,15 +47,53 @@ List metadataFeather(const std::string& path) {
   return out;
 }
 
-// [[Rcpp::export]]
-List readFeather(const std::string& path) {
-  auto table = openFeatherTable(path);
 
-  int n = table->num_columns(), p = table->num_rows();
-  List out(n), names(n);
+// [[Rcpp::export]]
+XPtr<feather::TableReader> openFeather(const std::string& path) {
+  return XPtr<TableReader>(openFeatherTable(path).release(), true);
+}
+
+
+// [[Rcpp::export]]
+double colsFeather(List feather) {
+  auto table = Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
+  return (double)table->num_columns();
+}
+
+
+// [[Rcpp::export]]
+double rowsFeather(List feather) {
+  auto table = Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
+  return (double)table->num_rows();
+}
+
+
+// [[Rcpp::export]]
+CharacterVector colnamesFeather(List feather) {
+  auto table = *Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
+
+  int n = table.num_columns();
+  CharacterVector names(n);
 
   for (int i = 0; i < n; ++i) {
     auto col = getColumn(table, i);
+
+    names[i] = col->name();
+  }
+
+  return names;
+}
+
+
+// [[Rcpp::export]]
+List coldataFeather(List feather, IntegerVector indexes) {
+  auto table = Rcpp::as<XPtr<TableReader> >(feather["ptr"]);
+
+  int n = indexes.length(), p = table->num_rows();
+  List out(n), names(n);
+
+  for (int i = 0; i < n; ++i) {
+    auto col = getColumn(*table, indexes[i] - 1);
 
     names[i] = col->name();
     out[i] = toSEXP(col);
@@ -66,5 +104,3 @@ List readFeather(const std::string& path) {
   out.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
   return out;
 }
-
-

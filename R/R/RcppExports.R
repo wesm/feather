@@ -5,8 +5,24 @@ metadataFeather <- function(path) {
     .Call('feather_metadataFeather', PACKAGE = 'feather', path)
 }
 
-readFeather <- function(path) {
-    .Call('feather_readFeather', PACKAGE = 'feather', path)
+openFeather <- function(path) {
+    .Call('feather_openFeather', PACKAGE = 'feather', path)
+}
+
+colsFeather <- function(feather) {
+    .Call('feather_colsFeather', PACKAGE = 'feather', feather)
+}
+
+rowsFeather <- function(feather) {
+    .Call('feather_rowsFeather', PACKAGE = 'feather', feather)
+}
+
+colnamesFeather <- function(feather) {
+    .Call('feather_colnamesFeather', PACKAGE = 'feather', feather)
+}
+
+coldataFeather <- function(feather, indexes) {
+    .Call('feather_coldataFeather', PACKAGE = 'feather', feather, indexes)
 }
 
 writeFeather <- function(df, path) {
