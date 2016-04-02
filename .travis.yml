@@ -47,6 +47,42 @@ matrix:
     after_success:
     - Rscript -e 'install.packages("covr"); covr::codecov()'
     env: TRAVIS_LANG=R
+  - os: linux
+    language: python
+    python: 2.7
+    compiler: gcc
+    before_install:
+    - cd python
+    - ln -s ../cpp/src src
+    install:
+    - pip install cython
+    - pip install -r requirements.txt
+    script: python setup.py test
+    env: TRAVIS_LANG=python
+  - os: linux
+    language: python
+    python: 3.4
+    compiler: gcc
+    before_install:
+    - cd python
+    - ln -s ../cpp/src src
+    install:
+    - pip install cython
+    - pip install -r requirements.txt
+    script: python setup.py test
+    env: TRAVIS_LANG=python
+  - os: linux
+    language: python
+    python: 3.5
+    compiler: gcc
+    before_install:
+    - cd python
+    - ln -s ../cpp/src src
+    install:
+    - pip install cython
+    - pip install -r requirements.txt
+    script: python setup.py test
+    env: TRAVIS_LANG=python
 
 before_install:
 - export FEATHER_CPP=$TRAVIS_BUILD_DIR/cpp
