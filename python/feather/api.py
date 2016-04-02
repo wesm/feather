@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import six
-
+from distutils.version import LooseVersion
 import pandas as pd
+if LooseVersion(pd.__version__) < '0.17.0':
+    raise ImportError("feather requires pandas >= 0.17.0")
 
 import feather.ext as ext
 

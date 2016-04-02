@@ -17,6 +17,7 @@
 
 # Editor temporary/working/backup files
 *flymake*
+*~
 
 # Compiled source and in-place build files
 *.py[ocd]
