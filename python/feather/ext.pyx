@@ -170,7 +170,6 @@ cdef class FeatherReader:
         cdef:
             shared_ptr[Column] col
             Column* cp
-            CategoryColumn* cat
 
         if i < 0 or i >= self.num_columns:
             raise IndexError(i)
