@@ -33,10 +33,10 @@ if Cython.__version__ < '0.19.1':
     raise Exception('Please upgrade to Cython 0.19.1 or newer')
 
 MAJOR = 0
-MINOR = 1
+MINOR = 2
 MICRO = 0
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-ISRELEASED = True
+ISRELEASED = False
 
 setup_dir = os.path.abspath(os.path.dirname(__file__))
 
