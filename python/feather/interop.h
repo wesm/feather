@@ -527,7 +527,7 @@ class FeatherDeserializer {
   ConvertValues() {
     typedef typename feather_traits<T2>::T T;
 
-    npy_intp dims[1] = {arr_->length};
+    npy_intp dims[1] = {static_cast<npy_intp>(arr_->length)};
     out_ = PyArray_SimpleNew(1, dims, feather_traits<T2>::npy_type);
 
     if (out_ == NULL) {
@@ -553,7 +553,7 @@ class FeatherDeserializer {
   ConvertValues() {
     typedef typename feather_traits<T2>::T T;
 
-    npy_intp dims[1] = {arr_->length};
+    npy_intp dims[1] = {static_cast<npy_intp>(arr_->length)};
     if (arr_->null_count > 0) {
       out_ = PyArray_SimpleNew(1, dims, NPY_FLOAT64);
       if (out_ == NULL)  return;
@@ -575,7 +575,7 @@ class FeatherDeserializer {
   template <int T2>
   inline typename std::enable_if<feather_traits<T2>::is_boolean, void>::type
   ConvertValues() {
-    npy_intp dims[1] = {arr_->length};
+    npy_intp dims[1] = {static_cast<npy_intp>(arr_->length)};
     if (arr_->null_count > 0) {
       out_ = PyArray_SimpleNew(1, dims, NPY_OBJECT);
       if (out_ == NULL)  return;
@@ -609,7 +609,7 @@ class FeatherDeserializer {
   template <int T2>
   inline typename std::enable_if<T2 == PrimitiveType::UTF8, void>::type
   ConvertValues() {
-    npy_intp dims[1] = {arr_->length};
+    npy_intp dims[1] = {static_cast<npy_intp>(arr_->length)};
     out_ = PyArray_SimpleNew(1, dims, NPY_OBJECT);
     if (out_ == NULL)  return;
     PyObject** out_values = reinterpret_cast<PyObject**>(PyArray_DATA(out_));
