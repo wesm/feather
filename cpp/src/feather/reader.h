@@ -32,7 +32,9 @@ class Column {
       const PrimitiveArray& values) :
       type_(type),
       metadata_(metadata),
-      values_(values) {}
+      values_(values) {
+    name_ = metadata_->name();
+  }
 
   const PrimitiveArray& values() const {
     return values_;
@@ -46,12 +48,13 @@ class Column {
     return metadata_;
   }
 
-  std::string name() const {
-    return metadata_->name();
+  const std::string& name() const {
+    return name_;
   }
 
  protected:
   ColumnType::type type_;
+  std::string name_;
   std::shared_ptr<metadata::Column> metadata_;
   PrimitiveArray values_;
 };
@@ -88,18 +91,20 @@ class TimestampColumn : public Column {
       const PrimitiveArray& values) :
       Column(ColumnType::TIMESTAMP, metadata, values)  {
     timestamp_meta_ = static_cast<const metadata::TimestampColumn*>(metadata.get());
+    timezone_ = timestamp_meta_->timezone();
   }
 
   TimeUnit::type unit() const {
     return timestamp_meta_->unit();
   }
 
-  std::string timezone() const {
-    return timestamp_meta_->timezone();
+  const std::string& timezone() const {
+    return timezone_;
   }
 
  private:
   const metadata::TimestampColumn* timestamp_meta_;
+  std::string timezone_;
 };
 
 class DateColumn : public Column {
@@ -148,22 +153,22 @@ class TableReader {
   int64_t num_rows() const;
   int64_t num_columns() const;
 
-  Status GetColumn(int i, std::shared_ptr<Column>* out) const;
+  Status GetColumn(int i, std::unique_ptr<Column>* out) const;
 
  private:
   Status GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out) const;
+      std::unique_ptr<Column>* out) const;
   Status GetCategory(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out) const;
+      std::unique_ptr<Column>* out) const;
 
   Status GetTimestamp(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out) const;
+      std::unique_ptr<Column>* out) const;
 
   Status GetTime(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out) const;
+      std::unique_ptr<Column>* out) const;
 
   Status GetDate(std::shared_ptr<metadata::Column> col_meta,
-      std::shared_ptr<Column>* out) const;
+      std::unique_ptr<Column>* out) const;
 
   // Retrieve a primitive array from the data source
   //

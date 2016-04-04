@@ -27,7 +27,7 @@ RColType toRColType(FeatherColType x) {
   }
 };
 
-RColType toRColType(ColumnPtr x) {
+RColType toRColType(const ColumnPtr& x) {
   switch(x->type()) {
   case feather::ColumnType::PRIMITIVE:
     return toRColType(x->metadata()->values().type);
@@ -200,7 +200,7 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
   return out;
 }
 
-SEXP toSEXP(ColumnPtr x) {
+SEXP toSEXP(const ColumnPtr& x) {
   ColumnMetadataPtr meta = x->metadata();
   const PrimitiveArray* val(&x->values());
 
@@ -210,7 +210,7 @@ SEXP toSEXP(ColumnPtr x) {
   case feather::ColumnType::CATEGORY: {
     IntegerVector out = toSEXP(val);
 
-    auto x_cat = std::static_pointer_cast<feather::CategoryColumn>(x);
+    auto x_cat = static_cast<feather::CategoryColumn*>(x.get());
     const PrimitiveArray* levels(&x_cat->levels());
 
     out.attr("levels") = Rf_coerceVector(toSEXP(levels), STRSXP);
@@ -223,14 +223,14 @@ SEXP toSEXP(ColumnPtr x) {
     return out;
   }
   case feather::ColumnType::TIME: {
-    auto x_time = std::static_pointer_cast<feather::TimeColumn>(x);
+    auto x_time = static_cast<feather::TimeColumn*>(x.get());
 
     DoubleVector out = rescaleFromInt64(val, timeScale(x_time->unit()));
     out.attr("class") = "time";
     return out;
   }
   case feather::ColumnType::TIMESTAMP: {
-    auto x_time = std::static_pointer_cast<feather::TimestampColumn>(x);
+    auto x_time = static_cast<feather::TimestampColumn*>(x.get());
 
     DoubleVector out = rescaleFromInt64(val, timeScale(x_time->unit()));
     out.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
