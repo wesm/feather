@@ -176,6 +176,11 @@ feather_reader_num_rows(feather_reader_t* self) {
   return reinterpret_cast<TableReader*>(self)->num_rows();
 }
 
+int64_t
+feather_reader_num_columns(feather_reader_t* self) {
+  return reinterpret_cast<TableReader*>(self)->num_columns();
+}
+
 feather_status
 feather_reader_get_column(feather_reader_t* self, int i, feather_column_t* out) {
   TableReader* reader = reinterpret_cast<TableReader*>(self);
