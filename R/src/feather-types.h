@@ -21,4 +21,4 @@ RColType toRColType(FeatherColType x);
 RColType toRColType(const ColumnPtr& x);
 
 std::string toString(RColType x);
-SEXP toSEXP(ColumnPtr x);
+SEXP toSEXP(const ColumnPtr& x);
