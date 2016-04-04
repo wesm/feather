@@ -16,13 +16,20 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <string>
 
 #include "feather/reader.h"
 #include "feather/types.h"
 #include "feather/writer.h"
 #include "feather/feather-c.h"
 
-using namespace feather;
+using feather::Column;
+using feather::ColumnType;
+using feather::PrimitiveArray;
+using feather::PrimitiveType;
+using feather::Status;
+using feather::TableReader;
+using feather::TableWriter;
 
 static PrimitiveType::type FromCFeatherType(feather_type ctype) {
   return static_cast<PrimitiveType::type>(static_cast<int>(ctype));

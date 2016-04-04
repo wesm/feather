@@ -30,11 +30,10 @@
     ASSERT_EQ(FEATHER_OK, _s);                  \
   } while (0);
 
-using namespace feather;
+namespace feather {
 
 class TestCAPI : public ::testing::Test {
  public:
-
   virtual void TearDown() {
     for (const std::string& path : tmp_paths_) {
       try {
@@ -82,7 +81,6 @@ TEST_F(TestCAPI, FileNotExist) {
 }
 
 TEST_F(TestCAPI, WriteNumRows) {
-
   const int num_rows = 1000;
 
   std::string path("test-cfeather-write-num-rows");
@@ -189,3 +187,5 @@ TEST_F(TestCAPI, PrimitiveRoundTrip) {
 
   CloseReader();
 }
+
+} // namespace feather
