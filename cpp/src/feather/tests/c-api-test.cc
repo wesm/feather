@@ -91,6 +91,7 @@ TEST_F(TestCAPI, WriteNumRows) {
 
   OpenReader(path);
   ASSERT_EQ(num_rows, feather_reader_num_rows(reader_));
+  ASSERT_EQ(0, feather_reader_num_columns(reader_));
   CloseReader();
 }
 
@@ -168,6 +169,8 @@ TEST_F(TestCAPI, PrimitiveRoundTrip) {
   CloseWriter();
 
   OpenReader(path);
+
+  ASSERT_EQ(2, feather_reader_num_columns(reader_));
 
   feather_column_t col;
   ASSERT_CFEATHER_OK(feather_reader_get_column(reader_, 0, &col));
