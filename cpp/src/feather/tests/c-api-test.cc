@@ -23,6 +23,7 @@
 #include "feather/common.h"
 #include "feather/feather-c.h"
 #include "feather/tests/test-common.h"
+#include "feather/types.h"
 
 #define ASSERT_CFEATHER_OK(s) do {              \
     feather_status _s = (s);                    \
@@ -107,6 +108,34 @@ void MakePrimitive(feather_type type,
   out->offsets = offsets;
 }
 
+static PrimitiveType::type ToFeatherType(feather_type ctype) {
+  return static_cast<PrimitiveType::type>(static_cast<int>(ctype));
+}
+
+bool cfeather_array_equals(const feather_array_t* lhs, const feather_array_t* rhs) {
+  if (lhs->type != rhs->type ||
+      lhs->length != rhs->length ||
+      lhs->null_count != rhs->null_count) {
+    return false;
+  }
+
+  if (lhs->null_count > 0) {
+    if (lhs->null_count != rhs->null_count ||
+        memcmp(lhs->nulls, rhs->nulls, util::bytes_for_bits(lhs->length)) != 0) {
+      return false;
+    }
+  }
+
+  // TODO(wesm): variable-length dimensions
+  // Fixed size, get the number of bytes from the length and value size
+  if (memcmp(lhs->values, rhs->values,
+          lhs->length * ByteSize(ToFeatherType(lhs->type))) != 0) {
+    return false;
+  }
+
+  return true;
+}
+
 TEST_F(TestCAPI, PrimitiveRoundTrip) {
   int num_values = 1000;
   int num_nulls = 50;
@@ -147,10 +176,15 @@ TEST_F(TestCAPI, PrimitiveRoundTrip) {
   ASSERT_EQ(FEATHER_COLUMN_PRIMITIVE, col.type);
   ASSERT_STREQ(name0, col.name);
 
+  ASSERT_TRUE(cfeather_array_equals(&cvalues, &col.values));
+
   feather_column_free(&col);
 
   ASSERT_CFEATHER_OK(feather_reader_get_column(reader_, 1, &col));
   ASSERT_STREQ(name1, col.name);
+
+  ASSERT_TRUE(cfeather_array_equals(&cvalues_nn, &col.values));
+
   feather_column_free(&col);
 
   CloseReader();

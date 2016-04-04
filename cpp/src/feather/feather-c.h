@@ -108,8 +108,8 @@ typedef struct {
   const char* name;
   feather_array_t values;
 
-  void* type_metadata;
   void* data;
+  void* type_metadata;
 } feather_column_t;
 
 feather_status
