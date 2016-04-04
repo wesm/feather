@@ -168,7 +168,7 @@ cdef class FeatherReader:
 
     def read_array(self, int i):
         cdef:
-            shared_ptr[Column] col
+            unique_ptr[Column] col
             Column* cp
 
         if i < 0 or i >= self.num_columns:

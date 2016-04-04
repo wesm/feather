@@ -121,7 +121,7 @@ TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   ASSERT_OK(writer_->AppendPlain("f1", nn_array));
   Finish();
 
-  std::shared_ptr<Column> col;
+  std::unique_ptr<Column> col;
   ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_TRUE(col->values().Equals(array));
   ASSERT_EQ("f0", col->metadata()->name());
@@ -154,7 +154,7 @@ TEST_F(TestTableWriter, CategoryRoundtrip) {
   ASSERT_OK(writer_->AppendCategory("f0", values, levels, true));
   Finish();
 
-  std::shared_ptr<Column> col;
+  std::unique_ptr<Column> col;
   ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_EQ("f0", col->metadata()->name());
   ASSERT_EQ(ColumnType::CATEGORY, col->type());
@@ -186,7 +186,7 @@ TEST_F(TestTableWriter, TimestampRoundtrip) {
   ASSERT_OK(writer_->AppendTimestamp("f0", values, metadata));
   Finish();
 
-  std::shared_ptr<Column> col;
+  std::unique_ptr<Column> col;
   ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_EQ("f0", col->metadata()->name());
   ASSERT_EQ(ColumnType::TIMESTAMP, col->type());
@@ -214,7 +214,7 @@ TEST_F(TestTableWriter, DateRoundtrip) {
   ASSERT_OK(writer_->AppendDate("f0", values));
   Finish();
 
-  std::shared_ptr<Column> col;
+  std::unique_ptr<Column> col;
   ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_EQ("f0", col->metadata()->name());
   ASSERT_EQ(ColumnType::DATE, col->type());
@@ -240,7 +240,7 @@ TEST_F(TestTableWriter, TimeRoundtrip) {
   ASSERT_OK(writer_->AppendTime("f0", values, metadata));
   Finish();
 
-  std::shared_ptr<Column> col;
+  std::unique_ptr<Column> col;
   ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_EQ("f0", col->metadata()->name());
   ASSERT_EQ(ColumnType::TIME, col->type());
@@ -275,7 +275,7 @@ TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
   ASSERT_OK(writer_->AppendPlain("f1", nn_array));
   Finish();
 
-  std::shared_ptr<Column> col;
+  std::unique_ptr<Column> col;
   ASSERT_OK(reader_->GetColumn(0, &col));
   ASSERT_TRUE(col->values().Equals(array));
   ASSERT_EQ("f0", col->metadata()->name());

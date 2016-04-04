@@ -14,6 +14,7 @@
 
 set(LIBFEATHER_SRCS
   buffer.cc
+  feather-c.cc
   io.cc
   metadata.cc
   reader.cc
@@ -59,6 +60,7 @@ else()
   )
 endif()
 
+ADD_FEATHER_TEST(tests/c-api-test)
 ADD_FEATHER_TEST(tests/io-test)
 ADD_FEATHER_TEST(tests/metadata-test)
 ADD_FEATHER_TEST(tests/writer-test)
@@ -88,6 +90,7 @@ install(FILES
   api.h
   buffer.h
   common.h
+  feather-c.h
   io.h
   metadata.h
   reader.h

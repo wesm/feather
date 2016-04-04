@@ -33,7 +33,8 @@ typedef enum {
   FEATHER_KEY_ERROR = 2,
   FEATHER_INVALID = 3,
   FEATHER_IO_ERROR = 4,
-  FEATHER_NOT_IMPLEMENTED = 10
+  FEATHER_NOT_IMPLEMENTED = 10,
+  FEATHER_UNKNOWN = 50
 } feather_status;
 
 typedef enum {
@@ -108,34 +109,11 @@ typedef struct {
   feather_array_t values;
 
   void* type_metadata;
+  void* data;
 } feather_column_t;
 
 feather_status
 feather_column_free(feather_column_t* self);
-
-/*
- *************************************************
-  TableReader C API
- *************************************************
-*/
-
-typedef void feather_reader_t;
-
-feather_status
-feather_reader_open_file(const char* path, feather_reader_t** out);
-
-int64_t
-feather_reader_num_rows(feather_reader_t* self);
-
-int64_t
-feather_reader_num_columns(feather_reader_t* self);
-
-/*
-  Retrieve the column metadata and data pointers from the file. Call
-  feather_column_free when finished with the column.
- */
-feather_status
-feather_reader_get_column(feather_reader_t* self, int i, feather_column_t** out);
 
 /*
  *************************************************
@@ -175,11 +153,41 @@ feather_writer_append_date(feather_writer_t* self, const char* name,
 
 /* Write file metadata and footer */
 feather_status
-feather_writer_finalize(feather_writer_t* self);
+feather_writer_close(feather_writer_t* self);
 
 /* Close file if any, and deallocate TableWriter */
 feather_status
 feather_writer_free(feather_writer_t* self);
+
+/*
+ *************************************************
+  TableReader C API
+ *************************************************
+*/
+
+typedef void feather_reader_t;
+
+feather_status
+feather_reader_open_file(const char* path, feather_reader_t** out);
+
+int64_t
+feather_reader_num_rows(feather_reader_t* self);
+
+int64_t
+feather_reader_num_columns(feather_reader_t* self);
+
+/*
+ * Retrieve the column metadata and data pointers from the file. Call
+ * feather_column_free when finished with the column.
+ */
+feather_status
+feather_reader_get_column(feather_reader_t* self, int i, feather_column_t* out);
+
+feather_status
+feather_reader_close(feather_reader_t* self);
+
+feather_status
+feather_reader_free(feather_reader_t* self);
 
 #ifdef __cplusplus
 #if 0 /* confuse emacs indentation */

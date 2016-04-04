@@ -509,6 +509,8 @@ std::shared_ptr<Column> TimestampColumn::Make(const void* fbs_column) {
   // flatbuffer non-null
   if (tz != 0) {
     result->metadata_.timezone = tz->str();
+  } else {
+    result->metadata_.timezone = "";
   }
 
   return result;

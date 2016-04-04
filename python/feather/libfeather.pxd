@@ -197,4 +197,4 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         int64_t num_rows()
         int64_t num_columns()
 
-        Status GetColumn(int i, shared_ptr[Column]* out)
+        Status GetColumn(int i, unique_ptr[Column]* out)

@@ -27,7 +27,7 @@ RColType toRColType(FeatherColType x) {
   }
 };
 
-RColType toRColType(ColumnPtr x) {
+RColType toRColType(const ColumnPtr& x) {
   switch(x->type()) {
   case feather::ColumnType::PRIMITIVE:
     return toRColType(x->metadata()->values().type);

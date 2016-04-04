@@ -15,9 +15,8 @@ std::unique_ptr<TableReader> openFeatherTable(const std::string& path) {
   return table;
 }
 
-std::shared_ptr<Column> getColumn(const TableReader& table, int i) {
-  std::shared_ptr<Column> col;
-
+std::unique_ptr<Column> getColumn(const TableReader& table, int i) {
+  std::unique_ptr<Column> col;
   stopOnFailure(table.GetColumn(i, &col));
   return col;
 }
