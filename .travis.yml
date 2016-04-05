@@ -41,6 +41,16 @@ matrix:
   - os: linux
     language: r
     compiler: gcc
+    r_binary_packages:
+      - BH
+      - crayon
+      - DBI
+      - dplyr
+      - lazyeval
+      - magrittr
+      - praise
+      - Rcpp
+      - testthat
     before_install:
     - cd R
     - ./configure
