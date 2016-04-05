@@ -22,12 +22,15 @@ matrix:
     - export CC="gcc-4.9"
     - export CXX="g++-4.9"
     - source $FEATHER_CPP/ci/before_script_travis.sh
-    - cmake -DCMAKE_CXX_FLAGS="-Werror" $FEATHER_CPP
+    - cmake -DCMAKE_CXX_FLAGS="-Werror -O0 -coverage" $FEATHER_CPP
     script:
     - make lint
     - make -j4 || exit 1
     - valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ctest
     env: TRAVIS_LANG=C++
+    after_success:
+    - gcov $FEATHER_CPP/src/feather/*gcno
+    - bash <(curl -s https://codecov.io/bash)
   - os: osx
     language: cpp
     compiler: clang
@@ -79,10 +82,13 @@ matrix:
     - cd python
     - ln -s ../cpp/src src
     install:
+    - pip install codecov
     - pip install cython
     - pip install -r requirements.txt
     script: python setup.py test
     env: TRAVIS_LANG=python
+    after_success:
+      codecov
 
 before_install:
 - export FEATHER_CPP=$TRAVIS_BUILD_DIR/cpp
