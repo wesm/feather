@@ -29,8 +29,7 @@ matrix:
     - valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ctest
     env: TRAVIS_LANG=C++
     after_success:
-    - gcov $FEATHER_CPP/src/feather/*gcno
-    - bash <(curl -s https://codecov.io/bash)
+    - bash <(curl -s https://codecov.io/bash) -p $BUILD_DIR/src/feather/CMakeFiles/feather.dir -x gcov-4.9
   - os: osx
     language: cpp
     compiler: clang
@@ -85,7 +84,7 @@ matrix:
     - pip install codecov
     - pip install cython
     - pip install -r requirements.txt
-    script: python setup.py test
+    script: coverage run setup.py test
     env: TRAVIS_LANG=python
     after_success:
       codecov
