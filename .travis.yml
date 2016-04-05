@@ -3,6 +3,7 @@ dist: trusty
 
 matrix:
   include:
+
   - os: linux
     language: cpp
     compiler: gcc
@@ -30,6 +31,7 @@ matrix:
     env: TRAVIS_LANG=C++
     after_success:
     - bash <(curl -s https://codecov.io/bash) -p $BUILD_DIR/src/feather/CMakeFiles/feather.dir -x gcov-4.9
+
   - os: osx
     language: cpp
     compiler: clang
@@ -40,6 +42,7 @@ matrix:
     - make -j4 || exit 1
     - ctest
     env: TRAVIS_LANG=C++
+
   - os: linux
     language: r
     compiler: gcc
@@ -49,6 +52,7 @@ matrix:
     after_success:
     - Rscript -e 'install.packages("covr"); covr::codecov()'
     env: TRAVIS_LANG=R
+
   - os: linux
     language: python
     python: 2.7
@@ -61,6 +65,7 @@ matrix:
     - pip install -r requirements.txt
     script: python setup.py test
     env: TRAVIS_LANG=python
+
   - os: linux
     language: python
     python: 3.4
@@ -73,6 +78,7 @@ matrix:
     - pip install -r requirements.txt
     script: python setup.py test
     env: TRAVIS_LANG=python
+
   - os: linux
     language: python
     python: 3.5
