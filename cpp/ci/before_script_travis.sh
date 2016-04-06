@@ -6,7 +6,6 @@ cp -r $FEATHER_CPP/thirdparty .
 source thirdparty/versions.sh
 
 # this is created in Travis CI
-export BUILD_DIR=$HOME/build_dir
 export TP_DIR=$BUILD_DIR/thirdparty
 
 if [ $TRAVIS_OS_NAME == "osx" ]; then
