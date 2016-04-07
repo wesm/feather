@@ -107,5 +107,6 @@ matrix:
 
 before_install:
 - export FEATHER_CPP=$TRAVIS_BUILD_DIR/cpp
-- mkdir $HOME/build_dir
-- cd $HOME/build_dir
+- export BUILD_DIR=$TRAVIS_BUILD_DIR/build_dir
+- mkdir $BUILD_DIR
+- cd $BUILD_DIR
