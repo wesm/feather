@@ -116,7 +116,8 @@ class TestFeatherReader(unittest.TestCase):
     def test_integer_no_nulls(self):
         data = {}
 
-        numpy_dtypes = ['i1', 'i2', 'i4', 'i8', 'u1', 'u2', 'u4', 'u8']
+        numpy_dtypes = ['i1', 'i2', 'i4', 'i8',
+                        'u1', 'u2', 'u4', 'u8']
         num_values = 100
 
         for dtype in numpy_dtypes:
@@ -124,6 +125,19 @@ class TestFeatherReader(unittest.TestCase):
             values = np.random.randint(info.min,
                                        min(info.max, np.iinfo('i8').max),
                                        size=num_values)
+            data[dtype] = values.astype(dtype)
+
+        df = pd.DataFrame(data)
+        self._check_pandas_roundtrip(df)
+
+    def test_platform_numpy_integers(self):
+        data = {}
+
+        numpy_dtypes = ['longlong']
+        num_values = 100
+
+        for dtype in numpy_dtypes:
+            values = np.random.randint(0, 100, size=num_values)
             data[dtype] = values.astype(dtype)
 
         df = pd.DataFrame(data)

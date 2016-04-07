@@ -47,25 +47,28 @@ struct npy_traits<NPY_BOOL> {
   }
 };
 
-#define NPY_INT_DECL(TYPE, T)                                           \
+#define NPY_INT_DECL(TYPE, FTYPE, T)                                    \
   template <>                                                           \
   struct npy_traits<NPY_##TYPE> {                                       \
     typedef T value_type;                                               \
-    static constexpr PrimitiveType::type feather_type = PrimitiveType::TYPE; \
+    static constexpr PrimitiveType::type feather_type = PrimitiveType::FTYPE; \
     static constexpr bool supports_nulls = false;                       \
     static inline bool isnull(T v) {                                    \
       return false;                                                     \
     }                                                                   \
   };
 
-NPY_INT_DECL(INT8, int8_t);
-NPY_INT_DECL(INT16, int16_t);
-NPY_INT_DECL(INT32, int32_t);
-NPY_INT_DECL(INT64, int64_t);
-NPY_INT_DECL(UINT8, uint8_t);
-NPY_INT_DECL(UINT16, uint16_t);
-NPY_INT_DECL(UINT32, uint32_t);
-NPY_INT_DECL(UINT64, uint64_t);
+NPY_INT_DECL(INT8, INT8, int8_t);
+NPY_INT_DECL(INT16, INT16, int16_t);
+NPY_INT_DECL(INT32, INT32, int32_t);
+NPY_INT_DECL(INT64, INT64, int64_t);
+NPY_INT_DECL(LONGLONG, INT64, int64_t);
+
+NPY_INT_DECL(UINT8, UINT8, uint8_t);
+NPY_INT_DECL(UINT16, UINT16, uint16_t);
+NPY_INT_DECL(UINT32, UINT32, uint32_t);
+NPY_INT_DECL(UINT64, UINT64, uint64_t);
+NPY_INT_DECL(ULONGLONG, UINT64, uint64_t);
 
 template <>
 struct npy_traits<NPY_FLOAT32> {
@@ -414,10 +417,12 @@ Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
     TO_FEATHER_CASE(INT16);
     TO_FEATHER_CASE(INT32);
     TO_FEATHER_CASE(INT64);
+    TO_FEATHER_CASE(LONGLONG);
     TO_FEATHER_CASE(UINT8);
     TO_FEATHER_CASE(UINT16);
     TO_FEATHER_CASE(UINT32);
     TO_FEATHER_CASE(UINT64);
+    TO_FEATHER_CASE(ULONGLONG);
     TO_FEATHER_CASE(FLOAT32);
     TO_FEATHER_CASE(FLOAT64);
     TO_FEATHER_CASE(OBJECT);
