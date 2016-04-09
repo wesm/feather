@@ -16,9 +16,9 @@ NULL
 read_feather <- function(path, columns = NULL) {
   data <- feather(path)
   if (is.null(columns))
-    as_data_frame(feather(path))
+    as_data_frame(data)
   else
-    as_data_frame(feather(path)[columns])
+    as_data_frame(data[columns])
 }
 
 #' @rdname read_feather
