@@ -60,29 +60,66 @@ PrimitiveArray lglToPrimitiveArray(SEXP x) {
 
 }
 
-// Returns an object with pointers into x, so must not be
-// used after x goes away
-PrimitiveArray intToPrimitiveArray(SEXP x) {
-  int n = Rf_length(x);
-
-  auto null_buffer = makeBoolBuffer(n);
-  auto nulls = null_buffer->mutable_data();
-  uint32_t n_missing = 0;
-  int* px = INTEGER(x);
-  for (int i = 0; i < n; ++i) {
-    if (px[i] == NA_INTEGER) {
+static int set_null_bitmap(int* values, int length, uint8_t* nulls) {
+  int n_missing = 0;
+  for (int i = 0; i < length; ++i) {
+    if (values[i] == NA_INTEGER) {
       ++n_missing;
     } else {
       // Valid
       util::set_bit(nulls, i);
     }
   }
+  return n_missing;
+}
+
+// Returns an object with pointers into x, so must not be
+// used after x goes away
+PrimitiveArray intToPrimitiveArray(SEXP x) {
+  int n = Rf_length(x);
+
+  auto null_buffer = makeBoolBuffer(n);
+  uint8_t* nulls = null_buffer->mutable_data();
+  int n_missing = set_null_bitmap(INTEGER(x), n, nulls);
 
   PrimitiveArray out;
   out.type = PrimitiveType::INT32;
   out.length = n;
   out.values = reinterpret_cast<uint8_t*>(INTEGER(x));
 
+  out.null_count = n_missing;
+  if (n_missing > 0) {
+    out.buffers.push_back(null_buffer);
+    out.nulls = nulls;
+  }
+
+  return out;
+}
+
+PrimitiveArray factorCodesToPrimitiveArray(SEXP x) {
+  // Must subtract 1 from factor codes for feather storage
+  int n = Rf_length(x);
+
+  auto null_buffer = makeBoolBuffer(n);
+  auto nulls = null_buffer->mutable_data();
+  int n_missing = set_null_bitmap(INTEGER(x), n, nulls);
+
+  auto values_buffer = std::make_shared<OwnedMutableBuffer>();
+  stopOnFailure(values_buffer->Resize(n * sizeof(int32_t)));
+  memset(values_buffer->mutable_data(), 0, n);
+  auto values = reinterpret_cast<int32_t*>(values_buffer->mutable_data());
+
+  for (int i = 0; i < n; ++i) {
+    // Results of NA values don't matter as the value slots are undefined
+    values[i] = INTEGER(x)[i] - 1;
+  }
+
+  PrimitiveArray out;
+  out.type = PrimitiveType::INT32;
+  out.length = n;
+  out.values = reinterpret_cast<uint8_t*>(values);
+
+  out.buffers.push_back(values_buffer);
   out.null_count = n_missing;
   if (n_missing > 0) {
     out.buffers.push_back(null_buffer);
@@ -260,7 +297,7 @@ Status addCategoryColumn(std::unique_ptr<TableWriter>& table,
   if (TYPEOF(x_levels) != STRSXP)
     stop("'%s' is corrupt", name);
 
-  auto values = intToPrimitiveArray(x);
+  auto values = factorCodesToPrimitiveArray(x);
   auto levels = chrToPrimitiveArray(x_levels);
   bool ordered = Rf_inherits(x, "ordered");
 

@@ -51,9 +51,11 @@ def read_dataframe(path, columns=None):
 
     # TODO(wesm): pipeline conversion to Arrow memory layout
     data = {}
+    names = []
     for i in range(reader.num_columns):
         name, arr = reader.read_array(i)
         data[name] = arr
+        names.append(name)
 
     # TODO(wesm):
-    return pd.DataFrame(data)
+    return pd.DataFrame(data, columns=names)
