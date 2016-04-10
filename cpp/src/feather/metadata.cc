@@ -26,8 +26,10 @@ namespace metadata {
 
 typedef flatbuffers::FlatBufferBuilder FBB;
 
+using FBString = flatbuffers::Offset<flatbuffers::String>;
+
 // Flatbuffers conveniences
-typedef std::vector<flatbuffers::Offset<fbs::Column> > ColumnVector;
+using ColumnVector = std::vector<flatbuffers::Offset<fbs::Column>>;
 
 // ----------------------------------------------------------------------
 // Primitive array
@@ -124,6 +126,8 @@ fbs::TypeMetadata ToFlatbufferEnum(ColumnType::type column_type) {
 // ----------------------------------------------------------------------
 // TableBuilder
 
+static constexpr int FEATHER_VERSION = 1;
+
 class TableBuilder::Impl {
  public:
   explicit Impl(int64_t num_rows) :
@@ -138,14 +142,19 @@ class TableBuilder::Impl {
     if (finished_) {
       return Status::Invalid("can only call this once");
     }
-    flatbuffers::Offset<flatbuffers::String> desc = 0;
+
+    FBString desc = 0;
     if (!description_.empty()) {
       desc = fbb_.CreateString(description_);
     }
 
-    auto root = fbs::CreateCTable(fbb_, desc,
+    flatbuffers::Offset<flatbuffers::String> metadata = 0;
+
+    auto root = fbs::CreateCTable(fbb_,
+        desc,
         num_rows_,
-        fbb_.CreateVector(columns_));
+        fbb_.CreateVector(columns_),
+        FEATHER_VERSION, metadata);
     fbb_.Finish(root);
     finished_ = true;
 
@@ -400,6 +409,11 @@ bool Table::has_description() const {
 int64_t Table::num_rows() const {
   const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
   return table->num_rows();
+}
+
+int Table::version() const {
+  const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
+  return table->version();
 }
 
 size_t Table::num_columns() const {

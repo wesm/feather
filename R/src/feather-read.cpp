@@ -40,7 +40,8 @@ List metadataFeather(const std::string& path) {
     _["path"] = path,
     _["dim"] = IntegerVector::create(n, p),
     _["types"] = types,
-    _["description"] = table->GetDescription()
+    _["description"] = table->GetDescription(),
+    _["version"] = table->version()
   );
   out.attr("class") = "feather_metadata";
   return out;

@@ -153,6 +153,8 @@ class Table {
 
   std::string description() const;
 
+  int version() const;
+
   // Optional
   bool has_description() const;
 

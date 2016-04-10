@@ -112,6 +112,12 @@ table CTable {
 
   num_rows: long;
   columns: [Column];
+
+  /// Version number of the Feather format
+  version: int;
+
+  /// Table metadata (likely JSON), not yet used
+  metadata: string;
 }
 
 root_type CTable;

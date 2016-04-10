@@ -365,12 +365,18 @@ struct CTable FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_DESCRIPTION = 4,
     VT_NUM_ROWS = 6,
-    VT_COLUMNS = 8
+    VT_COLUMNS = 8,
+    VT_VERSION = 10,
+    VT_METADATA = 12
   };
   /// Some text (or a name) metadata about what the file is, optional
   const flatbuffers::String *description() const { return GetPointer<const flatbuffers::String *>(VT_DESCRIPTION); }
   int64_t num_rows() const { return GetField<int64_t>(VT_NUM_ROWS, 0); }
   const flatbuffers::Vector<flatbuffers::Offset<Column>> *columns() const { return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Column>> *>(VT_COLUMNS); }
+  /// Version number of the Feather format
+  int32_t version() const { return GetField<int32_t>(VT_VERSION, 0); }
+  /// Table metadata (likely JSON), not yet used
+  const flatbuffers::String *metadata() const { return GetPointer<const flatbuffers::String *>(VT_METADATA); }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<flatbuffers::uoffset_t>(verifier, VT_DESCRIPTION) &&
@@ -379,6 +385,9 @@ struct CTable FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<flatbuffers::uoffset_t>(verifier, VT_COLUMNS) &&
            verifier.Verify(columns()) &&
            verifier.VerifyVectorOfTables(columns()) &&
+           VerifyField<int32_t>(verifier, VT_VERSION) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, VT_METADATA) &&
+           verifier.Verify(metadata()) &&
            verifier.EndTable();
   }
 };
@@ -389,10 +398,12 @@ struct CTableBuilder {
   void add_description(flatbuffers::Offset<flatbuffers::String> description) { fbb_.AddOffset(CTable::VT_DESCRIPTION, description); }
   void add_num_rows(int64_t num_rows) { fbb_.AddElement<int64_t>(CTable::VT_NUM_ROWS, num_rows, 0); }
   void add_columns(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Column>>> columns) { fbb_.AddOffset(CTable::VT_COLUMNS, columns); }
+  void add_version(int32_t version) { fbb_.AddElement<int32_t>(CTable::VT_VERSION, version, 0); }
+  void add_metadata(flatbuffers::Offset<flatbuffers::String> metadata) { fbb_.AddOffset(CTable::VT_METADATA, metadata); }
   CTableBuilder(flatbuffers::FlatBufferBuilder &_fbb) : fbb_(_fbb) { start_ = fbb_.StartTable(); }
   CTableBuilder &operator=(const CTableBuilder &);
   flatbuffers::Offset<CTable> Finish() {
-    auto o = flatbuffers::Offset<CTable>(fbb_.EndTable(start_, 3));
+    auto o = flatbuffers::Offset<CTable>(fbb_.EndTable(start_, 5));
     return o;
   }
 };
@@ -400,9 +411,13 @@ struct CTableBuilder {
 inline flatbuffers::Offset<CTable> CreateCTable(flatbuffers::FlatBufferBuilder &_fbb,
    flatbuffers::Offset<flatbuffers::String> description = 0,
    int64_t num_rows = 0,
-   flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Column>>> columns = 0) {
+   flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Column>>> columns = 0,
+   int32_t version = 0,
+   flatbuffers::Offset<flatbuffers::String> metadata = 0) {
   CTableBuilder builder_(_fbb);
   builder_.add_num_rows(num_rows);
+  builder_.add_metadata(metadata);
+  builder_.add_version(version);
   builder_.add_columns(columns);
   builder_.add_description(description);
   return builder_.Finish();
