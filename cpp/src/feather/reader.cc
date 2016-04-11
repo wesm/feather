@@ -82,6 +82,10 @@ std::string TableReader::GetDescription() const {
   return metadata_.description();
 }
 
+int TableReader::version() const {
+  return metadata_.version();
+}
+
 int64_t TableReader::num_rows() const {
   return metadata_.num_rows();
 }

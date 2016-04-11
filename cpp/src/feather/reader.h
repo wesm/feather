@@ -150,6 +150,8 @@ class TableReader {
   std::string GetDescription() const;
   bool HasDescription() const;
 
+  int version() const;
+
   int64_t num_rows() const;
   int64_t num_columns() const;
 

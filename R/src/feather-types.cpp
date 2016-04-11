@@ -200,6 +200,14 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
   return out;
 }
 
+template <typename T>
+static void write_factor_codes(const uint8_t* values, int length, int* out) {
+  auto codes = reinterpret_cast<const T*>(values);
+  for (int i = 0; i < length; ++i) {
+    out[i] = codes[i] + 1;
+  }
+}
+
 SEXP toSEXP(const ColumnPtr& x) {
   ColumnMetadataPtr meta = x->metadata();
   const PrimitiveArray* val(&x->values());
@@ -208,7 +216,26 @@ SEXP toSEXP(const ColumnPtr& x) {
   case feather::ColumnType::PRIMITIVE:
     return toSEXP(val);
   case feather::ColumnType::CATEGORY: {
-    IntegerVector out = toSEXP(val);
+    IntegerVector out = Rf_allocVector(INTSXP, val->length);
+
+    // Add 1 to category values
+    switch (val->type) {
+      case PrimitiveType::INT8:
+        write_factor_codes<int8_t>(val->values, val->length, INTEGER(out));
+        break;
+      case PrimitiveType::INT16:
+        write_factor_codes<int16_t>(val->values, val->length, INTEGER(out));
+        break;
+      case PrimitiveType::INT32:
+        write_factor_codes<int32_t>(val->values, val->length, INTEGER(out));
+        break;
+      case PrimitiveType::INT64:
+        write_factor_codes<int64_t>(val->values, val->length, INTEGER(out));
+        break;
+      default:
+        stop("Factor codes not a signed integer");
+        break;
+    }
 
     auto x_cat = static_cast<feather::CategoryColumn*>(x.get());
     const PrimitiveArray* levels(&x_cat->levels());

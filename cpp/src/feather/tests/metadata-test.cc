@@ -43,6 +43,11 @@ class TestTableBuilder : public ::testing::Test {
 };
 
 
+TEST_F(TestTableBuilder, Version) {
+  Finish();
+  ASSERT_EQ(1, table_->version());
+}
+
 TEST_F(TestTableBuilder, EmptyTable) {
   Finish();
 
