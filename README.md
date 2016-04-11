@@ -2,19 +2,19 @@
 
 [![Travis-CI Build Status](https://travis-ci.org/wesm/feather.svg?branch=master)](https://travis-ci.org/wesm/feather) [![Coverage Status](https://img.shields.io/codecov/c/github/wesm/feather/master.svg)](https://codecov.io/github/wesm/feather?branch=master)
 
-Feather is binary columnar serialization for data frames. It is designed to
-read and write data frames very efficiently, and to make it easy to share data
-across multiple data analysis languages. The initial version of Feather comes
-with bindings for [python](python/) (written by [Wes
-McKinney](https://github.com/wesm)) and [R](R/) (written by [Hadley
-Wickham](https://github.com/hadley/)).
+Feather provides binary columnar serialization for data frames. It is designed to 
+make reading and writing data frames efficient, and to make sharing data across 
+data analysis languages easy. This initial version comes with bindings for 
+[python](python/) (written by [Wes McKinney](https://github.com/wesm)) and [R](R/) 
+(written by [Hadley Wickham](https://github.com/hadley/)).
 
-Feather uses the [Apache Arrow](https://arrow.apache.org) columnar memory
-specification to representing binary data on disk in a way that can be read
-and written very rapidly. This is particularly important for encoding
-null/NA values and variable-length types like UTF8 strings. Feather is
-complementary to Apache Arrow because Arrow does not provide a file format,
-so Feather defines its own schemas and metadata for an on-disk representation.
+Feather uses the [Apache Arrow](https://arrow.apache.org) columnar memory 
+specification to represent binary data on disk. This makes read and write 
+operations very fast. This is particularly important for encoding null/NA values 
+and variable-length types like UTF8 strings. 
+
+Feather is complementary to Apache Arrow. Because Arrow does not provide a file 
+format, Feather defines its own schemas and metadata for on-disk representation.
 
 Feather currently supports the following column types:
 
