@@ -57,7 +57,7 @@ test_that("always coerces to UTF-8", {
 
 test_that("preserves simple factor", {
   x <- factor(c("abc", "def"))
-  expect_equal(roundtrip_vector(x), x)
+  expect_identical(roundtrip_vector(x), x)
 })
 
 
@@ -65,23 +65,24 @@ test_that("preserves NA in factor and levels", {
   x1 <- factor(c("abc", "def", NA))
   x2 <- addNA(x1)
 
-  expect_equal(roundtrip_vector(x1), x1)
-  expect_equal(roundtrip_vector(x2), x2)
+  expect_identical(roundtrip_vector(x1), x1)
+  expect_identical(roundtrip_vector(x2), x2)
 })
 
 
 # Date --------------------------------------------------------------------
 
 test_that("preserves dates", {
-  x <- as.Date("2010-01-01") + c(0, 365, NA)
-  expect_equal(roundtrip_vector(x), x)
+  x <- as.Date("2010-01-01") + c(0L, 365L, NA)
+  mode(x) <- "integer"
+  expect_identical(roundtrip_vector(x), x)
 })
 
 # Time --------------------------------------------------------------------
 
 test_that("preserves times", {
-  x <- structure(1:100, class = "time")
-  expect_equal(roundtrip_vector(x), x)
+  x <- structure(as.numeric(1:100), class = "time")
+  expect_identical(roundtrip_vector(x), x)
 })
 
 
@@ -91,9 +92,9 @@ test_that("preserves times", {
   x1 <- ISOdate(2001, 10, 10, tz = "US/Pacific")
   x2 <- roundtrip_vector(x1)
 
-  expect_equal(attr(x1, "tzone"), attr(x2, "tzone"))
-  expect_equal(attr(x1, "class"), attr(x1, "class"))
-  expect_equal(unclass(x1), unclass(x2))
+  expect_identical(attr(x1, "tzone"), attr(x2, "tzone"))
+  expect_identical(attr(x1, "class"), attr(x1, "class"))
+  expect_identical(unclass(x1), unclass(x2))
 })
 
 test_that("throws error on POSIXlt", {
