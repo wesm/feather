@@ -11,4 +11,6 @@ Install from Github with:
 devtools::install_github("wesm/feather/R")
 ```
 
-Feather uses C++11, so if you're on windows, you'll require the [experimental gcc 4.93 toolchain](https://github.com/rwinlib/r-base/wiki/Testing-Packages-with-Experimental-R-Devel-Build-for-Windows). This should become official when R 3.3.0 is released, which is also when we'll submit it to CRAN, so installation will eventually be painless.
+Feather uses C++11, so if you're on Windows, you'll first need to install the [experimental gcc 4.93 toolchain](https://github.com/rwinlib/r-base/wiki/Testing-Packages-with-Experimental-R-Devel-Build-for-Windows). 
+
+Installation will eventually become painless. When R 3.3.0 is released, not only should this toolchain become the official toolchain for building extensions under Windows but we'll also be submitting Feather to CRAN.
