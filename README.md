@@ -1,6 +1,7 @@
 ## Feather: fast, interoperable data frame storage
 
 [![Travis-CI Build Status](https://travis-ci.org/wesm/feather.svg?branch=master)](https://travis-ci.org/wesm/feather) [![Coverage Status](https://img.shields.io/codecov/c/github/wesm/feather/master.svg)](https://codecov.io/github/wesm/feather?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/feather-format.svg?maxAge=3600)](https://pypi.python.org/pypi/feather-format)
 
 Feather provides binary columnar serialization for data frames. It is designed to 
 make reading and writing data frames efficient, and to make sharing data across 
