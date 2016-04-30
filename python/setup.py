@@ -36,7 +36,7 @@ MAJOR = 0
 MINOR = 2
 MICRO = 0
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-ISRELEASED = False
+ISRELEASED = True
 
 setup_dir = os.path.abspath(os.path.dirname(__file__))
 
