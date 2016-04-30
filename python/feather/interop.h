@@ -62,13 +62,16 @@ NPY_INT_DECL(INT8, INT8, int8_t);
 NPY_INT_DECL(INT16, INT16, int16_t);
 NPY_INT_DECL(INT32, INT32, int32_t);
 NPY_INT_DECL(INT64, INT64, int64_t);
-NPY_INT_DECL(LONGLONG, INT64, int64_t);
 
 NPY_INT_DECL(UINT8, UINT8, uint8_t);
 NPY_INT_DECL(UINT16, UINT16, uint16_t);
 NPY_INT_DECL(UINT32, UINT32, uint32_t);
 NPY_INT_DECL(UINT64, UINT64, uint64_t);
+
+#if NPY_INT64 != NPY_LONGLONG
+NPY_INT_DECL(LONGLONG, INT64, int64_t);
 NPY_INT_DECL(ULONGLONG, UINT64, uint64_t);
+#endif
 
 template <>
 struct npy_traits<NPY_FLOAT32> {
@@ -411,24 +414,36 @@ Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
     return Status::Invalid("only handle 1-dimensional arrays");
   }
 
-  switch(PyArray_DESCR(arr)->type_num) {
+  int type_num = PyArray_DESCR(arr)->type_num;
+
+#if (NPY_INT64 == NPY_LONGLONG) && (NPY_SIZEOF_LONGLONG == 8)
+  // GH #129, on i386 / Apple Python, both LONGLONG and INT64 can be observed
+  // in the wild, which is buggy. We set U/LONGLONG to U/INT64 so things work
+  // properly.
+  if (type_num == NPY_LONGLONG) {
+    type_num = NPY_INT64;
+  }
+  if (type_num == NPY_ULONGLONG) {
+    type_num = NPY_UINT64;
+  }
+#endif
+
+  switch(type_num) {
     TO_FEATHER_CASE(BOOL);
     TO_FEATHER_CASE(INT8);
     TO_FEATHER_CASE(INT16);
     TO_FEATHER_CASE(INT32);
     TO_FEATHER_CASE(INT64);
-    TO_FEATHER_CASE(LONGLONG);
     TO_FEATHER_CASE(UINT8);
     TO_FEATHER_CASE(UINT16);
     TO_FEATHER_CASE(UINT32);
     TO_FEATHER_CASE(UINT64);
-    TO_FEATHER_CASE(ULONGLONG);
     TO_FEATHER_CASE(FLOAT32);
     TO_FEATHER_CASE(FLOAT64);
     TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
-      ss << "unsupported type " << PyArray_DESCR(arr)->type_num
+      ss << "unsupported type " << type_num
          << std::endl;
       return Status::Invalid(ss.str());
   }
