@@ -51,13 +51,11 @@ If, in the metadata, `null_count = 0`, then the null bitmask is omitted.
 
 ## Variable-length arrays
 
-We use the Apache Arrow encoding for storing variable-length values
+We use the [Apache Arrow][3] encoding for storing variable-length values
 
 ```
-<null bitmask, optional> <value offsets> <value data>
+<null bitmask, optional> <int32_t* value offsets> <uint8_t* value data>
 ```
-
-The null bitmask
 
 ## Dictionary encoding
 
@@ -74,3 +72,4 @@ pieces of data.
 
 [1]: https://en.wikipedia.org/wiki/Bit_numbering
 [2]: http://www.postgresql.org/docs/9.5/static/storage-page-layout.html
+[3]: http://github.com/apache/arrow
