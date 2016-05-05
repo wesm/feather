@@ -19,5 +19,5 @@ Imports:
 Suggests:
     testthat,
     dplyr
-SystemRequirements: C++11, GNU make
+SystemRequirements: C++11
 RoxygenNote: 5.0.1

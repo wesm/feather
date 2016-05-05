@@ -1,3 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^src/feather/.*\.o$
+^src/.*\.a$
+^configure$
