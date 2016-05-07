@@ -1,12 +1,12 @@
 Package: feather
-Title: R bindings to the feather API
+Title: R bindings to the feather 'API'
 Version: 0.0.0.9000
 Authors@R: c(
     person("Hadley", "Wickham", , "hadley@rstudio.com", role = c("aut", "cre")),
     person("RStudio", role = "cph")
   )
 Description: Read and write feather files, a lightweight binary columnar
-    datastore designed for maximum speed.
+    data store designed for maximum speed.
 Encoding: UTF-8
 License: Apache License 2.0
 LazyData: true
