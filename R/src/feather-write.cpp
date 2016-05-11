@@ -163,7 +163,7 @@ PrimitiveArray rescaleToInt64(SEXP x, int64_t scale) {
       } else {
         // Valid
         util::set_bit(nulls, i);
-        values[i] = px[i] * scale;
+        values[i] = round(px[i] * scale);
       }
     }
     break;
