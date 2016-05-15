@@ -15,6 +15,10 @@
 #ifndef FEATHER_API_H
 #define FEATHER_API_H
 
+#if _MSC_VER >= 1900
+  #undef timezone
+#endif
+
 #include "feather/buffer.h"
 #include "feather/common.h"
 #include "feather/io.h"

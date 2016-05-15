@@ -14,7 +14,8 @@
 
 #include "feather/io.h"
 
-#ifdef __MINGW32__
+#ifdef _WIN32
+#define NOMINMAX
 #include "feather/mman.h"
 #undef Realloc
 #undef Free
