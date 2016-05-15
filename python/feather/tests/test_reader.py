@@ -122,9 +122,7 @@ class TestFeatherReader(unittest.TestCase):
 
         for dtype in numpy_dtypes:
             info = np.iinfo(dtype)
-            values = np.random.randint(info.min,
-                                       min(info.max, np.iinfo('i8').max),
-                                       size=num_values)
+            values = np.random.randint(0, 100, size=num_values)
             data[dtype] = values.astype(dtype)
 
         df = pd.DataFrame(data)

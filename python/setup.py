@@ -116,6 +116,9 @@ else:
     if platform.system() == 'Darwin':
         EXTRA_LINK_ARGS.append('-Wl,-rpath,' + feather_lib_dir)
 
+EXTRA_COMPILE_ARGS = []
+if platform.system() != 'Windows':
+    EXTRA_COMPILE_ARGS = ['-std=c++11', '-O3']
 
 RT_LIBRARY_DIRS = LIBRARY_DIRS
 
@@ -126,7 +129,7 @@ ext = Extension('feather.ext',
                 include_dirs=INCLUDE_PATHS,
                 library_dirs=LIBRARY_DIRS,
                 runtime_library_dirs=RT_LIBRARY_DIRS,
-                extra_compile_args=['-std=c++11', '-O3'],
+                extra_compile_args=EXTRA_COMPILE_ARGS,
                 extra_link_args=EXTRA_LINK_ARGS)
 extensions = [ext]
 extensions = cythonize(extensions)
