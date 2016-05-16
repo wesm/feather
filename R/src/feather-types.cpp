@@ -25,6 +25,7 @@ RColType toRColType(FeatherColType x) {
   case PrimitiveType::BINARY:
     return R_RAW;
   }
+  throw std::runtime_error("Invalid FeatherColType");
 };
 
 RColType toRColType(const ColumnPtr& x) {
@@ -40,6 +41,7 @@ RColType toRColType(const ColumnPtr& x) {
   case feather::ColumnType::TIME:
     return R_TIME;
   }
+  throw std::runtime_error("Invalid RColType");
 }
 
 std::string toString(RColType x) {
@@ -54,6 +56,7 @@ std::string toString(RColType x) {
   case R_DATETIME: return "datetime";
   case R_TIME:     return "time";
   }
+  throw std::runtime_error("Invalid RColType");
 }
 
 SEXPTYPE toSEXPTYPE(RColType x) {
@@ -68,6 +71,7 @@ SEXPTYPE toSEXPTYPE(RColType x) {
   case R_DATETIME: return REALSXP;
   case R_TIME:     return REALSXP;
   }
+  throw std::runtime_error("Invalid RColType");
 }
 
 
@@ -174,6 +178,7 @@ int64_t timeScale(TimeUnit::type unit) {
   case TimeUnit::MICROSECOND: return 1e6;
   case TimeUnit::NANOSECOND:  return 1e9;
   }
+  throw std::runtime_error("Invalid TimeUnit");
 }
 
 // Used to convert INT64 TIME and TIMESTAMP to a double vector.
@@ -265,8 +270,7 @@ SEXP toSEXP(const ColumnPtr& x) {
     return out;
 
 
-  }
-    stop("Not supported yet");
-    return 0;
-  }
+  } //case
+  } //switch
+  throw std::runtime_error("Not supported yet");
 }
