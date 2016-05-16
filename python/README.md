@@ -14,7 +14,16 @@ Anaconda uses a default 10.5 deployment target which does not have C++11
 properly available. This can be fixed by setting:
 
 ```
-export MACOSX_DEPLOYMENT_TARGET=10.10
+export MACOSX_DEPLOYMENT_TARGET=10.9
+```
+
+Deployments targets as early as 10.7 can be used if the compiler supports
+C++11 and the correct mode is selected. For example using the following:
+
+```
+export MACOSX_DEPLOYMENT_TARGET=10.7
+export CFLAGS="${CXXFLAGS} -stdlib=libc++ -std=c++11"
+export CXXFLAGS="${CXXFLAGS} -stdlib=libc++ -std=c++11"
 ```
 
 This may be necessary in some other OS X environments.
