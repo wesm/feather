@@ -60,7 +60,7 @@ std::string Status::CodeAsString() const {
     return "OK";
   }
 
-  const char* type;
+  const char* type = NULL;
   switch (code()) {
     case StatusCode::OK:
       type = "OK";
