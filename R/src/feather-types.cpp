@@ -83,6 +83,24 @@ void copyRecast(const PrimitiveArray* src, DestType* dest) {
   std::copy(&recast[0], &recast[0] + n, dest);
 }
 
+void setMissing(SEXP x, const PrimitiveArray* val) {
+  if (val->null_count == 0)
+    return;
+
+  int64_t n = val->length;
+  for (int i = 0; i < n; ++i) {
+    if (util::bit_not_set(val->nulls, i)) {
+      switch(TYPEOF(x)) {
+      case LGLSXP: INTEGER(x)[i] = NA_LOGICAL; break;
+      case INTSXP: INTEGER(x)[i] = NA_INTEGER; break;
+      case REALSXP: REAL(x)[i] = NA_REAL; break;
+      case STRSXP: SET_STRING_ELT(x, i, NA_STRING); break;
+      default: break;
+      }
+    }
+  }
+}
+
 SEXP toSEXP(const PrimitiveArray* val) {
   int64_t n = val->length;
   RColType rType = toRColType(val->type);
@@ -153,21 +171,7 @@ SEXP toSEXP(const PrimitiveArray* val) {
     break;
   }
 
-  if (val->null_count > 0) {
-    for (int i = 0; i < n; ++i) {
-      if (util::bit_not_set(val->nulls, i)) {
-        switch(TYPEOF(out)) {
-        case LGLSXP: INTEGER(out)[i] = NA_LOGICAL; break;
-        case INTSXP: INTEGER(out)[i] = NA_INTEGER; break;
-        case REALSXP: REAL(out)[i] = NA_REAL; break;
-        case STRSXP: SET_STRING_ELT(out, i, NA_STRING); break;
-        default: break;
-        }
-      }
-    }
-  }
-
-
+  setMissing(out, val);
   return out;
 }
 
@@ -201,6 +205,7 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
       pOut[i] = pValues[i] / scale;
     }
   }
+  setMissing(out, pArray);
 
   return out;
 }

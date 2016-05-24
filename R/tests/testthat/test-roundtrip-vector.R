@@ -89,7 +89,7 @@ test_that("preserves times", {
 # Timestamp/POSIXct -------------------------------------------------------
 
 test_that("preserves times", {
-  x1 <- ISOdate(2001, 10, 10, tz = "US/Pacific")
+  x1 <- ISOdate(2001, 10, 10, tz = "US/Pacific") + c(0, NA)
   x2 <- roundtrip_vector(x1)
 
   expect_identical(attr(x1, "tzone"), attr(x2, "tzone"))
