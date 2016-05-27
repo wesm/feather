@@ -1,11 +1,9 @@
-if [ -d "../cpp/src/feather" ]; then
-  mkdir -p src/feather
-  rsync -urv src/feather/ ../cpp/src/feather/ --include="*.cc" --include="*.h" || true
-  cp -pv ../cpp/src/feather/*.h ../cpp/src/feather/*.cc src/feather/
-fi
-
-if [ -d "../cpp/src/flatbuffers" ]; then
-  mkdir -p src/flatbuffers
-
-  cp -p ../cpp/src/flatbuffers/flatbuffers.h src/flatbuffers/
+# Check for little-endian system
+R_ENDIAN=`${R_HOME}/bin/Rscript -e 'cat(.Platform$endian)'`
+if [ "$R_ENDIAN" = "little" ]; then
+    echo "Platform is little endian. Good."
+    exit 0
+else
+    echo "Platform is big endian. This is currently unsupported."
+    exit 1
 fi
