@@ -1,0 +1,9 @@
+# Check for little-endian system
+R_ENDIAN=`${R_HOME}/bin/Rscript -e 'cat(.Platform$endian)'`
+if [ "$R_ENDIAN" = "little" ]; then
+    echo "Platform is little endian. Good."
+    exit 0
+else
+    echo "Platform is big endian. This is currently unsupported."
+    exit 1
+fi
