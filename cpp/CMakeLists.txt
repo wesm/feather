@@ -168,7 +168,9 @@ endif ()
 if (APPLE)
   # Use libc++ to avoid linker errors on some platforms
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-elseif (NOT MSVC)
+endif()
+
+if (NOT MSVC)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11 -msse3 -Wall")
 endif()
 
