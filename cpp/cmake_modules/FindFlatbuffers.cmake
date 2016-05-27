@@ -53,6 +53,7 @@ endif ()
 
 find_program(FLATBUFFERS_COMPILER flatc
   $ENV{FLATBUFFERS_HOME}/bin
+  ${_flatbuffers_roots}/bin
   /usr/local/bin
   /usr/bin
   NO_DEFAULT_PATH

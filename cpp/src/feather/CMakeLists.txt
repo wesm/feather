@@ -21,6 +21,16 @@ set(LIBFEATHER_SRCS
   status.cc
   types.cc
   writer.cc
+  api.h
+  buffer.h
+  common.h
+  feather-c.h
+  io.h
+  metadata.h
+  reader.h
+  status.h
+  types.h
+  writer.h
 )
 
 set(LIBFEATHER_LINK_LIBS
@@ -43,6 +53,7 @@ if(APPLE)
     set_target_properties(feather PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
+
 add_library(feather_test_main
   tests/test_main.cc)
 
@@ -52,6 +63,9 @@ if (APPLE)
     dl)
   set_target_properties(feather_test_main
         PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+elseif (WIN32)
+  target_link_libraries(feather_test_main
+    gtest)
 else()
   target_link_libraries(feather_test_main
     dl
