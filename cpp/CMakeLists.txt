@@ -97,8 +97,15 @@ function(ADD_FEATHER_TEST REL_TEST_NAME)
     set(TEST_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${REL_TEST_NAME})
   endif()
 
+  if (WIN32)
+    set(TEST_RUNNER "")
+  else()
+    set(TEST_RUNNER ${BUILD_SUPPORT_DIR}/run-test.sh)
+  endif()
+
   add_test(${TEST_NAME}
-    ${BUILD_SUPPORT_DIR}/run-test.sh ${TEST_PATH})
+    ${TEST_RUNNER} ${TEST_PATH}
+  )
   if(ARGN)
     set_tests_properties(${TEST_NAME} PROPERTIES ${ARGN})
   endif()

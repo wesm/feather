@@ -4,7 +4,7 @@
 
 `libfeather` is mainly designed for linking with some other application, like a
 Python or R extension. To build the dependencies and install a release build,
-run:
+run (see further below for Windows instructions):
 
 ```shell
 ./thirdparty/download_thirdparty.sh
@@ -47,6 +47,22 @@ make lint
 Explicit memory management and non-trivial destructors are to be avoided. Use
 smart pointers to manage the lifetime of objects and memory, and generally use
 [RAII][2] whenever possible.
+
+## Windows
+
+```shell
+thirdparty\win_download_and_build.cmd
+
+# Sets the thirdparty build environment variables
+win_develop_env.cmd
+
+mkdir release-build
+cd release-build
+
+cmake -G "Visual Studio 14 Win64" -DCMAKE_BUILD_TYPE=release ..
+# `feather.sln` can be opened and built in Visual Studio or built from the command line with
+cmake --build . --config Release
+```
 
 [1]: http://google.github.io/styleguide/cppguide.html
 [2]: https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization

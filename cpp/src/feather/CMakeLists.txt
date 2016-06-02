@@ -21,6 +21,9 @@ set(LIBFEATHER_SRCS
   status.cc
   types.cc
   writer.cc
+)
+
+set(LIBFEATHER_HEADERS
   api.h
   buffer.h
   common.h
@@ -41,6 +44,7 @@ set(LIBFEATHER_LINKAGE "SHARED")
 add_library(feather
   ${LIBFEATHER_LINKAGE}
   ${LIBFEATHER_SRCS}
+  ${LIBFEATHER_HEADERS}
 )
 
 set_target_properties(feather
@@ -66,6 +70,10 @@ if (APPLE)
 elseif (WIN32)
   target_link_libraries(feather_test_main
     gtest)
+  # copy dll to directory of test executables
+  add_custom_command(TARGET feather_test_main POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory
+                     $<TARGET_FILE_DIR:feather> $<TARGET_FILE_DIR:feather_test_main>)
 else()
   target_link_libraries(feather_test_main
     dl
