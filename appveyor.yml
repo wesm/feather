@@ -3,15 +3,15 @@ environment:
     - lang: cpp
 
 install:
- - "cd feather\cpp"
- - "thirdparty\win_download_and_build.cmd"
+ - "cd feather\\cpp"
+ - "thirdparty\\win_download_and_build.cmd"
  - "win_develop_env.cmd"
  - "mkdir release-build"
  - "cd release-build"
 
 build_script:
- - "cmake -G "Visual Studio 14 Win64" ..
- - "cmake --build . --config Release"
+ - cmake -G "Visual Studio 14 Win64" ..
+ - cmake --build . --config Release"
 
 test_script:
  - "ctest"
