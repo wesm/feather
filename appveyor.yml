@@ -3,7 +3,7 @@ environment:
     - lang: cpp
 
 install:
- - "cd feather\\cpp"
+ - "cd cpp"
  - "thirdparty\\win_download_and_build.cmd"
  - "win_develop_env.cmd"
  - "mkdir release-build"
