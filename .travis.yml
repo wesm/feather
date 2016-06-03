@@ -59,7 +59,7 @@ matrix:
     before_install:
     - cd R
     after_success:
-    - Rscript -e 'install.packages("covr"); covr::codecov()'
+    - R -e 'install.packages("covr"); covr::codecov()'
     env: TRAVIS_LANG=R
 
   - os: linux
