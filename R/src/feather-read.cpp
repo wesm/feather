@@ -83,7 +83,9 @@ void closeFeather(const List& feather) {
 
 
 TableReader* getTableFromFeather(const List& feather) {
-  return Rcpp::as<XPtr<TableReader> >(feather.attr("table"));
+  TableReader* table = Rcpp::as<XPtr<TableReader> >(feather.attr("table")).get();
+  if (!table) Rcpp::stop("feather already closed");
+  return table;
 }
 
 
