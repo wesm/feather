@@ -15,6 +15,8 @@ NULL
 #' @export
 read_feather <- function(path, columns = NULL) {
   data <- feather(path)
+  on.exit(close(data), add = TRUE)
+
   if (is.null(columns))
     as_data_frame(data)
   else
