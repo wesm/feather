@@ -13,6 +13,11 @@ feather <- function(path) {
 }
 
 #' @export
+close.feather <- function(con, ...) {
+  closeFeather(con)
+}
+
+#' @export
 row.names.feather <- function(x) as.character(seq_len(nrow(x)))
 
 #' @export

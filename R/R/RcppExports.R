@@ -9,6 +9,10 @@ openFeather <- function(path) {
     .Call('feather_openFeather', PACKAGE = 'feather', path)
 }
 
+closeFeather <- function(feather) {
+    invisible(.Call('feather_closeFeather', PACKAGE = 'feather', feather))
+}
+
 rowsFeather <- function(feather) {
     .Call('feather_rowsFeather', PACKAGE = 'feather', feather)
 }

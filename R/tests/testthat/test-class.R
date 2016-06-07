@@ -37,3 +37,10 @@ test_that("invalid column indexes", {
   expect_error(iris.f[6], "bounds")
   expect_error(iris.f[3:6], "bounds")
 })
+
+test_that("close", {
+  iris.f2 <- feather(feather_example("iris.feather"))
+  expect_equal(nrow(iris.f2), 150L)
+  close(iris.f2)
+  expect_error(nrow(iris.f2), "feather already closed")
+})

@@ -28,6 +28,16 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// closeFeather
+void closeFeather(const List& feather);
+RcppExport SEXP feather_closeFeather(SEXP featherSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const List& >::type feather(featherSEXP);
+    closeFeather(feather);
+    return R_NilValue;
+END_RCPP
+}
 // rowsFeather
 double rowsFeather(const List& feather);
 RcppExport SEXP feather_rowsFeather(SEXP featherSEXP) {

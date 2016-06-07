@@ -76,8 +76,16 @@ List openFeather(const std::string& path) {
 }
 
 
+// [[Rcpp::export]]
+void closeFeather(const List& feather) {
+  Rcpp::as<XPtr<TableReader> >(feather.attr("table")).release();
+}
+
+
 TableReader* getTableFromFeather(const List& feather) {
-  return Rcpp::as<XPtr<TableReader> >(feather.attr("table"));
+  TableReader* table = Rcpp::as<XPtr<TableReader> >(feather.attr("table")).get();
+  if (!table) Rcpp::stop("feather already closed");
+  return table;
 }
 
 
