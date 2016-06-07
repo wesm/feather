@@ -26,7 +26,7 @@ RColType toRColType(FeatherColType x) {
     return R_RAW;
   }
   throw std::runtime_error("Invalid FeatherColType");
-};
+}
 
 RColType toRColType(const ColumnPtr& x) {
   switch(x->type()) {
