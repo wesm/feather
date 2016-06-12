@@ -32,7 +32,7 @@ static inline int64_t bytes_for_bits(int64_t size) {
 static constexpr uint8_t BITMASK[] = {1, 2, 4, 8, 16, 32, 64, 128};
 
 static inline bool get_bit(const uint8_t* bits, int i) {
-  return static_cast<bool>(bits[i / 8] & BITMASK[i % 8]);
+  return (bits[i / 8] & BITMASK[i % 8]) != 0;
 }
 
 static inline bool bit_not_set(const uint8_t* bits, int i) {

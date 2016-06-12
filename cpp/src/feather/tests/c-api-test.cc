@@ -38,7 +38,9 @@ class TestCAPI : public ::testing::Test {
     for (const std::string& path : tmp_paths_) {
       try {
         std::remove(path.c_str());
-      } catch (const std::exception& e) {}
+      } catch (const std::exception& e) {
+        (void) e;
+      }
     }
   }
 
@@ -138,7 +140,7 @@ bool cfeather_array_equals(const feather_array_t* lhs, const feather_array_t* rh
 TEST_F(TestCAPI, PrimitiveRoundTrip) {
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::bytes_for_bits(num_values);
+  int64_t null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;

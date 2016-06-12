@@ -102,7 +102,7 @@ PrimitiveArray MakePrimitive(PrimitiveType::type type,
 TEST_F(TestTableWriter, PrimitiveRoundTrip) {
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::bytes_for_bits(num_values);
+  int64_t null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;
@@ -135,7 +135,7 @@ TEST_F(TestTableWriter, CategoryRoundtrip) {
   int num_values = 1000;
   int num_nulls = 50;
   int num_levels = 10;
-  int null_bytes = util::bytes_for_bits(num_values);
+  int64_t null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;
@@ -168,7 +168,7 @@ TEST_F(TestTableWriter, CategoryRoundtrip) {
 TEST_F(TestTableWriter, TimestampRoundtrip) {
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::bytes_for_bits(num_values);
+  int64_t null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;
@@ -200,7 +200,7 @@ TEST_F(TestTableWriter, TimestampRoundtrip) {
 TEST_F(TestTableWriter, DateRoundtrip) {
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::bytes_for_bits(num_values);
+  int64_t null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;
@@ -224,7 +224,7 @@ TEST_F(TestTableWriter, DateRoundtrip) {
 TEST_F(TestTableWriter, TimeRoundtrip) {
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::bytes_for_bits(num_values);
+  int64_t null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;
@@ -254,7 +254,7 @@ TEST_F(TestTableWriter, VLenPrimitiveRoundTrip) {
   // UTF8 or BINARY
   int num_values = 1000;
   int num_nulls = 50;
-  int null_bytes = util::bytes_for_bits(num_values);
+  int64_t null_bytes = util::bytes_for_bits(num_values);
 
     // Generate some random data
   vector<uint8_t> null_buffer;
