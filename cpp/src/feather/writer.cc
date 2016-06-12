@@ -48,8 +48,12 @@ void TableWriter::SetNumRows(int64_t num_rows) {
 }
 
 Status TableWriter::Init() {
-  return stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
-      strlen(FEATHER_MAGIC_BYTES));
+  if (!initialized_stream_) {
+    RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
+            strlen(FEATHER_MAGIC_BYTES)));
+    initialized_stream_ = true;
+  }
+  return Status::OK();
 }
 
 Status TableWriter::Finalize() {
