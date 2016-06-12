@@ -8,6 +8,12 @@ Feather efficiently stores pandas DataFrame objects on disk.
 pip install feather-format
 ```
 
+From [conda-forge][1]:
+
+```shell
+conda install feather-format -c conda-forge
+```
+
 #### Mac notes
 
 Anaconda uses a default 10.5 deployment target which does not have C++11
@@ -69,3 +75,5 @@ Some features of pandas are not supported in Feather:
 * Non-string column names
 * Row indexes
 * Object-type columns with non-homogeneous data
+
+[1]: https://conda-forge.github.io
