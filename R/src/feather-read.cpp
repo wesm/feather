@@ -31,7 +31,7 @@ List metadataFeather(const std::string& path) {
   for (int j = 0; j < p; ++j) {
     auto col = getColumn(*table, j);
 
-    names[j] = col->name();
+    names[j] = Rf_mkCharCE(col->name().c_str(), CE_UTF8);
     types[j] = toString(toRColType(col));
   }
   types.attr("names") = names;
@@ -55,7 +55,7 @@ CharacterVector colnamesAsCharacterVector(const TableReader& table) {
   for (int i = 0; i < n; ++i) {
     auto col = getColumn(table, i);
 
-    names[i] = col->name();
+    names[i] = Rf_mkCharCE(col->name().c_str(), CE_UTF8);
   }
 
   return names;
@@ -106,7 +106,7 @@ List coldataFeather(const List& feather, const IntegerVector& indexes) {
   for (int i = 0; i < n; ++i) {
     auto col = getColumn(*table, indexes[i] - 1);
 
-    names[i] = col->name();
+    names[i] = Rf_mkCharCE(col->name().c_str(), CE_UTF8);
     out[i] = toSEXP(col);
   }
 
