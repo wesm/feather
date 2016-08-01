@@ -3,3 +3,4 @@
 ^src/feather/.*\.o$
 ^src/.*\.a$
 ^cran-comments\.md$
+^configure.win$
