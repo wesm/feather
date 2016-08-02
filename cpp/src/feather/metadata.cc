@@ -421,7 +421,7 @@ size_t Table::num_columns() const {
   return table->columns()->size();
 }
 
-std::shared_ptr<Column> Table::GetColumn(size_t i) const {
+std::shared_ptr<Column> Table::GetColumn(int i) const {
   const fbs::CTable* table = static_cast<const fbs::CTable*>(table_);
   const fbs::Column* col = table->columns()->Get(i);
 

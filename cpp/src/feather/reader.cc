@@ -29,7 +29,7 @@ TableReader::TableReader() {}
 Status TableReader::Open(const std::shared_ptr<RandomAccessReader>& source) {
   source_ = source;
 
-  int magic_size = strlen(FEATHER_MAGIC_BYTES);
+  int magic_size = static_cast<int>(strlen(FEATHER_MAGIC_BYTES));
   int footer_size = magic_size + sizeof(uint32_t);
 
   // Pathological issue where the file is smaller than

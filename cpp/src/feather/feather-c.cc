@@ -112,6 +112,7 @@ feather_writer_open_file(const char* path, feather_writer_t** out) {
     std::string str_path(path);
     FEATHER_CHECK_STATUS(TableWriter::OpenFile(str_path, &writer));
   } catch (const std::exception& e) {
+    (void) e;
     return FEATHER_OOM;
   }
   *out = reinterpret_cast<feather_writer_t*>(writer.release());
@@ -134,6 +135,7 @@ feather_writer_append_plain(feather_writer_t* self, const char* name,
     std::string cpp_name(name);
     return get_feather_status(writer->AppendPlain(cpp_name, cpp_values));
   } catch (const std::exception& e) {
+    (void) e;
     return FEATHER_OOM;
   }
 }
@@ -165,6 +167,7 @@ feather_reader_open_file(const char* path, feather_reader_t** out) {
     std::string str_path(path);
     FEATHER_CHECK_STATUS(TableReader::OpenFile(str_path, &reader));
   } catch (const std::exception& e) {
+    (void) e;
     return FEATHER_OOM;
   }
   *out = reinterpret_cast<feather_reader_t*>(reader.release());

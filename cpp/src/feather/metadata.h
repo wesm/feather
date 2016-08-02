@@ -161,7 +161,7 @@ class Table {
   int64_t num_rows() const;
 
   size_t num_columns() const;
-  std::shared_ptr<Column> GetColumn(size_t i) const;
+  std::shared_ptr<Column> GetColumn(int i) const;
   std::shared_ptr<Column> GetColumnNamed(const std::string& name) const;
 
  private:

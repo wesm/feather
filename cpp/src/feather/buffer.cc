@@ -35,7 +35,7 @@ Status OwnedMutableBuffer::Resize(int64_t new_size) {
   try {
     buffer_owner_.resize(new_size);
   } catch (const std::bad_alloc& e) {
-    return Status::OutOfMemory("allocation failed");
+    return Status::OutOfMemory(e.what());
   }
   data_ = buffer_owner_.data();
   mutable_data_ = buffer_owner_.data();

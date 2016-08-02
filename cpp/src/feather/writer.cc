@@ -67,7 +67,7 @@ Status TableWriter::Finalize() {
   // Writer metadata
   RETURN_NOT_OK(stream_->Write(buffer->data(), buffer->size()));
 
-  uint32_t buffer_size = buffer->size();
+  uint32_t buffer_size = static_cast<uint32_t>(buffer->size());
 
   // Footer: metadata length, magic bytes
   RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(&buffer_size),
@@ -86,7 +86,9 @@ Status TableWriter::AppendPrimitive(const PrimitiveArray& values,
   }
   meta->type = values.type;
   meta->encoding = Encoding::PLAIN;
-  meta->offset = stream_->Tell();
+
+  RETURN_NOT_OK(stream_->Tell(&meta->offset));
+
   meta->length = values.length;
   meta->null_count = values.null_count;
   meta->total_bytes = 0;

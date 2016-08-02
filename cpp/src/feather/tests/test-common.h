@@ -54,7 +54,7 @@ inline void assert_vector_equal(const vector<T>& left,
   }
 }
 
-static inline void random_bytes(int n, uint32_t seed, std::vector<uint8_t>* out) {
+static inline void random_bytes(int64_t n, uint32_t seed, std::vector<uint8_t>* out) {
   std::mt19937 gen(seed);
   std::uniform_int_distribution<int> d(0, 255);
 
@@ -63,7 +63,7 @@ static inline void random_bytes(int n, uint32_t seed, std::vector<uint8_t>* out)
   }
 }
 
-static inline void random_vlen_bytes(int n, int max_value_size, uint32_t seed,
+static inline void random_vlen_bytes(int64_t n, int max_value_size, uint32_t seed,
     std::vector<int32_t>* offsets, std::vector<uint8_t>* values) {
   std::mt19937 gen(seed);
 
