@@ -26,7 +26,7 @@ const class nullptr_t {
 public:
   template<class T> inline operator T*() const { return 0; }
 private:
-  void operator&() const;
+  void operator&() const; // NOLINT
 } nullptr = {};
 #  endif
 
