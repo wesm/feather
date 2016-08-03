@@ -467,7 +467,7 @@ Status MemoryMapReader::Tell(int64_t* pos) const {
 
 Status MemoryMapReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
   nbytes = std::min(nbytes, size_ - pos_);
-  *out = std::make_shared<Buffer>(data_ + pos_, nbytes);
+  *out = std::shared_ptr<Buffer>(new Buffer(data_ + pos_, nbytes));
   return Status::OK();
 }
 
@@ -514,7 +514,7 @@ Status InMemoryOutputStream::Tell(int64_t* pos) const {
 std::shared_ptr<Buffer> InMemoryOutputStream::Finish() {
   buffer_->Resize(size_);
   std::shared_ptr<Buffer> result = buffer_;
-  buffer_ = nullptr;
+  buffer_.reset();
 
   // TODO(wesm): raise exceptions if user calls Write after Finish
   size_ = 0;

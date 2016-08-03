@@ -12,21 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FEATHER_API_H
-#define FEATHER_API_H
+#ifndef FEATHER_COMPATIBILITY_H_
+#define FEATHER_COMPATIBILITY_H_
 
-#if _MSC_VER >= 1900
-  #undef timezone
+// Compatibility for older versions of gcc without full C++11 support
+#if defined(__GNUC__) && !defined(__clang__)
+# if __GNUC__ == 4 && __GNUC_MINOR__ < 6
+
+#  define FEATHER_CPP0X_COMPATIBLE
+
+#  ifndef nullptr
+const class nullptr_t {
+public:
+  template<class T> inline operator T*() const { return 0; }
+private:
+  void operator&() const;
+} nullptr = {};
+#  endif
+
+#  define constexpr
+#  define override
+
+# endif
 #endif
 
-#include "feather/compatibility.h"
-#include "feather/buffer.h"
-#include "feather/common.h"
-#include "feather/io.h"
-#include "feather/metadata.h"
-#include "feather/reader.h"
-#include "feather/status.h"
-#include "feather/types.h"
-#include "feather/writer.h"
-
-#endif // FEATHER_API_H
+#endif /* FEATHER_COMPATIBILITY_H_ */
