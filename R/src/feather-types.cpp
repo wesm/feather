@@ -104,7 +104,7 @@ void setMissing(SEXP x, const PrimitiveArray* val) {
 SEXP toSEXP(const PrimitiveArray* val) {
   int64_t n = val->length;
   RColType rType = toRColType(val->type);
-  SEXP out = Rf_allocVector(toSEXPTYPE(rType), n);
+  SEXP out = PROTECT(Rf_allocVector(toSEXPTYPE(rType), n));
 
   switch(val->type) {
   case PrimitiveType::BOOL: {
@@ -161,9 +161,10 @@ SEXP toSEXP(const PrimitiveArray* val) {
       uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
       int32_t n = offset2 - offset1;
 
-      SEXP raw = Rf_allocVector(RAWSXP, n);
+      SEXP raw = PROTECT(Rf_allocVector(RAWSXP, n));
       memcpy(RAW(out), asChar + offset1, n);
       SET_VECTOR_ELT(out, i, raw);
+      UNPROTECT(1);
     }
     break;
   }
@@ -172,6 +173,8 @@ SEXP toSEXP(const PrimitiveArray* val) {
   }
 
   setMissing(out, val);
+
+  UNPROTECT(1);
   return out;
 }
 
@@ -195,7 +198,7 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
   auto pValues = reinterpret_cast<const int64_t*>(pArray->values);
   int n = pArray->length;
 
-  SEXP out = Rf_allocVector(REALSXP, n);
+  SEXP out = PROTECT(Rf_allocVector(REALSXP, n));
   double* pOut = REAL(out);
 
   if (scale == 1) {
@@ -207,6 +210,7 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
   }
   setMissing(out, pArray);
 
+  UNPROTECT(1);
   return out;
 }
 
@@ -226,7 +230,7 @@ SEXP toSEXP(const ColumnPtr& x) {
   case feather::ColumnType::PRIMITIVE:
     return toSEXP(val);
   case feather::ColumnType::CATEGORY: {
-    IntegerVector out = Rf_allocVector(INTSXP, val->length);
+    IntegerVector out(val->length);
 
     // Add 1 to category values
     switch (val->type) {
