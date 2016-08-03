@@ -326,7 +326,7 @@ class ColumnBuilder::Impl {
 
   // Type-specific metadata union
   CategoryMetadata meta_category_;
-  DateMetadata meta_date_;
+  // DateMetadata meta_date_; // not used?
   TimeMetadata meta_time_;
 
   TimestampMetadata meta_timestamp_;
