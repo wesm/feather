@@ -21,13 +21,14 @@
 
 #  define FEATHER_CPP0X_COMPATIBLE
 
-#  ifndef nullptr
-const class nullptr_t {
+#  ifndef nullptr_t
+const class feather_nullptr_t {
 public:
   template<class T> inline operator T*() const { return 0; }
 private:
   void operator&() const; // NOLINT
 } nullptr = {};
+#   define nullptr_t feather_nullptr_t
 #  endif
 
 #  define constexpr
