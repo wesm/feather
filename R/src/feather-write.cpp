@@ -110,8 +110,8 @@ PrimitiveArray factorCodesToPrimitiveArray(SEXP x) {
   auto values = reinterpret_cast<int32_t*>(values_buffer->mutable_data());
 
   for (int i = 0; i < n; ++i) {
-    // Results of NA values don't matter as the value slots are undefined
-    values[i] = INTEGER(x)[i] - 1;
+    int value = INTEGER(x)[i];
+    values[i] = value == NA_INTEGER ? value : value - 1;
   }
 
   PrimitiveArray out;
