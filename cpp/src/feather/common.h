@@ -47,6 +47,12 @@ static inline void set_bit(uint8_t* bits, int i) {
   bits[i / 8] |= BITMASK[i % 8];
 }
 
+static inline void* fill_buffer(void* buffer, int value, size_t n) {
+  if (buffer && n)
+    ::memset(buffer, value, n);
+  return buffer;
+}
+
 } // namespace util
 
 } // namespace feather

@@ -13,7 +13,7 @@ std::shared_ptr<OwnedMutableBuffer> makeBoolBuffer(int n) {
 
   auto buffer = std::make_shared<OwnedMutableBuffer>();
   stopOnFailure(buffer->Resize(nbytes));
-  memset(buffer->mutable_data(), 0, nbytes);
+  util::fill_buffer(buffer->mutable_data(), 0, nbytes);
 
   return buffer;
 }
@@ -106,7 +106,7 @@ PrimitiveArray factorCodesToPrimitiveArray(SEXP x) {
 
   auto values_buffer = std::make_shared<OwnedMutableBuffer>();
   stopOnFailure(values_buffer->Resize(n * sizeof(int32_t)));
-  memset(values_buffer->mutable_data(), 0, n);
+  util::fill_buffer(values_buffer->mutable_data(), 0, n);
   auto values = reinterpret_cast<int32_t*>(values_buffer->mutable_data());
 
   for (int i = 0; i < n; ++i) {
@@ -137,7 +137,7 @@ PrimitiveArray rescaleToInt64(SEXP x, int64_t scale) {
 
   auto values_buffer = std::make_shared<OwnedMutableBuffer>();
   stopOnFailure(values_buffer->Resize(n * sizeof(int64_t) / sizeof(int8_t)));
-  memset(values_buffer->mutable_data(), 0, n);
+  util::fill_buffer(values_buffer->mutable_data(), 0, n);
   auto values = reinterpret_cast<int64_t*>(values_buffer->mutable_data());
 
   uint32_t n_missing = 0;
