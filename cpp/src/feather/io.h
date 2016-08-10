@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 
+#include "feather/compatibility.h"
+
 namespace feather {
 
 class Buffer;

@@ -26,10 +26,8 @@ namespace metadata {
 
 typedef flatbuffers::FlatBufferBuilder FBB;
 
-using FBString = flatbuffers::Offset<flatbuffers::String>;
-
-// Flatbuffers conveniences
-using ColumnVector = std::vector<flatbuffers::Offset<fbs::Column>>;
+typedef flatbuffers::Offset<flatbuffers::String> FBString;
+typedef std::vector<flatbuffers::Offset<fbs::Column>> ColumnVector;
 
 // ----------------------------------------------------------------------
 // Primitive array
@@ -186,8 +184,9 @@ TableBuilder::TableBuilder(int64_t num_rows) {
   impl_.reset(new Impl(num_rows));
 }
 
-TableBuilder::TableBuilder() :
-    TableBuilder(0) {}
+TableBuilder::TableBuilder() {
+  impl_.reset(new Impl(0));
+}
 
 std::shared_ptr<Buffer> TableBuilder::GetBuffer() const {
   return std::make_shared<Buffer>(impl_->fbb().GetBufferPointer(),
@@ -326,11 +325,9 @@ class ColumnBuilder::Impl {
   ColumnType::type type_;
 
   // Type-specific metadata union
-  union {
-    CategoryMetadata meta_category_;
-    DateMetadata meta_date_;
-    TimeMetadata meta_time_;
-  };
+  CategoryMetadata meta_category_;
+  // DateMetadata meta_date_; // not used?
+  TimeMetadata meta_time_;
 
   TimestampMetadata meta_timestamp_;
 
@@ -441,12 +438,12 @@ std::shared_ptr<Column> Table::GetColumn(int i) const {
       break;
   }
   // suppress compiler warning
-  return std::shared_ptr<Column>(nullptr);
+  return std::shared_ptr<Column>();
 }
 
 std::shared_ptr<Column> Table::GetColumnNamed(const std::string& name) const {
   // Not yet implemented
-  return std::shared_ptr<Column>(nullptr);
+  return std::shared_ptr<Column>();
 }
 
 // ----------------------------------------------------------------------

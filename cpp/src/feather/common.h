@@ -15,6 +15,8 @@
 #ifndef FEATHER_COMMON_H
 #define FEATHER_COMMON_H
 
+#include "feather/compatibility.h"
+
 namespace feather {
 
 static constexpr const char* FEATHER_MAGIC_BYTES = "FEA1";

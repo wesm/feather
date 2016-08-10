@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "feather/compatibility.h"
 #include "feather/buffer.h"
 #include "feather/types.h"
 

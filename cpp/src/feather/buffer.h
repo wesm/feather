@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 
+#include "feather/compatibility.h"
 #include "feather/status.h"
 
 namespace feather {
@@ -143,7 +144,7 @@ class BufferBuilder {
     } else {
       result = buffer_;
     }
-    buffer_ = nullptr;
+    buffer_.reset();
     return result;
   }
 
