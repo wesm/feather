@@ -217,8 +217,9 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
 template <typename T>
 static void write_factor_codes(const uint8_t* values, int length, int* out) {
   auto codes = reinterpret_cast<const T*>(values);
+  T maximum = std::numeric_limits<T>::min();
   for (int i = 0; i < length; ++i) {
-    out[i] = codes[i] + 1;
+    out[i] = codes[i] + (codes[i] != maximum);
   }
 }
 
