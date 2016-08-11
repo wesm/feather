@@ -199,7 +199,7 @@ cdef class FeatherReader:
 
         check_status(self.reader.get().GetColumn(i, &col))
         cp = col.get()
-        return cp.name()
+        return frombytes(cp.name())
 
 
 cdef category_to_pandas(Column* col):
