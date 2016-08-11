@@ -251,7 +251,7 @@ class TestFeatherReader(unittest.TestCase):
         data = {'foo': [1,2,3,4],
                 'boo': [5,6,7,8],
                 'woo': [1,3,5,7]}
-        columns = ['boo', 'woo']
+        columns = list(data.keys())[1:3]
         df = pd.DataFrame(data)
         expected = pd.DataFrame({c:data[c] for c in columns})
         self._check_pandas_roundtrip(df, expected, columns) 
