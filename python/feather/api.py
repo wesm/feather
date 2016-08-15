@@ -43,18 +43,26 @@ def read_dataframe(path, columns=None):
     """
     Read a pandas.DataFrame from Feather format
 
+    Parameters
+    ----------
+    path : string, path to read from
+    columns : optional, array-like, containing list of columns to read, or None to read all columns
+
     Returns
     -------
     df : pandas.DataFrame
-    """
+    """ 
     reader = ext.FeatherReader(path)
+
+    if columns is not None:
+        columns = set(columns)
 
     # TODO(wesm): pipeline conversion to Arrow memory layout
     data = {}
     names = []
     for i in range(reader.num_columns):
         name = reader.get_column_name(i)
-        if (columns is None) or (name in columns):
+        if columns is None or name in columns:
             name, arr = reader.read_array(i)
             data[name] = arr
             names.append(name)
