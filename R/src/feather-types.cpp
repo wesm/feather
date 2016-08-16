@@ -215,10 +215,18 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
 }
 
 template <typename T>
-static void write_factor_codes(const uint8_t* values, int length, int* out) {
-  auto codes = reinterpret_cast<const T*>(values);
-  for (int i = 0; i < length; ++i) {
-    out[i] = codes[i] + 1;
+static void write_factor_codes(const PrimitiveArray* arr, int* out) {
+  auto codes = reinterpret_cast<const T*>(arr->values);
+  T maximum = std::numeric_limits<T>::min();
+  if (arr->null_count > 0) {
+    for (int i = 0; i < arr->length; ++i) {
+      // The bit is 1 if it is not null
+      out[i] = util::get_bit(arr->nulls, i) ? codes[i] + 1 : NA_INTEGER;
+    }
+  } else {
+    for (int i = 0; i < arr->length; ++i) {
+      out[i] = codes[i] + 1;
+    }
   }
 }
 
@@ -235,16 +243,16 @@ SEXP toSEXP(const ColumnPtr& x) {
     // Add 1 to category values
     switch (val->type) {
       case PrimitiveType::INT8:
-        write_factor_codes<int8_t>(val->values, val->length, INTEGER(out));
+        write_factor_codes<int8_t>(val, INTEGER(out));
         break;
       case PrimitiveType::INT16:
-        write_factor_codes<int16_t>(val->values, val->length, INTEGER(out));
+        write_factor_codes<int16_t>(val, INTEGER(out));
         break;
       case PrimitiveType::INT32:
-        write_factor_codes<int32_t>(val->values, val->length, INTEGER(out));
+        write_factor_codes<int32_t>(val, INTEGER(out));
         break;
       case PrimitiveType::INT64:
-        write_factor_codes<int64_t>(val->values, val->length, INTEGER(out));
+        write_factor_codes<int64_t>(val, INTEGER(out));
         break;
       default:
         stop("Factor codes not a signed integer");

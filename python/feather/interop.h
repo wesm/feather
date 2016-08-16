@@ -123,7 +123,7 @@ class FeatherSerializer {
     auto buffer = std::make_shared<OwnedMutableBuffer>();
     RETURN_NOT_OK(buffer->Resize(null_bytes));
     out_->buffers.push_back(buffer);
-    memset(buffer->mutable_data(), 0, null_bytes);
+    util::fill_buffer(buffer->mutable_data(), 0, null_bytes);
     out_->nulls = buffer->data();
 
     null_bitmap_ = buffer->mutable_data();
@@ -206,7 +206,7 @@ class FeatherSerializer {
     RETURN_NOT_OK(buffer->Resize(nbytes));
     out_->buffers.push_back(buffer);
     uint8_t* bitmap = buffer->mutable_data();
-    memset(bitmap, 0, nbytes);
+    util::fill_buffer(bitmap, 0, nbytes);
 
     int64_t null_count = 0;
     for (int64_t i = 0; i < out_->length; ++i) {
@@ -376,7 +376,7 @@ inline Status FeatherSerializer<NPY_BOOL>::ConvertData() {
 
   uint8_t* bitmap = buffer->mutable_data();
 
-  memset(bitmap, 0, nbytes);
+  util::fill_buffer(bitmap, 0, nbytes);
   for (int i = 0; i < out_->length; ++i) {
     if (values[i] > 0) {
       util::set_bit(bitmap, i);
