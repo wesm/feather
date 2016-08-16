@@ -54,3 +54,8 @@ print.feather_metadata <- function(x, ...) {
   names <- format(encodeString(names(x$types), quote = "'"))
   cat(paste0("* ", names, ": ", x$types, "\n"), sep = "")
 }
+
+
+# Force import of hms package
+#' @importFrom hms hms
+NULL

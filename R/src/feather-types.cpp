@@ -217,7 +217,6 @@ SEXP rescaleFromInt64(const PrimitiveArray* pArray, double scale = 1) {
 template <typename T>
 static void write_factor_codes(const PrimitiveArray* arr, int* out) {
   auto codes = reinterpret_cast<const T*>(arr->values);
-  T maximum = std::numeric_limits<T>::min();
   if (arr->null_count > 0) {
     for (int i = 0; i < arr->length; ++i) {
       // The bit is 1 if it is not null
@@ -275,7 +274,8 @@ SEXP toSEXP(const ColumnPtr& x) {
     auto x_time = static_cast<feather::TimeColumn*>(x.get());
 
     DoubleVector out = rescaleFromInt64(val, timeScale(x_time->unit()));
-    out.attr("class") = "time";
+    out.attr("class") = CharacterVector::create("hms", "difftime");
+    out.attr("units") = "secs";
     return out;
   }
   case feather::ColumnType::TIMESTAMP: {

@@ -352,7 +352,7 @@ Status addColumn(std::unique_ptr<TableWriter>& table,
     return addCategoryColumn(table, name, x);
   } else if (Rf_inherits(x, "Date")) {
     return addDateColumn(table, name, x);
-  } else if (Rf_inherits(x, "time")) {
+  } else if (Rf_inherits(x, "time") || Rf_inherits(x, "hms")) {
     return addTimeColumn(table, name, x);
   } else if (Rf_inherits(x, "POSIXct")) {
     return addTimestampColumn(table, name, x);
