@@ -112,7 +112,8 @@ PrimitiveArray factorCodesToPrimitiveArray(SEXP x) {
   for (int i = 0; i < n; ++i) {
     int value = INTEGER(x)[i];
     // The null bits are set above
-    values[i] = value - 1;
+    if (value != NA_INTEGER)
+      values[i] = value - 1;
   }
 
   PrimitiveArray out;
