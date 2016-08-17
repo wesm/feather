@@ -189,6 +189,18 @@ cdef class FeatherReader:
 
         return frombytes(cp.name()), values
 
+    def get_column_name(self, int i):
+        cdef:
+            unique_ptr[Column] col
+            Column* cp
+
+        if i < 0 or i >= self.num_columns:
+            raise IndexError(i)
+
+        check_status(self.reader.get().GetColumn(i, &col))
+        cp = col.get()
+        return frombytes(cp.name())
+
 
 cdef category_to_pandas(Column* col):
     cdef CategoryColumn* cat = <CategoryColumn*>(col)
