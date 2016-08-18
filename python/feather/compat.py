@@ -88,6 +88,9 @@ def encode_file_path(path):
     # Windows requires utf-16le encoding for unicode file names
     if isinstance(path, unicode_type):
         if os.name == 'nt':
+            # try:
+            #     encoded_path = path.encode('ascii')
+            # except:
             encoded_path = path.encode('utf-16le')
         else:
             # POSIX systems can handle utf-8

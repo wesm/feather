@@ -63,7 +63,7 @@ cdef class FeatherWriter:
 
     def __cinit__(self, object name):
         cdef:
-            string c_name = tobytes(encode_file_path(name))
+            string c_name = encode_file_path(name)
 
         check_status(TableWriter.OpenFile(c_name, &self.writer))
         self.num_rows = -1
@@ -153,7 +153,7 @@ cdef class FeatherReader:
 
     def __cinit__(self, object name):
         cdef:
-            string c_name = tobytes(encode_file_path(name))
+            string c_name = encode_file_path(name)
 
         check_status(TableReader.OpenFile(c_name, &self.reader))
 
