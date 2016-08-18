@@ -76,6 +76,7 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <vector>
 
 #if defined(_MSC_VER)
 #include <codecvt>
