@@ -76,6 +76,12 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <vector>
+
+#if defined(_MSC_VER)
+#include <codecvt>
+#include <locale>
+#endif
 
 // ----------------------------------------------------------------------
 // file compatibility stuff
@@ -150,11 +156,23 @@ Status BufferReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
 // Cross-platform file compatability layer
 
 static inline Status CheckOpenResult(int ret, int errno_actual,
-    const char* filename) {
+    const char* filename, size_t filename_length) {
   if (ret == -1) {
     // TODO: errno codes to strings
     std::stringstream ss;
-    ss << "Failed to open file: " << filename;
+    ss << "Failed to open file: ";
+#if defined(_MSC_VER)
+    // using wchar_t
+
+    // this requires c++11
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    std::wstring wide_string(reinterpret_cast<const wchar_t*>(filename),
+        filename_length / sizeof(wchar_t));
+    std::string byte_string = converter.to_bytes(wide_string);
+    ss << byte_string;
+#else
+    ss << filename;
+#endif
     return Status::IOError(ss.str());
   }
   return Status::OK();
@@ -171,37 +189,53 @@ static inline int64_t lseek64_compat(int fd, int64_t pos, int whence) {
 #endif
 }
 
-static inline Status FileOpenReadable(const char* filename, int* fd) {
+static inline Status FileOpenReadable(const std::string& filename, int* fd) {
   int ret;
   errno_t errno_actual = 0;
-
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
-  errno_actual = _sopen_s(fd, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO,
-      _S_IREAD);
+
+  // See GH #209. Here we are assuming that the filename has been encoded in
+  // utf-16le so that unicode filenames can be supported
+  const int nwchars = static_cast<int>(filename.size()) / sizeof(wchar_t);
+  std::vector<wchar_t> wpath(nwchars + 1);
+  memcpy(wpath.data(), filename.data(), filename.size());
+  memcpy(wpath.data() + nwchars, L"\0", sizeof(wchar_t));
+
+  errno_actual = _wsopen_s(fd, wpath.data(),
+      _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
   ret = *fd;
 #else
-  ret = *fd = open(filename, O_RDONLY | O_BINARY);
+  ret = *fd = open(filename.c_str(), O_RDONLY | O_BINARY);
   errno_actual = errno;
 #endif
 
-  return CheckOpenResult(ret, errno_actual, filename);
+  return CheckOpenResult(ret, errno_actual, filename.c_str(),
+      filename.size());
 }
 
-static inline Status FileOpenWriteable(const char* filename, int* fd) {
+static inline Status FileOpenWriteable(const std::string& filename, int* fd) {
   int ret;
   errno_t errno_actual = 0;
 
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
-  errno_actual = _sopen_s(fd, filename, _O_WRONLY | _O_CREAT | _O_BINARY,
+  // Same story with wchar_t as above
+  const int nwchars = static_cast<int>(filename.size()) / sizeof(wchar_t);
+  std::vector<wchar_t> wpath(nwchars + 1);
+  memcpy(wpath.data(), filename.data(), filename.size());
+  memcpy(wpath.data() + nwchars, L"\0", sizeof(wchar_t));
+
+  errno_actual = _wsopen_s(fd, wpath.data(), _O_WRONLY | _O_CREAT | _O_BINARY,
       _SH_DENYNO, _S_IWRITE);
   ret = *fd;
+
 #else
-  ret = *fd = open(filename, O_WRONLY | O_CREAT | O_BINARY,
+  ret = *fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_BINARY,
       FEATHER_WRITE_SHMODE);
 #endif
-  return CheckOpenResult(ret, errno_actual, filename);
+  return CheckOpenResult(ret, errno_actual, filename.c_str(),
+      filename.size());
 }
 
 static inline Status FileTell(int fd, int64_t* pos) {
@@ -312,14 +346,14 @@ class FileInterface {
   ~FileInterface() {}
 
   Status OpenWritable(const std::string& path) {
-    RETURN_NOT_OK(FileOpenWriteable(path.c_str(), &fd_));
+    RETURN_NOT_OK(FileOpenWriteable(path, &fd_));
     path_ = path;
     is_open_ = true;
     return Status::OK();
   }
 
   Status OpenReadable(const std::string& path) {
-    RETURN_NOT_OK(FileOpenReadable(path.c_str(), &fd_));
+    RETURN_NOT_OK(FileOpenReadable(path, &fd_));
     RETURN_NOT_OK(FileGetSize(fd_, &size_));
 
     // The position should be 0 after GetSize
@@ -363,12 +397,6 @@ class FileInterface {
   }
 
   Status Write(const uint8_t* data, int64_t length) {
-    // fwrite(data, 1, length, fd_);
-    // if (ferror(fd_)) {
-    //   return Status::IOError("error writing bytes to file");
-    // }
-    // return Status::OK();
-
     return FileWrite(fd_, data, length);
   }
 

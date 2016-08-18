@@ -1,1 +1,1 @@
-xcopy ..\cpp\src src /s /e /y
+xcopy ..\cpp\src src /s /e /y /d

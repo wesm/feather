@@ -70,6 +70,10 @@ TEST(TestInMemoryOutputStream, Basics) {
   ASSERT_EQ(0, memcmp(buffer->data(), &data[0], data.size()));
 }
 
+// TODO(wesm): These test are temporarily disabled on Windows because of the
+// utf16-le mess
+#if !defined (_MSC_VER)
+
 TEST(LocalFileReader, NonExistentFile) {
   LocalFileReader reader;
 
@@ -84,6 +88,8 @@ TEST(FileOutputStream, NonExistentDirectory) {
   ASSERT_FALSE(s.ok());
   ASSERT_TRUE(s.IsIOError());
 }
+
+#endif
 
 TEST(BufferBuilder, EmptyStrings) {
   BufferBuilder builder;

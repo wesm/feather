@@ -83,6 +83,24 @@ else:
         return o.decode('utf8')
 
 
+def encode_file_path(path):
+    import os
+    # Windows requires utf-16le encoding for unicode file names
+    if isinstance(path, unicode_type):
+        if os.name == 'nt':
+            # try:
+            #     encoded_path = path.encode('ascii')
+            # except:
+            encoded_path = path.encode('utf-16le')
+        else:
+            # POSIX systems can handle utf-8
+            encoded_path = path.encode('utf-8')
+    else:
+        encoded_path = path
+
+    return encoded_path
+
+
 def guid():
     from uuid import uuid4
     guid = uuid4()
