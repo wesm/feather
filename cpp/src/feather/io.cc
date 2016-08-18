@@ -77,6 +77,11 @@
 #include <limits>
 #include <sstream>
 
+#if defined(_MSC_VER)
+#include <codecvt>
+#include <locale>
+#endif
+
 // ----------------------------------------------------------------------
 // file compatibility stuff
 
@@ -150,11 +155,23 @@ Status BufferReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
 // Cross-platform file compatability layer
 
 static inline Status CheckOpenResult(int ret, int errno_actual,
-    const char* filename) {
+    const char* filename, size_t filename_length) {
   if (ret == -1) {
     // TODO: errno codes to strings
     std::stringstream ss;
-    ss << "Failed to open file: " << filename;
+    ss << "Failed to open file: ";
+#if defined(_MSC_VER)
+    // using wchar_t
+
+    // this requires c++11
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    std::wstring wide_string(reinterpret_cast<const wchar_t*>(filename),
+        filename_length / sizeof(wchar_t));
+    std::string byte_string = converter.to_bytes(wide_string);
+    ss << byte_string;
+#else
+    ss << filename;
+#endif
     return Status::IOError(ss.str());
   }
   return Status::OK();
@@ -174,6 +191,7 @@ static inline int64_t lseek64_compat(int fd, int64_t pos, int whence) {
 static inline Status FileOpenReadable(const std::string& filename, int* fd) {
   int ret;
   errno_t errno_actual = 0;
+  const char* encoded_filename = filename.c_str();
 
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
@@ -188,18 +206,22 @@ static inline Status FileOpenReadable(const std::string& filename, int* fd) {
   errno_actual = _wsopen_s(fd, wpath.data(),
       _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
   ret = *fd;
+
+  encoded_filename = reinterpret_cast<const char*>(wpath.data());
 #else
-  ret = *fd = open(filename, O_RDONLY | O_BINARY);
+  ret = *fd = open(filename.c_str(), O_RDONLY | O_BINARY);
   errno_actual = errno;
   *fh = nullptr;
 #endif
 
-  return CheckOpenResult(ret, errno_actual, filename.c_str());
+  return CheckOpenResult(ret, errno_actual, filename.c_str(),
+      filename.size());
 }
 
 static inline Status FileOpenWriteable(const std::string& filename, int* fd) {
   int ret;
   errno_t errno_actual = 0;
+  const char* encoded_filename = filename.c_str();
 
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
@@ -213,17 +235,14 @@ static inline Status FileOpenWriteable(const std::string& filename, int* fd) {
       _SH_DENYNO, _S_IWRITE);
   ret = *fd;
 
-  // errno_actual = _wfopen_s(fh, reinterpret_cast<const wchar_t*>(filename),
-  //     L"wb");
-  // if (errno_actual == 0) {
-  //   ret = *fd = fileno(*fh);
-  // }
+  encoded_filename = reinterpret_cast<const char*>(wpath.data());
 #else
-  ret = *fd = open(filename, O_WRONLY | O_CREAT | O_BINARY,
+  ret = *fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_BINARY,
       FEATHER_WRITE_SHMODE);
   *fh = nullptr;
 #endif
-  return CheckOpenResult(ret, errno_actual, filename.c_str());
+  return CheckOpenResult(ret, errno_actual, filename.c_str(),
+      filename.size());
 }
 
 static inline Status FileTell(int fd, int64_t* pos) {
