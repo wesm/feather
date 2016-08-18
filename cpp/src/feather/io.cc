@@ -191,8 +191,6 @@ static inline int64_t lseek64_compat(int fd, int64_t pos, int whence) {
 static inline Status FileOpenReadable(const std::string& filename, int* fd) {
   int ret;
   errno_t errno_actual = 0;
-  const char* encoded_filename = filename.c_str();
-
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
 
@@ -206,12 +204,9 @@ static inline Status FileOpenReadable(const std::string& filename, int* fd) {
   errno_actual = _wsopen_s(fd, wpath.data(),
       _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
   ret = *fd;
-
-  encoded_filename = reinterpret_cast<const char*>(wpath.data());
 #else
   ret = *fd = open(filename.c_str(), O_RDONLY | O_BINARY);
   errno_actual = errno;
-  *fh = nullptr;
 #endif
 
   return CheckOpenResult(ret, errno_actual, filename.c_str(),
@@ -221,7 +216,6 @@ static inline Status FileOpenReadable(const std::string& filename, int* fd) {
 static inline Status FileOpenWriteable(const std::string& filename, int* fd) {
   int ret;
   errno_t errno_actual = 0;
-  const char* encoded_filename = filename.c_str();
 
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
@@ -235,11 +229,9 @@ static inline Status FileOpenWriteable(const std::string& filename, int* fd) {
       _SH_DENYNO, _S_IWRITE);
   ret = *fd;
 
-  encoded_filename = reinterpret_cast<const char*>(wpath.data());
 #else
   ret = *fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_BINARY,
       FEATHER_WRITE_SHMODE);
-  *fh = nullptr;
 #endif
   return CheckOpenResult(ret, errno_actual, filename.c_str(),
       filename.size());
