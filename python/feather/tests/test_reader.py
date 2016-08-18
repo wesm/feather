@@ -45,8 +45,10 @@ class TestFeatherReader(unittest.TestCase):
         with self.assertRaises(feather.FeatherError):
             FeatherReader('test_invalid_file')
 
-    def _check_pandas_roundtrip(self, df, expected=None):
-        path = random_path()
+    def _check_pandas_roundtrip(self, df, expected=None, path=None):
+        if path is None:
+            path = random_path()
+
         self.test_files.append(path)
         feather.write_dataframe(df, path)
         if not os.path.exists(path):
@@ -246,3 +248,9 @@ class TestFeatherReader(unittest.TestCase):
 
         expected = df.rename(columns=str)
         self._check_pandas_roundtrip(df, expected)
+
+    def test_unicode_filename(self):
+        # GH #209
+        name = (b'Besa_Kavaj\xc3\xab.feather').decode('utf-8')
+        df = pd.DataFrame({'foo': [1, 2, 3, 4]})
+        self._check_pandas_roundtrip(df, path=name)

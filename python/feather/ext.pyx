@@ -30,13 +30,14 @@ from numpy cimport ndarray
 cimport numpy as cnp
 import numpy as np
 
-from feather.compat import frombytes, tobytes
+from feather.compat import frombytes, tobytes, encode_file_path
 import six
 
 cnp.import_array()
 
 class FeatherError(Exception):
     pass
+
 
 cdef extern from "interop.h" namespace "feather::py":
     Status pandas_to_primitive(object ao, PrimitiveArray* out)
@@ -62,7 +63,7 @@ cdef class FeatherWriter:
 
     def __cinit__(self, object name):
         cdef:
-            string c_name = tobytes(name)
+            string c_name = tobytes(encode_file_path(name))
 
         check_status(TableWriter.OpenFile(c_name, &self.writer))
         self.num_rows = -1
@@ -152,7 +153,7 @@ cdef class FeatherReader:
 
     def __cinit__(self, object name):
         cdef:
-            string c_name = tobytes(name)
+            string c_name = tobytes(encode_file_path(name))
 
         check_status(TableReader.OpenFile(c_name, &self.reader))
 

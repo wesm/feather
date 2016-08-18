@@ -177,8 +177,11 @@ static inline Status FileOpenReadable(const char* filename, int* fd) {
 
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
-  errno_actual = _sopen_s(fd, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO,
-      _S_IREAD);
+
+  // See GH #209. Here we are assuming that the filename has been encoded in
+  // utf-16le so that unicode filenames can be supported
+  errno_actual = _wsopen_s(fd, static_cast<wchar_t*>(filename),
+      _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
   ret = *fd;
 #else
   ret = *fd = open(filename, O_RDONLY | O_BINARY);
@@ -194,8 +197,9 @@ static inline Status FileOpenWriteable(const char* filename, int* fd) {
 
 #if defined(_MSC_VER)
   // https://msdn.microsoft.com/en-us/library/w64k0ytk.aspx
-  errno_actual = _sopen_s(fd, filename, _O_WRONLY | _O_CREAT | _O_BINARY,
-      _SH_DENYNO, _S_IWRITE);
+  // Same story with wchar_t as above
+  errno_actual = _wsopen_s(fd, static_cast<wchar_t*>(filename),
+      _O_WRONLY | _O_CREAT | _O_BINARY, _SH_DENYNO, _S_IWRITE);
   ret = *fd;
 #else
   ret = *fd = open(filename, O_WRONLY | O_CREAT | O_BINARY,
