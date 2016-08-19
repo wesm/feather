@@ -1,4 +1,4 @@
-# feather 0.0.1.9000
+# feather 0.3.0
 
 * Added a `NEWS.md` file to track changes to the package.
 
