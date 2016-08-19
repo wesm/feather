@@ -45,7 +45,8 @@ class TestFeatherReader(unittest.TestCase):
         with self.assertRaises(feather.FeatherError):
             FeatherReader('test_invalid_file')
 
-    def _check_pandas_roundtrip(self, df, expected=None, path=None):
+    def _check_pandas_roundtrip(self, df, expected=None, path=None,
+                                columns=None):
         if path is None:
             path = random_path()
 
@@ -262,4 +263,4 @@ class TestFeatherReader(unittest.TestCase):
         columns = list(data.keys())[1:3]
         df = pd.DataFrame(data)
         expected = pd.DataFrame({c:data[c] for c in columns})
-        self._check_pandas_roundtrip(df, expected, columns)
+        self._check_pandas_roundtrip(df, expected, columns=columns)

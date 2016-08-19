@@ -157,6 +157,8 @@ class TableReader {
 
   Status GetColumn(int i, std::unique_ptr<Column>* out) const;
 
+  Status GetColumnMetadata(int i, std::shared_ptr<metadata::Column>* out) const;
+
  private:
   Status GetPrimitive(std::shared_ptr<metadata::Column> col_meta,
       std::unique_ptr<Column>* out) const;

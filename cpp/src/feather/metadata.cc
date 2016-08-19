@@ -484,6 +484,11 @@ ColumnType::type Column::type() const {
   return type_;
 }
 
+PrimitiveType::type Column::values_type() const {
+  return values_.type;
+}
+
+
 std::string Column::user_metadata() const {
   return user_metadata_;
 }

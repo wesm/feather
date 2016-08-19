@@ -147,6 +147,62 @@ cdef _unbox_series(col):
     return col_values
 
 
+cdef class Column:
+    cdef:
+        shared_ptr[CColumnMetadata] metadata
+        CColumnMetadata* mp
+        FeatherReader parent
+        int column_index
+
+    def __cinit__(self):
+        self.mp = NULL
+
+    cdef init(self, FeatherReader parent, int i):
+        cdef TableReader* tbl = parent.reader.get()
+
+        self.parent = parent
+        self.column_index = i
+
+        check_status(tbl.GetColumnMetadata(i, &self.metadata))
+        self.mp = self.metadata.get()
+
+    property name:
+
+        def __get__(self):
+            return frombytes(self.mp.name())
+
+    property type:
+
+        def __get__(self):
+            return self.mp.type()
+
+    property user_metadata:
+
+        def __get__(self):
+            return frombytes(self.mp.user_metadata())
+
+    def read(self):
+        cdef:
+            unique_ptr[CColumn] col
+            CColumn* cp
+
+        check_status(self.parent.reader.get()
+                     .GetColumn(self.column_index, &col))
+
+        cp = col.get()
+
+        if cp.type() == ColumnType_PRIMITIVE:
+            values = primitive_to_pandas(cp.values())
+        elif cp.type() == ColumnType_CATEGORY:
+            values = category_to_pandas(cp)
+        elif cp.type() == ColumnType_TIMESTAMP:
+            values = timestamp_to_pandas(cp)
+        else:
+            raise NotImplementedError(cp.type())
+
+        return values
+
+
 cdef class FeatherReader:
     cdef:
         unique_ptr[TableReader] reader
@@ -167,43 +223,17 @@ cdef class FeatherReader:
         def __get__(self):
             return self.reader.get().num_columns()
 
-    def read_array(self, int i):
-        cdef:
-            unique_ptr[Column] col
-            Column* cp
-
+    def get_column(self, int i):
         if i < 0 or i >= self.num_columns:
             raise IndexError(i)
 
-        check_status(self.reader.get().GetColumn(i, &col))
+        cdef Column col = Column()
+        col.init(self, i)
 
-        cp = col.get()
-
-        if cp.type() == ColumnType_PRIMITIVE:
-            values = primitive_to_pandas(cp.values())
-        elif cp.type() == ColumnType_CATEGORY:
-            values = category_to_pandas(cp)
-        elif cp.type() == ColumnType_TIMESTAMP:
-            values = timestamp_to_pandas(cp)
-        else:
-            raise NotImplementedError(cp.type())
-
-        return frombytes(cp.name()), values
-
-    def get_column_name(self, int i):
-        cdef:
-            unique_ptr[Column] col
-            Column* cp
-
-        if i < 0 or i >= self.num_columns:
-            raise IndexError(i)
-
-        check_status(self.reader.get().GetColumn(i, &col))
-        cp = col.get()
-        return frombytes(cp.name())
+        return col
 
 
-cdef category_to_pandas(Column* col):
+cdef category_to_pandas(CColumn* col):
     cdef CategoryColumn* cat = <CategoryColumn*>(col)
 
     values = primitive_to_pandas(cat.values())
@@ -212,7 +242,7 @@ cdef category_to_pandas(Column* col):
     return pd.Categorical(values, categories=levels,
                           fastpath=True)
 
-cdef timestamp_to_pandas(Column* col):
+cdef timestamp_to_pandas(CColumn* col):
     cdef TimestampColumn* cat = <TimestampColumn*>(col)
 
     values = primitive_to_pandas(cat.values())

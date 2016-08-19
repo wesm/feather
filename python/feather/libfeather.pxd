@@ -173,15 +173,20 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
 
         Status Finalize()
 
-    cdef cppclass Column:
+    cdef cppclass CColumn" feather::Column":
         const PrimitiveArray& values()
         ColumnType type()
         string name()
 
-    cdef cppclass CategoryColumn(Column):
+    cdef cppclass CColumnMetadata" feather::metadata::Column":
+        string name() const
+        ColumnType type() const
+        string user_metadata() const
+
+    cdef cppclass CategoryColumn(CColumn):
         const PrimitiveArray& levels()
 
-    cdef cppclass TimestampColumn(Column):
+    cdef cppclass TimestampColumn(CColumn):
         TimeUnit unit()
         string timezone()
 
@@ -197,4 +202,5 @@ cdef extern from "feather/api.h" namespace "feather" nogil:
         int64_t num_rows()
         int64_t num_columns()
 
-        Status GetColumn(int i, unique_ptr[Column]* out)
+        Status GetColumn(int i, unique_ptr[CColumn]* out)
+        Status GetColumnMetadata(int i, shared_ptr[CColumnMetadata]* out)
