@@ -208,4 +208,10 @@ Status TableReader::GetColumn(int i, std::unique_ptr<Column>* out) const {
   return Status::OK();
 }
 
+Status TableReader::GetColumnMetadata(int i,
+    std::shared_ptr<metadata::Column>* out) const {
+  *out = metadata_.GetColumn(i);
+  return Status::OK();
+}
+
 } // namespace feather

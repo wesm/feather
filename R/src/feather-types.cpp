@@ -4,7 +4,7 @@ using namespace Rcpp;
 #include "feather-types.h"
 using namespace feather;
 
-RColType toRColType(FeatherColType x) {
+RColType toRColType(FeatherPrimitiveType x) {
   switch(x) {
   case PrimitiveType::BOOL:
     return R_LGL;
@@ -28,10 +28,10 @@ RColType toRColType(FeatherColType x) {
   throw std::runtime_error("Invalid FeatherColType");
 }
 
-RColType toRColType(const ColumnPtr& x) {
-  switch(x->type()) {
+RColType toRColType(FeatherColumnType col_type, FeatherPrimitiveType primitive_type) {
+  switch(col_type) {
   case feather::ColumnType::PRIMITIVE:
-    return toRColType(x->metadata()->values().type);
+    return toRColType(primitive_type);
   case feather::ColumnType::CATEGORY:
     return R_FACTOR;
   case feather::ColumnType::TIMESTAMP:

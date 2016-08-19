@@ -15,10 +15,11 @@
 import six
 from distutils.version import LooseVersion
 import pandas as pd
-if LooseVersion(pd.__version__) < '0.17.0':
-    raise ImportError("feather requires pandas >= 0.17.0")
 
 import feather.ext as ext
+
+if LooseVersion(pd.__version__) < '0.17.0':
+    raise ImportError("feather requires pandas >= 0.17.0")
 
 
 def write_dataframe(df, path):
@@ -43,19 +44,32 @@ def read_dataframe(path, columns=None):
     """
     Read a pandas.DataFrame from Feather format
 
+    Parameters
+    ----------
+    path : string, path to read from
+    columns : sequence, optional
+        Only read a specific set of columns. If not provided, all columns are
+        read
+
     Returns
     -------
     df : pandas.DataFrame
     """
     reader = ext.FeatherReader(path)
 
+    if columns is not None:
+        columns = set(columns)
+
     # TODO(wesm): pipeline conversion to Arrow memory layout
     data = {}
     names = []
     for i in range(reader.num_columns):
-        name, arr = reader.read_array(i)
-        data[name] = arr
-        names.append(name)
+        col = reader.get_column(i)
+        name = col.name
+        if columns is None or name in columns:
+            arr = col.read()
+            data[name] = arr
+            names.append(name)
 
     # TODO(wesm):
     return pd.DataFrame(data, columns=names)

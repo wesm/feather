@@ -87,6 +87,8 @@ class Column {
   std::string name() const;
   ColumnType::type type() const;
 
+  PrimitiveType::type values_type() const;
+
   std::string user_metadata() const;
 
   const ArrayMetadata& values() const {
