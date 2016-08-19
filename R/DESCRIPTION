@@ -23,5 +23,5 @@ Imports:
 Suggests:
     testthat,
     dplyr
-SystemRequirements: gcc-compatible compiler, little-endian platform
+SystemRequirements: little-endian platform
 RoxygenNote: 5.0.1
