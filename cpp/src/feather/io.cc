@@ -503,7 +503,7 @@ Status MemoryMapReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
 // ----------------------------------------------------------------------
 // Generic output stream
 
-static const uint8_t kPaddingBytes[FEATHER_DEFAULT_ALIGNMENT] = {0};
+static const uint8_t kPaddingBytes[kFeatherDefaultAlignment] = {0};
 
 Status OutputStream::WritePadded(const uint8_t* data, int64_t length,
     int64_t* bytes_written) {

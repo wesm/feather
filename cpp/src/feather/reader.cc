@@ -16,6 +16,7 @@
 
 #include <cstring>
 #include <memory>
+#include <sstream>
 
 #include "feather/buffer.h"
 #include "feather/common.h"
@@ -60,6 +61,13 @@ Status TableReader::Open(const std::shared_ptr<RandomAccessReader>& source) {
 
   if (!metadata_.Open(buffer)) {
     return Status::Invalid("Invalid file metadata");
+  }
+
+  if (metadata_.version() < kFeatherVersion) {
+    std::stringstream ss;
+    ss << "Feather file is version " << metadata_.version()
+       << " but only able to read files with version " << kFeatherVersion;
+    return Status::Invalid(ss.str());
   }
 
   return Status::OK();

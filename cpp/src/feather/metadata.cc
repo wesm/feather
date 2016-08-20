@@ -17,6 +17,7 @@
 #include <cstdint>
 
 #include "feather/buffer.h"
+#include "feather/common.h"
 #include "feather/metadata_generated.h"
 #include "feather/status.h"
 
@@ -124,8 +125,6 @@ fbs::TypeMetadata ToFlatbufferEnum(ColumnType::type column_type) {
 // ----------------------------------------------------------------------
 // TableBuilder
 
-static constexpr int FEATHER_VERSION = 1;
-
 class TableBuilder::Impl {
  public:
   explicit Impl(int64_t num_rows) :
@@ -152,7 +151,7 @@ class TableBuilder::Impl {
         desc,
         num_rows_,
         fbb_.CreateVector(columns_),
-        FEATHER_VERSION, metadata);
+        kFeatherVersion, metadata);
     fbb_.Finish(root);
     finished_ = true;
 
