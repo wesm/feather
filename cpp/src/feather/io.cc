@@ -105,6 +105,7 @@
 // other feather includes
 
 #include "feather/buffer.h"
+#include "feather/common.h"
 #include "feather/status.h"
 
 namespace feather {
@@ -496,6 +497,23 @@ Status MemoryMapReader::Tell(int64_t* pos) const {
 Status MemoryMapReader::Read(int64_t nbytes, std::shared_ptr<Buffer>* out) {
   nbytes = std::min(nbytes, size_ - pos_);
   *out = std::shared_ptr<Buffer>(new Buffer(data_ + pos_, nbytes));
+  return Status::OK();
+}
+
+// ----------------------------------------------------------------------
+// Generic output stream
+
+static const uint8_t kPaddingBytes[FEATHER_DEFAULT_ALIGNMENT] = {0};
+
+Status OutputStream::WritePadded(const uint8_t* data, int64_t length,
+    int64_t* bytes_written) {
+  RETURN_NOT_OK(Write(data, length));
+
+  int64_t remainder = PaddedLength(length) - length;
+  if (remainder != 0) {
+    RETURN_NOT_OK(Write(kPaddingBytes, remainder));
+  }
+  *bytes_written = length + remainder;
   return Status::OK();
 }
 

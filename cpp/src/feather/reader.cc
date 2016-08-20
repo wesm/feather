@@ -107,14 +107,14 @@ Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta,
   // If there are nulls, the null bitmask is first
   if (meta.null_count > 0) {
     out->nulls = data;
-    data += util::bytes_for_bits(meta.length);
+    data += PaddedLength(util::bytes_for_bits(meta.length));
   } else {
     out->nulls = nullptr;
   }
 
   if (IsVariableLength(meta.type)) {
     out->offsets = reinterpret_cast<const int32_t*>(data);
-    data += (meta.length + 1) * sizeof(int32_t);
+    data += PaddedLength((meta.length + 1) * sizeof(int32_t));
   }
 
   // TODO(wesm): dictionary encoded values
