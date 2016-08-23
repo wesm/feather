@@ -15,8 +15,8 @@
 #include "feather/reader.h"
 
 #include <cstring>
+#include <iostream>
 #include <memory>
-#include <sstream>
 
 #include "feather/buffer.h"
 #include "feather/common.h"
@@ -64,10 +64,9 @@ Status TableReader::Open(const std::shared_ptr<RandomAccessReader>& source) {
   }
 
   if (metadata_.version() < kFeatherVersion) {
-    std::stringstream ss;
-    ss << "Feather file is version " << metadata_.version()
-       << " but only able to read files with version " << kFeatherVersion;
-    return Status::Invalid(ss.str());
+    std::cout << "This Feather file is old"
+              << " and will not be readable beyond the 0.3.0 release"
+              << std::endl;
   }
 
   return Status::OK();
