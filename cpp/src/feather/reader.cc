@@ -102,6 +102,17 @@ int64_t TableReader::num_columns() const {
   return metadata_.num_columns();
 }
 
+// XXX: Hack for Feather 0.3.0 for backwards compatibility with old files
+// Size in-file of written byte buffer
+static int64_t GetOutputLength(int64_t nbytes) {
+  if (kFeatherVersion < 2) {
+    // Feather files < 0.3.0
+    return nbytes;
+  } else {
+    return PaddedLength(nbytes);
+  }
+}
+
 Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta,
     PrimitiveArray* out) const {
   // Buffer data from the source (may or may not perform a copy depending on
@@ -115,14 +126,14 @@ Status TableReader::GetPrimitiveArray(const ArrayMetadata& meta,
   // If there are nulls, the null bitmask is first
   if (meta.null_count > 0) {
     out->nulls = data;
-    data += PaddedLength(util::bytes_for_bits(meta.length));
+    data += GetOutputLength(util::bytes_for_bits(meta.length));
   } else {
     out->nulls = nullptr;
   }
 
   if (IsVariableLength(meta.type)) {
     out->offsets = reinterpret_cast<const int32_t*>(data);
-    data += PaddedLength((meta.length + 1) * sizeof(int32_t));
+    data += GetOutputLength((meta.length + 1) * sizeof(int32_t));
   }
 
   // TODO(wesm): dictionary encoded values
