@@ -133,6 +133,10 @@ class OutputStream {
   virtual Status Tell(int64_t* pos) const = 0;
 
   virtual Status Write(const uint8_t* data, int64_t length) = 0;
+
+  // Call Write and add additional padding bytes if length is not a multiple of
+  // the alignment parameter
+  Status WritePadded(const uint8_t* data, int64_t length, int64_t* bytes_written);
 };
 
 

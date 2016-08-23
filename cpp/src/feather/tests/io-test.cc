@@ -70,6 +70,28 @@ TEST(TestInMemoryOutputStream, Basics) {
   ASSERT_EQ(0, memcmp(buffer->data(), &data[0], data.size()));
 }
 
+TEST(TestInMemoryOutputStream, WritePadded) {
+  std::unique_ptr<InMemoryOutputStream> stream(new InMemoryOutputStream(8));
+  std::vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+
+  int64_t bytes_written;
+  ASSERT_OK(stream->WritePadded(data.data(), static_cast<int64_t>(data.size()),
+          &bytes_written));
+
+  ASSERT_EQ(16, bytes_written);
+
+  int64_t pos;
+  ASSERT_OK(stream->Tell(&pos));
+  ASSERT_EQ(16, pos);
+
+  const uint8_t padding_bytes[16] = {0};
+  std::shared_ptr<Buffer> buffer = stream->Finish();
+
+  ASSERT_EQ(16, buffer->size());
+  ASSERT_EQ(0, memcmp(buffer->data() + data.size(), padding_bytes,
+          buffer->size() - data.size()));
+}
+
 // TODO(wesm): These test are temporarily disabled on Windows because of the
 // utf16-le mess
 #if !defined (_MSC_VER)

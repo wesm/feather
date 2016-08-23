@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "feather/common.h"
 #include "feather/metadata.h"
 
 namespace feather {
@@ -45,7 +46,7 @@ class TestTableBuilder : public ::testing::Test {
 
 TEST_F(TestTableBuilder, Version) {
   Finish();
-  ASSERT_EQ(1, table_->version());
+  ASSERT_EQ(kFeatherVersion, table_->version());
 }
 
 TEST_F(TestTableBuilder, EmptyTable) {

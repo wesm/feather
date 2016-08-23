@@ -49,8 +49,10 @@ void TableWriter::SetNumRows(int64_t num_rows) {
 
 Status TableWriter::Init() {
   if (!initialized_stream_) {
-    RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
-            strlen(FEATHER_MAGIC_BYTES)));
+    int64_t bytes_written_unused;
+    RETURN_NOT_OK(stream_->WritePadded(
+            reinterpret_cast<const uint8_t*>(FEATHER_MAGIC_BYTES),
+            strlen(FEATHER_MAGIC_BYTES), &bytes_written_unused));
     initialized_stream_ = true;
   }
   return Status::OK();
@@ -65,9 +67,9 @@ Status TableWriter::Finalize() {
   auto buffer = metadata_.GetBuffer();
 
   // Writer metadata
-  RETURN_NOT_OK(stream_->Write(buffer->data(), buffer->size()));
-
-  uint32_t buffer_size = static_cast<uint32_t>(buffer->size());
+  int64_t bytes_written;
+  RETURN_NOT_OK(stream_->WritePadded(buffer->data(), buffer->size(), &bytes_written));
+  uint32_t buffer_size = static_cast<uint32_t>(bytes_written);
 
   // Footer: metadata length, magic bytes
   RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(&buffer_size),
@@ -93,14 +95,16 @@ Status TableWriter::AppendPrimitive(const PrimitiveArray& values,
   meta->null_count = values.null_count;
   meta->total_bytes = 0;
 
+  int64_t bytes_written;
+
   // Write the null bitmask
   if (values.null_count > 0) {
     // We assume there is one bit for each value in values.nulls, aligned on a
     // byte boundary, and we write this much data into the stream
     size_t null_bytes = util::bytes_for_bits(values.length);
 
-    RETURN_NOT_OK(stream_->Write(values.nulls, null_bytes));
-    meta->total_bytes += null_bytes;
+    RETURN_NOT_OK(stream_->WritePadded(values.nulls, null_bytes, &bytes_written));
+    meta->total_bytes += bytes_written;
   }
 
   size_t value_byte_size = ByteSize(values.type);
@@ -112,9 +116,9 @@ Status TableWriter::AppendPrimitive(const PrimitiveArray& values,
     values_bytes = values.offsets[values.length] * value_byte_size;
 
     // Write the variable-length offsets
-    RETURN_NOT_OK(stream_->Write(reinterpret_cast<const uint8_t*>(values.offsets),
-            offset_bytes));
-    meta->total_bytes += offset_bytes;
+    RETURN_NOT_OK(stream_->WritePadded(reinterpret_cast<const uint8_t*>(values.offsets),
+            offset_bytes, &bytes_written));
+    meta->total_bytes += bytes_written;
   } else {
     if (values.type == PrimitiveType::BOOL) {
       // Booleans are bit-packed
@@ -123,8 +127,8 @@ Status TableWriter::AppendPrimitive(const PrimitiveArray& values,
       values_bytes = values.length * value_byte_size;
     }
   }
-  RETURN_NOT_OK(stream_->Write(values.values, values_bytes));
-  meta->total_bytes += values_bytes;
+  RETURN_NOT_OK(stream_->WritePadded(values.values, values_bytes, &bytes_written));
+  meta->total_bytes += bytes_written;
 
   return Status::OK();
 }
