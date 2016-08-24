@@ -33,7 +33,7 @@ if Cython.__version__ < '0.19.1':
     raise Exception('Please upgrade to Cython 0.19.1 or newer')
 
 MAJOR = 0
-MINOR = 2
+MINOR = 3
 MICRO = 0
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 ISRELEASED = True
