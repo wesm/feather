@@ -4,3 +4,4 @@
 ^src/.*\.a$
 ^cran-comments\.md$
 ^configure.win$
+^revdep$
