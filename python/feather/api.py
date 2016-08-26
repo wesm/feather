@@ -27,6 +27,9 @@ def write_dataframe(df, path):
     Write a pandas.DataFrame to Feather format
     '''
     writer = ext.FeatherWriter(path)
+    
+    if isinstance(df, pd.sparse.frame.SparseDataFrame):
+        df = df.to_dense()
 
     # TODO(wesm): pipeline conversion to Arrow memory layout
     for i, name in enumerate(df.columns):
