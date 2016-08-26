@@ -264,3 +264,8 @@ class TestFeatherReader(unittest.TestCase):
         df = pd.DataFrame(data)
         expected = pd.DataFrame({c:data[c] for c in columns})
         self._check_pandas_roundtrip(df, expected, columns=columns)
+        
+    def test_sparse_dataframe(self):
+        # GH #221
+        df = pd.DataFrame([[0,1],[1,1]]).to_sparse(fill_value=1)
+        self._check_pandas_roundtrip(df)
