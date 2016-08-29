@@ -268,4 +268,5 @@ class TestFeatherReader(unittest.TestCase):
     def test_sparse_dataframe(self):
         # GH #221
         df = pd.DataFrame([[0,1],[1,1]]).to_sparse(fill_value=1)
-        self._check_pandas_roundtrip(df)
+        expected = df.to_dense()
+        self._check_pandas_roundtrip(df, expected)
