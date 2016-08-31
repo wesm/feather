@@ -28,7 +28,7 @@ def write_dataframe(df, path):
     '''
     writer = ext.FeatherWriter(path)
     
-    if isinstance(df, pd.sparse.frame.SparseDataFrame):
+    if isinstance(df, pd.SparseDataFrame):
         df = df.to_dense()
 
     # TODO(wesm): pipeline conversion to Arrow memory layout
