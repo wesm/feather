@@ -1,0 +1,11 @@
+<html>
+  <head>
+    <script src="http://d3js.org/d3.v4.js"></script>
+    <script src="metadata_generated.js"></script>
+    <script src="bytebuffer.js"></script>
+    <script src="flatbuffers.js"></script>
+    <script src="main.js"></script>
+  </head>
+  <body>
+  </body>
+</html>
