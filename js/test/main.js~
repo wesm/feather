@@ -1,5 +1,0 @@
-d3.request("feather/iris.feather")
-    .responseType("arraybuffer")
-    .get(function() {
-        debugger;
-    });
