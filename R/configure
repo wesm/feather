@@ -1,5 +1,7 @@
 # Check for little-endian system
 R_ENDIAN=`${R_HOME}/bin/Rscript -e 'cat(.Platform$endian)'`
+# Trim off any warning messages that Rscript appends in front of the platform endianness
+R_ENDIAN=`expr "$R_ENDIAN" : '.*\(little\)$'`
 if [ "$R_ENDIAN" = "little" ]; then
     echo "Platform is little endian. Good."
     exit 0
