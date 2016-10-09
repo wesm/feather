@@ -24,7 +24,7 @@ from cython.operator cimport dereference as deref
 from libfeather cimport *
 
 import pandas as pd
-import pandas.api.types as pdapi
+from feather.compat import pdapi
 
 from numpy cimport ndarray
 cimport numpy as cnp
