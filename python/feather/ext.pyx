@@ -95,6 +95,12 @@ cdef class FeatherWriter:
             PrimitiveArray levels
 
         col_values = _unbox_series(col)
+        dataype_nulls = col_values.codes == -1
+        if dataype_nulls.any():
+            if mask is None:
+                mask = dataype_nulls
+            else:
+                mask = mask | dataype_nulls
 
         self.write_ndarray(col_values.codes, mask, &values)
         check_status(pandas_to_primitive(np.asarray(col_values.categories),
@@ -248,6 +254,7 @@ cdef category_to_pandas(CColumn* col):
     cdef CategoryColumn* cat = <CategoryColumn*>(col)
 
     values = primitive_to_pandas(cat.values())
+    values[np.isnan(values)] = -1
     levels = primitive_to_pandas(cat.levels())
 
     return pd.Categorical(values, categories=levels,
