@@ -181,6 +181,17 @@ cdef class Column:
         def __get__(self):
             return frombytes(self.mp.user_metadata())
 
+    property null_count:
+        def __get__(self):
+            cdef:
+                unique_ptr[CColumn] col
+                CColumn* cp
+
+            check_status(self.parent.reader.get()
+                .GetColumn(self.column_index, &col))
+
+            return col.get().values().null_count
+
     def read(self):
         cdef:
             unique_ptr[CColumn] col
