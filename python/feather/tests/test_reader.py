@@ -215,7 +215,7 @@ class TestFeatherReader(unittest.TestCase):
         values = [b'foo', None, u'bar', 'qux', np.nan]
         df = pd.DataFrame({'strings': values * repeats})
 
-        values = ['foo', None, u'bar', 'qux', None]
+        values = ['foo', None, 'bar', 'qux', None]
         expected = pd.DataFrame({'strings': values * repeats})
         self._check_pandas_roundtrip(df, expected)
 
@@ -234,7 +234,10 @@ class TestFeatherReader(unittest.TestCase):
         values = ['foo', None, u'bar', 'qux', np.nan]
         df = pd.DataFrame({'strings': values * repeats})
         df['strings'] = df['strings'].astype('category')
-        self._check_pandas_roundtrip(df)
+
+        values = ['foo', None, 'bar', 'qux', None]
+        expected = pd.DataFrame({'strings': pd.Categorical(values * repeats)})
+        self._check_pandas_roundtrip(df,expected)
 
     def test_timestamp(self):
         df = pd.DataFrame({'naive': pd.date_range('2016-03-28', periods=10)})
