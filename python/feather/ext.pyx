@@ -24,7 +24,7 @@ from cython.operator cimport dereference as deref
 from libfeather cimport *
 
 import pandas as pd
-import pandas.core.common as pdcom
+from feather.compat import pdapi
 
 from numpy cimport ndarray
 cimport numpy as cnp
@@ -81,9 +81,9 @@ cdef class FeatherWriter:
         else:
             self.num_rows = len(col)
 
-        if pdcom.is_categorical_dtype(col.dtype):
+        if pdapi.is_categorical_dtype(col.dtype):
             self.write_category(name, col, mask)
-        elif pdcom.is_datetime64_any_dtype(col.dtype):
+        elif pdapi.is_datetime64_any_dtype(col.dtype):
             self.write_timestamp(name, col, mask)
         else:
             self.write_primitive(name, col, mask)
