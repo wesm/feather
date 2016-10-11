@@ -30,6 +30,11 @@ def random_path():
     return 'feather_{}'.format(guid())
 
 
+class TestFeather(unittest.TestCase):
+
+    def test_versioning(self):
+        assert feather.__version__ is not None
+
 class TestFeatherReader(unittest.TestCase):
 
     def setUp(self):
@@ -287,7 +292,7 @@ class TestFeatherReader(unittest.TestCase):
         df = pd.DataFrame(data)
         expected = pd.DataFrame({c:data[c] for c in columns})
         self._check_pandas_roundtrip(df, expected, columns=columns)
-        
+
     def test_sparse_dataframe(self):
         # GH #221
         data = {'A': [0,1,2],
