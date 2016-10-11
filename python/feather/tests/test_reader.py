@@ -77,6 +77,18 @@ class TestFeatherReader(unittest.TestCase):
 
         np.testing.assert_array_equal(self._get_null_counts(path, columns), null_counts)
 
+    def _assert_error_on_write(self, df, exc, path=None):
+        # check that we are raising the exception
+        # on writing
+
+        if path is None:
+            path = random_path()
+
+        self.test_files.append(path)
+        def f():
+            feather.write_dataframe(df, path)
+        self.assertRaises(exc, f)
+
     def test_num_rows_attr(self):
         df = pd.DataFrame({'foo': [1, 2, 3, 4, 5]})
         path = random_path()
@@ -287,7 +299,7 @@ class TestFeatherReader(unittest.TestCase):
         df = pd.DataFrame(data)
         expected = pd.DataFrame({c:data[c] for c in columns})
         self._check_pandas_roundtrip(df, expected, columns=columns)
-        
+
     def test_sparse_dataframe(self):
         # GH #221
         data = {'A': [0,1,2],
@@ -295,3 +307,23 @@ class TestFeatherReader(unittest.TestCase):
         df = pd.DataFrame(data).to_sparse(fill_value=1)
         expected = df.to_dense()
         self._check_pandas_roundtrip(df, expected)
+
+    def test_duplicate_columns(self):
+
+        # https://github.com/wesm/feather/issues/53
+        # not currently able to handle duplicate columns
+        df = pd.DataFrame(np.arange(12).reshape(4, 3),
+                          columns=list('aaa')).copy()
+        self._assert_error_on_write(df, ValueError)
+
+    def test_unsupported(self):
+        # https://github.com/wesm/feather/issues/240
+        # serializing actual python objects
+
+        # period
+        df = pd.DataFrame({'a': pd.period_range('2013', freq='M', periods=3)})
+        self._assert_error_on_write(df, ValueError)
+
+        # non-strings
+        df = pd.DataFrame({'a': ['a', 1, 2.0]})
+        self._assert_error_on_write(df, ValueError)
