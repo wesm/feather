@@ -54,6 +54,14 @@ cdef check_status(const Status& status):
     cdef string c_message = status.ToString()
     raise FeatherError(frombytes(c_message))
 
+cdef update_mask_with_datatype_nulls(mask, values):
+    datatype_nulls = pd.isnull(values)
+    if datatype_nulls.any():
+        if mask is None:
+            return datatype_nulls
+        else:
+            return mask | datatype_nulls
+
 set_numpy_nan(np.nan)
 
 cdef class FeatherWriter:
@@ -95,14 +103,9 @@ cdef class FeatherWriter:
             PrimitiveArray levels
 
         col_values = _unbox_series(col)
-        dataype_nulls = col_values.codes == -1
-        if dataype_nulls.any():
-            if mask is None:
-                mask = dataype_nulls
-            else:
-                mask = mask | dataype_nulls
+        mask_to_file = update_mask_with_datatype_nulls(mask, col_values)
 
-        self.write_ndarray(col_values.codes, mask, &values)
+        self.write_ndarray(col_values.codes, mask_to_file, &values)
         check_status(pandas_to_primitive(np.asarray(col_values.categories),
                                          &levels))
         check_status(self.writer.get().AppendCategory(c_name, values, levels,
@@ -124,7 +127,9 @@ cdef class FeatherWriter:
             TimestampMetadata metadata
 
         col_values = _unbox_series(col)
-        self.write_ndarray(col_values.view('i8'), mask, &values)
+        mask_to_file = update_mask_with_datatype_nulls(mask, col_values)
+
+        self.write_ndarray(col_values.view('i8'), mask_to_file, &values)
 
         metadata.unit = TimeUnit_NANOSECOND
 

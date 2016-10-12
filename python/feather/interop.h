@@ -588,7 +588,7 @@ class FeatherDeserializer {
       double* out_values = reinterpret_cast<double*>(PyArray_DATA(out_));
       const T* in_values = reinterpret_cast<const T*>(arr_->values);
       for (int i = 0; i < arr_->length; ++i) {
-        out_values[i] = util::bit_not_set(arr_->nulls, i) ? NAN : in_values[i];
+        out_values[i] = util::bit_not_set(arr_->nulls, i) ? (double) NAN : in_values[i];
       }
     } else {
       out_ = PyArray_SimpleNew(1, dims, feather_traits<TYPE>::npy_type);
