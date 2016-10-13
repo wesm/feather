@@ -43,6 +43,8 @@ cdef extern from "interop.h" namespace "feather::py":
     Status pandas_to_primitive(object ao, PrimitiveArray* out)
     Status pandas_masked_to_primitive(object ao, object mask,
                                       PrimitiveArray* out)
+    object primitive_mask(const PrimitiveArray& arr)
+    object raw_primitive_to_pandas(const PrimitiveArray& arr)
     object primitive_to_pandas(const PrimitiveArray& arr)
     void set_numpy_nan(object nan)
 
@@ -266,16 +268,18 @@ cdef category_to_pandas(CColumn* col):
                           fastpath=True)
 
 cdef timestamp_to_pandas(CColumn* col):
-    cdef TimestampColumn* cat = <TimestampColumn*>(col)
+    cdef TimestampColumn* ts = <TimestampColumn*>(col)
 
-    values = primitive_to_pandas(cat.values())
+    values = raw_primitive_to_pandas(ts.values())
+    mask = primitive_mask(ts.values())
 
-    tz = frombytes(cat.timezone())
+    tz = frombytes(ts.timezone())
     if tz:
         values = (pd.DatetimeIndex(values).tz_localize('utc')
                   .tz_convert(tz))
         result = pd.Series(values)
     else:
         result = pd.Series(values, dtype='M8[ns]')
+    result.iloc[np.invert(mask)] = pd.NaT
 
     return result
