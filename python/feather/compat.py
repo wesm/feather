@@ -108,3 +108,10 @@ def guid():
 
 
 integer_types = six.integer_types + (np.integer,)
+
+from distutils.version import LooseVersion
+import pandas
+if LooseVersion(pandas.__version__) < '0.19.0':
+    pdapi = pandas.core.common
+else:
+    pdapi = pandas.api.types

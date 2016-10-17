@@ -24,7 +24,7 @@ from cython.operator cimport dereference as deref
 from libfeather cimport *
 
 import pandas as pd
-import pandas.core.common as pdcom
+from feather.compat import pdapi
 
 from numpy cimport ndarray
 cimport numpy as cnp
@@ -81,9 +81,9 @@ cdef class FeatherWriter:
         else:
             self.num_rows = len(col)
 
-        if pdcom.is_categorical_dtype(col.dtype):
+        if pdapi.is_categorical_dtype(col.dtype):
             self.write_category(name, col, mask)
-        elif pdcom.is_datetime64_any_dtype(col.dtype):
+        elif pdapi.is_datetime64_any_dtype(col.dtype):
             self.write_timestamp(name, col, mask)
         else:
             self.write_primitive(name, col, mask)
@@ -95,6 +95,12 @@ cdef class FeatherWriter:
             PrimitiveArray levels
 
         col_values = _unbox_series(col)
+        dataype_nulls = col_values.codes == -1
+        if dataype_nulls.any():
+            if mask is None:
+                mask = dataype_nulls
+            else:
+                mask = mask | dataype_nulls
 
         self.write_ndarray(col_values.codes, mask, &values)
         check_status(pandas_to_primitive(np.asarray(col_values.categories),
@@ -181,6 +187,17 @@ cdef class Column:
         def __get__(self):
             return frombytes(self.mp.user_metadata())
 
+    property null_count:
+        def __get__(self):
+            cdef:
+                unique_ptr[CColumn] col
+                CColumn* cp
+
+            check_status(self.parent.reader.get()
+                .GetColumn(self.column_index, &col))
+
+            return col.get().values().null_count
+
     def read(self):
         cdef:
             unique_ptr[CColumn] col
@@ -237,6 +254,7 @@ cdef category_to_pandas(CColumn* col):
     cdef CategoryColumn* cat = <CategoryColumn*>(col)
 
     values = primitive_to_pandas(cat.values())
+    values[np.isnan(values)] = -1
     levels = primitive_to_pandas(cat.levels())
 
     return pd.Categorical(values, categories=levels,

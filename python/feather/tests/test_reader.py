@@ -15,6 +15,7 @@
 import os
 import unittest
 
+from numpy.testing import assert_array_equal
 import numpy as np
 
 from pandas.util.testing import assert_frame_equal
@@ -45,8 +46,18 @@ class TestFeatherReader(unittest.TestCase):
         with self.assertRaises(feather.FeatherError):
             FeatherReader('test_invalid_file')
 
+    def _get_null_counts(self, path, columns=None):
+        reader = FeatherReader(path)
+        counts = []
+        for i in range(reader.num_columns):
+            col = reader.get_column(i)
+            if columns == None or col.name in columns:
+                counts.append(col.null_count)
+
+        return counts
+
     def _check_pandas_roundtrip(self, df, expected=None, path=None,
-                                columns=None):
+                                columns=None, null_counts=None):
         if path is None:
             path = random_path()
 
@@ -60,6 +71,11 @@ class TestFeatherReader(unittest.TestCase):
             expected = df
 
         assert_frame_equal(result, expected)
+
+        if null_counts is None:
+            null_counts = np.zeros(len(expected.columns))
+
+        np.testing.assert_array_equal(self._get_null_counts(path, columns), null_counts)
 
     def test_num_rows_attr(self):
         df = pd.DataFrame({'foo': [1, 2, 3, 4, 5]})
@@ -100,6 +116,7 @@ class TestFeatherReader(unittest.TestCase):
         null_mask = np.random.randint(0, 10, size=num_values) < 3
         dtypes = ['f4', 'f8']
         expected_cols = []
+        null_counts = []
         for name in dtypes:
             values = np.random.randn(num_values).astype(name)
             writer.write_array(name, values, null_mask)
@@ -107,6 +124,7 @@ class TestFeatherReader(unittest.TestCase):
             values[null_mask] = np.nan
 
             expected_cols.append(values)
+            null_counts.append(null_mask.sum())
 
         writer.close()
 
@@ -115,6 +133,7 @@ class TestFeatherReader(unittest.TestCase):
 
         result = feather.read_dataframe(path)
         assert_frame_equal(result, ex_frame)
+        assert_array_equal(self._get_null_counts(path), null_counts)
 
     def test_integer_no_nulls(self):
         data = {}
@@ -206,18 +225,19 @@ class TestFeatherReader(unittest.TestCase):
         assert_frame_equal(result, ex_frame)
 
     def test_boolean_object_nulls(self):
-        arr = np.array([False, None, True] * 100, dtype=object)
+        repeats = 100
+        arr = np.array([False, None, True] * repeats, dtype=object)
         df = pd.DataFrame({'bools': arr})
-        self._check_pandas_roundtrip(df)
+        self._check_pandas_roundtrip(df, null_counts=[1 * repeats])
 
     def test_strings(self):
         repeats = 1000
         values = [b'foo', None, u'bar', 'qux', np.nan]
         df = pd.DataFrame({'strings': values * repeats})
 
-        values = ['foo', None, u'bar', 'qux', None]
+        values = ['foo', None, 'bar', 'qux', None]
         expected = pd.DataFrame({'strings': values * repeats})
-        self._check_pandas_roundtrip(df, expected)
+        self._check_pandas_roundtrip(df, expected, null_counts=[2 * repeats])
 
     def test_empty_strings(self):
         df = pd.DataFrame({'strings': [''] * 10})
@@ -234,7 +254,10 @@ class TestFeatherReader(unittest.TestCase):
         values = ['foo', None, u'bar', 'qux', np.nan]
         df = pd.DataFrame({'strings': values * repeats})
         df['strings'] = df['strings'].astype('category')
-        self._check_pandas_roundtrip(df)
+
+        values = ['foo', None, 'bar', 'qux', None]
+        expected = pd.DataFrame({'strings': pd.Categorical(values * repeats)})
+        result = self._check_pandas_roundtrip(df,expected, null_counts=[2 * repeats])
 
     def test_timestamp(self):
         df = pd.DataFrame({'naive': pd.date_range('2016-03-28', periods=10)})
