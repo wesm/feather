@@ -244,10 +244,20 @@ class TestFeatherReader(unittest.TestCase):
 
     def test_strings(self):
         repeats = 1000
+
+        # we hvae mixed bytes, unicode, strings
         values = [b'foo', None, u'bar', 'qux', np.nan]
         df = pd.DataFrame({'strings': values * repeats})
+        self._assert_error_on_write(df, ValueError)
 
+        # embedded nulls are ok
         values = ['foo', None, 'bar', 'qux', None]
+        df = pd.DataFrame({'strings': values * repeats})
+        expected = pd.DataFrame({'strings': values * repeats})
+        self._check_pandas_roundtrip(df, expected, null_counts=[2 * repeats])
+
+        values = ['foo', None, 'bar', 'qux', np.nan]
+        df = pd.DataFrame({'strings': values * repeats})
         expected = pd.DataFrame({'strings': values * repeats})
         self._check_pandas_roundtrip(df, expected, null_counts=[2 * repeats])
 
