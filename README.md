@@ -33,6 +33,10 @@ Feather currently supports the following column types:
 
 All column types support NA/null values.
 
+## Other Languages
+
+Julia: [Feather.jl](https://github.com/JuliaStats/Feather.jl)
+
 ## License and Copyrights
 
 This library is released under the [Apache License, Version 2.0](LICENSE.txt).
