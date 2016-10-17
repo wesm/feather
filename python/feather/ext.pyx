@@ -260,8 +260,9 @@ cdef class FeatherReader:
 cdef category_to_pandas(CColumn* col):
     cdef CategoryColumn* cat = <CategoryColumn*>(col)
 
-    values = primitive_to_pandas(cat.values())
-    values[np.isnan(values)] = -1
+    values = raw_primitive_to_pandas(cat.values())
+    mask = primitive_mask(cat.values())
+    values[np.invert(mask)] = -1
     levels = primitive_to_pandas(cat.levels())
 
     return pd.Categorical(values, categories=levels,

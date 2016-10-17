@@ -701,7 +701,14 @@ PyObject* primitive_mask(const PrimitiveArray& arr) {
 
 PyObject* raw_primitive_to_pandas(const PrimitiveArray& arr) {
   switch(arr.type) {
+    FROM_RAW_FEATHER_CASE(INT8);
+    FROM_RAW_FEATHER_CASE(INT16);
+    FROM_RAW_FEATHER_CASE(INT32);
     FROM_RAW_FEATHER_CASE(INT64);
+    FROM_RAW_FEATHER_CASE(UINT8);
+    FROM_RAW_FEATHER_CASE(UINT16);
+    FROM_RAW_FEATHER_CASE(UINT32);
+    FROM_RAW_FEATHER_CASE(UINT64);
     default:
       break;
   }
