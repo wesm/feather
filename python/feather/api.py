@@ -15,7 +15,7 @@
 import six
 from distutils.version import LooseVersion
 import pandas as pd
-from pandas.types import api as pdapi
+from feather.compat import pdapi
 
 import feather.ext as ext
 
