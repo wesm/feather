@@ -33,7 +33,7 @@ enum class StatusCode: char {
   Invalid = 3,
   IOError = 4,
 
-  NotImplemented = 10,
+  NotImplemented = 10
 };
 
 class Status {
