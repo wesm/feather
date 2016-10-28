@@ -321,6 +321,18 @@ class TestFeatherReader(unittest.TestCase):
         expected = pd.DataFrame({c:data[c] for c in columns})
         self._check_pandas_roundtrip(df, expected, columns=columns)
 
+    def test_overwritten_file(self):
+        path = random_path()
+
+        num_values = 100
+        np.random.seed(0)
+
+        values = np.random.randint(0, 10, size=num_values)
+        feather.write_dataframe(pd.DataFrame({'ints':values}), path)
+
+        df = pd.DataFrame({'ints':values[0:num_values//2]})
+        self._check_pandas_roundtrip(df, path=path)
+
     def test_sparse_dataframe(self):
         # GH #221
         data = {'A': [0,1,2],
