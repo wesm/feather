@@ -16,3 +16,4 @@
 
 from feather.api import read_dataframe, write_dataframe
 from feather.ext import FeatherError, FeatherReader, FeatherWriter
+from feather.version import version as __version__
