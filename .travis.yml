@@ -46,6 +46,11 @@ matrix:
   - os: linux
     language: r
     compiler: gcc
+    addons:
+      apt:
+        packages:
+        - gcc-4.4
+        - g++-4.4
     r_binary_packages:
       - BH
       - crayon
@@ -57,6 +62,11 @@ matrix:
       - Rcpp
       - testthat
     before_install:
+    - mkdir -p ~/.R
+    - echo "CC = gcc-4.4 -std=gnu99"    >> ~/.R/Makevars
+    - echo "CXX = g++-4.4"              >> ~/.R/Makevars
+    - echo "CXX1X = g++-4.4 -std=c++0x" >> ~/.R/Makevars
+    - echo "CXX1XSTD = -std=c++0x"      >> ~/.R/Makevars
     - cd R
     after_success:
     - Rscript -e 'install.packages("covr"); covr::codecov()'
