@@ -21,8 +21,8 @@ namespace feather {
 
 static constexpr const char* FEATHER_MAGIC_BYTES = "FEA1";
 
-static constexpr int kFeatherDefaultAlignment = 8;
-static constexpr int kFeatherVersion = 2;
+static constexpr const int kFeatherDefaultAlignment = 8;
+static constexpr const int kFeatherVersion = 2;
 
 static inline int64_t PaddedLength(int64_t nbytes) {
   static const int64_t alignment = kFeatherDefaultAlignment;

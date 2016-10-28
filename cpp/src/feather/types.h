@@ -47,7 +47,7 @@ struct PrimitiveType {
 
     UTF8 = 11,
 
-    BINARY = 12,
+    BINARY = 12
   };
 };
 
