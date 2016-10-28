@@ -293,6 +293,12 @@ class TestFeatherReader(unittest.TestCase):
 
         self._check_pandas_roundtrip(df)
 
+    def test_timestamp_with_nulls(self):
+        df = pd.DataFrame({'test': [pd.datetime(2016,1,1),None,pd.datetime(2016,1,3)]})
+        df['with_tz'] = df.test.dt.tz_localize('utc')
+
+        self._check_pandas_roundtrip(df, null_counts=[1,1])
+
     def test_non_string_columns(self):
         df = pd.DataFrame({0: [1, 2, 3, 4],
                            1: [True, False, True, False]})
