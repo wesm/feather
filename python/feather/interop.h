@@ -548,6 +548,7 @@ class FeatherDeserializer {
     return out_;
   }
 
+  // Floating point specialization
   template <int T2>
   inline typename std::enable_if<feather_traits<T2>::is_floating, void>::type
   ConvertValues() {
@@ -666,6 +667,55 @@ class FeatherDeserializer {
   const PrimitiveArray* arr_;
   PyObject* out_;
 };
+
+PyObject* get_null_mask(const PrimitiveArray& arr) {
+  npy_intp dims[1] = {static_cast<npy_intp>(arr.length)};
+  PyObject* out = PyArray_SimpleNew(1, dims, NPY_BOOL);
+  if (out == NULL) return out;
+
+  uint8_t* out_values = reinterpret_cast<uint8_t*>(PyArray_DATA(out));
+  if (arr.null_count > 0) {
+    for (int64_t i = 0; i < arr.length; ++i) {
+      out_values[i] = util::bit_not_set(arr.nulls, i);
+    }
+  } else {
+    for (int64_t i = 0; i < arr.length; ++i) {
+      out_values[i] = 0;
+    }
+  }
+  return out;
+}
+
+#define FROM_RAW_FEATHER_CASE(TYPE)                             \
+  case PrimitiveType::TYPE:                                     \
+    {                                                           \
+      npy_intp dims[1] = {static_cast<npy_intp>(arr.length)};   \
+      PyObject* out = PyArray_SimpleNew(1, dims,                \
+        feather_traits<PrimitiveType::TYPE>::npy_type);         \
+      if (out == NULL)  return out;                             \
+      memcpy(PyArray_DATA(out), arr.values,                     \
+        arr.length * ByteSize(arr.type));                       \
+      return out;                                               \
+    }                                                           \
+    break;
+
+PyObject* raw_primitive_to_pandas(const PrimitiveArray& arr) {
+  switch(arr.type) {
+    FROM_RAW_FEATHER_CASE(INT8);
+    FROM_RAW_FEATHER_CASE(INT16);
+    FROM_RAW_FEATHER_CASE(INT32);
+    FROM_RAW_FEATHER_CASE(INT64);
+    FROM_RAW_FEATHER_CASE(UINT8);
+    FROM_RAW_FEATHER_CASE(UINT16);
+    FROM_RAW_FEATHER_CASE(UINT32);
+    FROM_RAW_FEATHER_CASE(UINT64);
+    default:
+      break;
+  }
+  PyErr_SetString(PyExc_NotImplementedError,
+      "Feather type raw reading not implemented");
+  return NULL;
+}
 
 #define FROM_FEATHER_CASE(TYPE)                                 \
   case PrimitiveType::TYPE:                                     \

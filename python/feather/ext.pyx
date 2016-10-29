@@ -43,6 +43,8 @@ cdef extern from "interop.h" namespace "feather::py":
     Status pandas_to_primitive(object ao, PrimitiveArray* out)
     Status pandas_masked_to_primitive(object ao, object mask,
                                       PrimitiveArray* out)
+    object get_null_mask(const PrimitiveArray& arr)
+    object raw_primitive_to_pandas(const PrimitiveArray& arr)
     object primitive_to_pandas(const PrimitiveArray& arr)
     void set_numpy_nan(object nan)
 
@@ -258,24 +260,27 @@ cdef class FeatherReader:
 cdef category_to_pandas(CColumn* col):
     cdef CategoryColumn* cat = <CategoryColumn*>(col)
 
-    values = primitive_to_pandas(cat.values())
-    values[np.isnan(values)] = -1
+    values = raw_primitive_to_pandas(cat.values())
+    mask = get_null_mask(cat.values())
+    values[mask] = -1
     levels = primitive_to_pandas(cat.levels())
 
     return pd.Categorical(values, categories=levels,
                           fastpath=True)
 
 cdef timestamp_to_pandas(CColumn* col):
-    cdef TimestampColumn* cat = <TimestampColumn*>(col)
+    cdef TimestampColumn* ts = <TimestampColumn*>(col)
 
-    values = primitive_to_pandas(cat.values())
+    values = raw_primitive_to_pandas(ts.values())
+    mask = get_null_mask(ts.values())
 
-    tz = frombytes(cat.timezone())
+    tz = frombytes(ts.timezone())
     if tz:
         values = (pd.DatetimeIndex(values).tz_localize('utc')
                   .tz_convert(tz))
         result = pd.Series(values)
     else:
         result = pd.Series(values, dtype='M8[ns]')
+    result.iloc[mask] = pd.NaT
 
     return result
