@@ -43,7 +43,7 @@ cdef extern from "interop.h" namespace "feather::py":
     Status pandas_to_primitive(object ao, PrimitiveArray* out)
     Status pandas_masked_to_primitive(object ao, object mask,
                                       PrimitiveArray* out)
-    object primitive_mask(const PrimitiveArray& arr)
+    object get_null_mask(const PrimitiveArray& arr)
     object raw_primitive_to_pandas(const PrimitiveArray& arr)
     object primitive_to_pandas(const PrimitiveArray& arr)
     void set_numpy_nan(object nan)
@@ -261,8 +261,8 @@ cdef category_to_pandas(CColumn* col):
     cdef CategoryColumn* cat = <CategoryColumn*>(col)
 
     values = raw_primitive_to_pandas(cat.values())
-    mask = primitive_mask(cat.values())
-    values[np.invert(mask)] = -1
+    mask = get_null_mask(cat.values())
+    values[mask] = -1
     levels = primitive_to_pandas(cat.levels())
 
     return pd.Categorical(values, categories=levels,
@@ -272,7 +272,7 @@ cdef timestamp_to_pandas(CColumn* col):
     cdef TimestampColumn* ts = <TimestampColumn*>(col)
 
     values = raw_primitive_to_pandas(ts.values())
-    mask = primitive_mask(ts.values())
+    mask = get_null_mask(ts.values())
 
     tz = frombytes(ts.timezone())
     if tz:
@@ -281,6 +281,6 @@ cdef timestamp_to_pandas(CColumn* col):
         result = pd.Series(values)
     else:
         result = pd.Series(values, dtype='M8[ns]')
-    result.iloc[np.invert(mask)] = pd.NaT
+    result.iloc[mask] = pd.NaT
 
     return result

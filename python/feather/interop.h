@@ -668,7 +668,7 @@ class FeatherDeserializer {
   PyObject* out_;
 };
 
-PyObject* primitive_mask(const PrimitiveArray& arr) {
+PyObject* get_null_mask(const PrimitiveArray& arr) {
   npy_intp dims[1] = {static_cast<npy_intp>(arr.length)};
   PyObject* out = PyArray_SimpleNew(1, dims, NPY_BOOL);
   if (out == NULL) return out;
@@ -676,11 +676,11 @@ PyObject* primitive_mask(const PrimitiveArray& arr) {
   uint8_t* out_values = reinterpret_cast<uint8_t*>(PyArray_DATA(out));
   if (arr.null_count > 0) {
     for (int64_t i = 0; i < arr.length; ++i) {
-      out_values[i] = util::get_bit(arr.nulls, i) ? 1 : 0;
+      out_values[i] = util::bit_not_set(arr.nulls, i);
     }
   } else {
     for (int64_t i = 0; i < arr.length; ++i) {
-      out_values[i] = 1;
+      out_values[i] = 0;
     }
   }
   return out;
