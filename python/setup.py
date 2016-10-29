@@ -34,7 +34,7 @@ if Cython.__version__ < '0.19.1':
 
 MAJOR = 0
 MINOR = 3
-MICRO = 0
+MICRO = 1
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 ISRELEASED = True
 
