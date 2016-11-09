@@ -1,3 +1,9 @@
+# feather 0.3.1
+
+## Bug fixes and minor features
+
+* Fixes for gcc-4.4 compilation.
+
 # feather 0.3.0
 
 ## Underlying feather library changes
