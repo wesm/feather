@@ -101,7 +101,7 @@ void setMissing(SEXP x, const PrimitiveArray* val) {
   }
 }
 
-SEXP toSEXP(const PrimitiveArray* val) {
+SEXP toSEXP(const PrimitiveArray* val, const ArrayMetadata& meta) {
   int64_t n = val->length;
   RColType rType = toRColType(val->type);
   SEXP out = PROTECT(Rf_allocVector(toSEXPTYPE(rType), n));
@@ -148,8 +148,12 @@ SEXP toSEXP(const PrimitiveArray* val) {
 
   case PrimitiveType::UTF8: {
     auto asChar = reinterpret_cast<const char*>(val->values);
+    auto total_bytes = meta.total_bytes;
     for (int i = 0; i < n; ++i) {
       uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      if(offset1 > total_bytes || offset2 > total_bytes) {
+        stop("Corrupt feather file: offsets out of bounds");
+      }
       SEXP string = Rf_mkCharLenCE(asChar + offset1, offset2 - offset1, CE_UTF8);
       SET_STRING_ELT(out, i, string);
     }
@@ -157,8 +161,12 @@ SEXP toSEXP(const PrimitiveArray* val) {
   }
   case PrimitiveType::BINARY: {
     auto asChar = reinterpret_cast<const char*>(val->values);
+    auto total_bytes = meta.total_bytes;
     for (int i = 0; i < n; ++i) {
       uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      if(offset1 > total_bytes || offset2 > total_bytes) {
+        stop("Corrupt feather file: offsets out of bounds");
+      }
       int32_t n = offset2 - offset1;
 
       SEXP raw = PROTECT(Rf_allocVector(RAWSXP, n));
@@ -235,7 +243,7 @@ SEXP toSEXP(const ColumnPtr& x) {
 
   switch(x->type()) {
   case feather::ColumnType::PRIMITIVE:
-    return toSEXP(val);
+    return toSEXP(val, meta->values());
   case feather::ColumnType::CATEGORY: {
     IntegerVector out(val->length);
 
@@ -260,13 +268,16 @@ SEXP toSEXP(const ColumnPtr& x) {
 
     auto x_cat = static_cast<feather::CategoryColumn*>(x.get());
     const PrimitiveArray* levels(&x_cat->levels());
+    auto levels_meta = static_cast<const metadata::CategoryColumn*>(
+                         x_cat->metadata().get()
+                       )->levels();
 
-    out.attr("levels") = Rf_coerceVector(toSEXP(levels), STRSXP);
+    out.attr("levels") = Rf_coerceVector(toSEXP(levels, levels_meta), STRSXP);
     out.attr("class") = "factor";
     return out;
   }
   case feather::ColumnType::DATE: {
-    IntegerVector out = toSEXP(val);
+    IntegerVector out = toSEXP(val, meta->values());
     out.attr("class") = "Date";
     return out;
   }
