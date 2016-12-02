@@ -57,6 +57,9 @@ We use the [Apache Arrow][3] encoding for storing variable-length values
 <null bitmask, optional> <int32_t* value offsets> <uint8_t* value data>
 ```
 
+libfeather does not perform any boundary checking on the offsets; libfeather
+clients are responsible for checking that the offsets are legal.
+
 ## Dictionary encoding
 
 Dictionary-encoded data is stored in the following layout.
