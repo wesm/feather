@@ -148,9 +148,9 @@ SEXP toSEXP(const PrimitiveArray* val, const ArrayMetadata& meta) {
 
   case PrimitiveType::UTF8: {
     auto asChar = reinterpret_cast<const char*>(val->values);
-    auto total_bytes = meta.total_bytes;
+    int64_t total_bytes = meta.total_bytes;
     for (int i = 0; i < n; ++i) {
-      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      int32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
       if(offset1 > total_bytes || offset2 > total_bytes) {
         stop("Corrupt feather file: offsets out of bounds");
       }
@@ -161,9 +161,9 @@ SEXP toSEXP(const PrimitiveArray* val, const ArrayMetadata& meta) {
   }
   case PrimitiveType::BINARY: {
     auto asChar = reinterpret_cast<const char*>(val->values);
-    auto total_bytes = meta.total_bytes;
+    int64_t total_bytes = meta.total_bytes;
     for (int i = 0; i < n; ++i) {
-      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
+      int32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
       if(offset1 > total_bytes || offset2 > total_bytes) {
         stop("Corrupt feather file: offsets out of bounds");
       }
