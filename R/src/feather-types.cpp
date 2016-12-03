@@ -164,7 +164,8 @@ SEXP toSEXP(const PrimitiveArray* val, const ArrayMetadata& meta) {
     int64_t total_bytes = meta.total_bytes;
     for (int i = 0; i < n; ++i) {
       int32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
-      if(offset1 > total_bytes || offset2 > total_bytes) {
+      if(offset1 < 0 || offset1 > total_bytes ||
+         offset2 < 0 || offset2 > total_bytes) {
         stop("Corrupt feather file: offsets out of bounds");
       }
       int32_t n = offset2 - offset1;
