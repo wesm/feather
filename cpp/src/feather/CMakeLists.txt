@@ -112,6 +112,7 @@ install(FILES
   api.h
   buffer.h
   common.h
+  compatibility.h
   feather-c.h
   io.h
   metadata.h
