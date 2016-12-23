@@ -449,7 +449,9 @@ Status pandas_masked_to_primitive(PyObject* ao, PyObject* mo,
     TO_FEATHER_CASE(OBJECT);
     default:
       std::stringstream ss;
-      ss << "unsupported type " << type_num
+      ss << "Unsupported data type (NPY_TYPES enum value: " << type_num << "). "
+         << "Please refer to the Feather webpage for a list of supported "
+         << "column types."
          << std::endl;
       return Status::Invalid(ss.str());
   }
