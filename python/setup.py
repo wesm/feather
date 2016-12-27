@@ -136,7 +136,7 @@ extensions = cythonize(extensions)
 
 write_version_py()
 
-LONG_DESCRIPTION = open(os.path.join(setup_dir, "README.md")).read()
+LONG_DESCRIPTION = open(os.path.join(setup_dir, "README.rst")).read()
 DESCRIPTION = "Python interface to the Apache Arrow-based Feather File Format"
 
 CLASSIFIERS = [
