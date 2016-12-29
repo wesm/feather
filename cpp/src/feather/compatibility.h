@@ -17,24 +17,26 @@
 
 // Compatibility for older versions of gcc without full C++11 support
 #if defined(__GNUC__) && !defined(__clang__)
+
+// gcc < 4.6
 # if __GNUC__ == 4 && __GNUC_MINOR__ < 6
 
-#  define FEATHER_CPP0X_COMPATIBLE
-
-#  ifndef nullptr_t
 const class feather_nullptr_t {
 public:
   template<class T> inline operator T*() const { return 0; }
 private:
   void operator&() const; // NOLINT
 } nullptr = {};
-#   define nullptr_t feather_nullptr_t
-#  endif
+#  define nullptr_t feather_nullptr_t
+# endif
 
+// gcc <= 4.6
+# if __GNUC__ == 4 && __GNUC_MINOR__ <= 6
+#  define FEATHER_CPP0X_COMPATIBLE
 #  define constexpr
 #  define override
-
 # endif
+
 #endif
 
 #endif /* FEATHER_COMPATIBILITY_H_ */
