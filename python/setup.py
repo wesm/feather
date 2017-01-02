@@ -16,11 +16,7 @@
 
 # Bits here from Apache Kudu (incubating), ASL 2.0
 
-from Cython.Distutils import build_ext
-from Cython.Build import cythonize
-import Cython
-
-import numpy as np
+# check for the setup_requires packages
 
 import sys
 from setuptools import setup
@@ -28,6 +24,18 @@ from distutils.command.clean import clean as _clean
 from distutils.extension import Extension
 import os
 import platform
+
+#
+# Force `setup_requires` stuff like Cython to be installed before proceeding
+#
+from setuptools.dist import Distribution
+Distribution(dict(setup_requires=['cython>=0.21', 'numpy>=1.7.1']))
+
+from Cython.Distutils import build_ext
+from Cython.Build import cythonize
+import Cython
+
+import numpy as np
 
 if Cython.__version__ < '0.19.1':
     raise Exception('Please upgrade to Cython 0.19.1 or newer')
@@ -163,7 +171,7 @@ setup(
         'clean': clean,
         'build_ext': build_ext
     },
-    install_requires=['cython >= 0.21'],
+    install_requires=['pandas>=0.17.0', 'numpy>=1.7.1'],
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     license='Apache License, Version 2.0',
