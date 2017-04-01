@@ -51,7 +51,11 @@ bool PrimitiveArray::Equals(const PrimitiveArray& other) const {
             (this->length + 1) * sizeof(int32_t)) != 0) {
       return false;
     }
-    size_t total_bytes = this->offsets[this->length] * ByteSize(this->type);
+    // (skirpichenko): sum up total_bytes instead of using last offset
+    size_t total_bytes = 0;
+    for (int i = 0; i < this->length; ++i) {
+      total_bytes += (this->offsets[i + 1] - this->offsets[i]) * ByteSize(this->type);
+    }
     if (memcmp(this->values, other.values, total_bytes) != 0) {
       return false;
     }

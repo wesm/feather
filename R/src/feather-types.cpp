@@ -148,23 +148,34 @@ SEXP toSEXP(const PrimitiveArray* val) {
 
   case PrimitiveType::UTF8: {
     auto asChar = reinterpret_cast<const char*>(val->values);
+    // (skirpichenko): Offsets are 32 bit signed integers. 
+    // When data is bigger than 2GB overflow occurs and offsets get invalid.
+    // However they are still good to calculate string lengths.
+    // The offsets can be reconstructed summing up lengths.
+    int64_t offset = 0;
     for (int i = 0; i < n; ++i) {
-      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
-      SEXP string = Rf_mkCharLenCE(asChar + offset1, offset2 - offset1, CE_UTF8);
+      uint32_t len = (val->offsets[i + 1] - val->offsets[i]);
+
+      SEXP string = Rf_mkCharLenCE(asChar + offset, len, CE_UTF8);
       SET_STRING_ELT(out, i, string);
+
+      offset += len;
     }
     break;
   }
   case PrimitiveType::BINARY: {
     auto asChar = reinterpret_cast<const char*>(val->values);
+    // (skirpichenko): same logic as for PrimitiveType::UTF8
+    int64_t offset = 0;
     for (int i = 0; i < n; ++i) {
-      uint32_t offset1 = val->offsets[i], offset2 = val->offsets[i + 1];
-      int32_t n = offset2 - offset1;
+      uint32_t len = (val->offsets[i + 1] - val->offsets[i]);
 
-      SEXP raw = PROTECT(Rf_allocVector(RAWSXP, n));
-      memcpy(RAW(out), asChar + offset1, n);
+      SEXP raw = PROTECT(Rf_allocVector(RAWSXP, len));
+      memcpy(RAW(out), asChar + offset, len);
       SET_VECTOR_ELT(out, i, raw);
       UNPROTECT(1);
+
+      offset += len;
     }
     break;
   }

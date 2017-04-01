@@ -119,3 +119,17 @@ test_that("doesn't lose undue precision", {
 
   expect_identical(x1, x2)
 })
+
+
+# Large data --------------------------------------------------------------
+
+test_that("withstands large (>2GB) columns", {
+  if (Sys.info()[['sysname']] != 'Windows' && 
+      Sys.info()[['machine']] == 'x86_64') {
+
+    x1 <- rep("23886fac-4311-41e3-83d2-c9c3e7556af3", 60*1e6) # 2.5GB
+    x2 <- roundtrip_vector(x1)
+
+    expect_identical(x1, x2)
+  }
+})
