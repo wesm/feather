@@ -21,6 +21,8 @@
 * Automatically close open file handles making it possible to read in
   hundreds of feather files in the same session (@krlmlr, #178)
 
+* Time fields are now imported as class hms/difftime (#119).
+
 * Added a `NEWS.md` file to track changes to the package.
 
 * Fixed protection bugs that lead to unpredictable crashes (#150, #204).
