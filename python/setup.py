@@ -68,7 +68,7 @@ setup(
     packages=['feather', 'feather.tests'],
     version=VERSION,
     package_data={'feather': ['*.pxd', '*.pyx']},
-    # install_requires=['cython >= 0.21', 'pyarrow>=0.3.0'],
+    install_requires=['pyarrow>=0.3.0'],
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     license='Apache License, Version 2.0',
