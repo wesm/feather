@@ -18,8 +18,8 @@ specification to represent binary data on disk. This makes read and write
 operations very fast. This is particularly important for encoding null/NA values
 and variable-length types like UTF8 strings.
 
-Feather is complementary to Apache Arrow. Because Arrow does not provide a file
-format, Feather defines its own schemas and metadata for on-disk representation.
+Feather is a part of the broader Apache Arrow project. Feather defines its own
+simplified schemas and metadata for on-disk representation.
 
 Feather currently supports the following column types:
 
