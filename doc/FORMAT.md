@@ -16,6 +16,8 @@ Here is the general structure of the file:
 There is a stream of arrays laid out end-to-end, with the metadata appended on
 completion at the end of the file.
 
+Array and metadata starts must be aligned on 8-byte boundaries.
+
 For the arrays themselves, the memory layout is type dependent.
 
 1. Primitive arrays
