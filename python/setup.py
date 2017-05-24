@@ -23,7 +23,7 @@ MAJOR = 0
 MINOR = 4
 MICRO = 0
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-ISRELEASED = False
+ISRELEASED = True
 
 setup_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -65,10 +65,10 @@ URL = 'http://github.com/wesm/feather'
 
 setup(
     name="feather-format",
-    packages=['feather', 'feather.tests'],
+    packages=['feather'],
     version=VERSION,
     package_data={'feather': ['*.pxd', '*.pyx']},
-    install_requires=['pyarrow>=0.3.0'],
+    install_requires=['pyarrow>=0.4.0'],
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     license='Apache License, Version 2.0',
