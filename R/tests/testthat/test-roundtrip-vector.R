@@ -119,3 +119,4 @@ test_that("doesn't lose undue precision", {
 
   expect_identical(x1, x2)
 })
+

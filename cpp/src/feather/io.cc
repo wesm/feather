@@ -289,7 +289,13 @@ static inline Status FileWrite(int fd, const uint8_t* buffer, int64_t nbytes) {
   }
   ret = _write(fd, buffer, static_cast<unsigned int>(nbytes));
 #else
-  ret = write(fd, buffer, nbytes);
+  // (skirpichenko): even on x64 systems `write` does not allow to write more than
+  // 2GB at once, so lets split data into blocks and write sequentially
+  int64_t offset = 0;
+  do {
+    ret = write(fd, buffer + offset, std::min(nbytes - offset, int64_t(1 << 30)));
+    offset += ret;
+  } while (ret != -1 && offset < nbytes);
 #endif
 
   if (ret == -1) {

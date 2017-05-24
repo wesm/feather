@@ -108,12 +108,15 @@ Status TableWriter::AppendPrimitive(const PrimitiveArray& values,
   }
 
   size_t value_byte_size = ByteSize(values.type);
-  size_t values_bytes;
+  size_t values_bytes = 0;
 
   if (IsVariableLength(values.type)) {
     size_t offset_bytes = sizeof(int32_t) * (values.length + 1);
 
-    values_bytes = values.offsets[values.length] * value_byte_size;
+    // (skirpichenk0): sum up values_bytes instead of using last offset
+    for (int i = 0; i < values.length; ++i) {
+      values_bytes += (values.offsets[i+1] - values.offsets[i]) * value_byte_size;
+    }
 
     // Write the variable-length offsets
     RETURN_NOT_OK(stream_->WritePadded(reinterpret_cast<const uint8_t*>(values.offsets),
