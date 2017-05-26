@@ -33,7 +33,9 @@ OwnedMutableBuffer::OwnedMutableBuffer() {}
 Status OwnedMutableBuffer::Resize(int64_t new_size) {
   size_ = new_size;
   try {
-    buffer_owner_.resize(new_size);
+    if(new_size == 0 && buffer_owner_.data() == NULL)
+      buffer_owner_.resize(1); //create dummy pointer for empty vectors
+    buffer_owner_.resize(new_size); //resize to actual size
   } catch (const std::bad_alloc& e) {
     return Status::OutOfMemory(e.what());
   }
