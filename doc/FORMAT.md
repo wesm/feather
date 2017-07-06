@@ -16,8 +16,6 @@ Here is the general structure of the file:
 There is a stream of arrays laid out end-to-end, with the metadata appended on
 completion at the end of the file.
 
-Array and metadata starts must be aligned on 8-byte boundaries.
-
 For the arrays themselves, the memory layout is type dependent.
 
 1. Primitive arrays
@@ -58,6 +56,8 @@ We use the [Apache Arrow][3] encoding for storing variable-length values
 ```
 <null bitmask, optional> <int32_t* value offsets> <uint8_t* value data>
 ```
+
+For an array of `N` elements, `N+1` offsets are written so the end of last value can be determined.
 
 ## Dictionary encoding
 
