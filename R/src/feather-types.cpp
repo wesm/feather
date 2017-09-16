@@ -266,7 +266,8 @@ SEXP toSEXP(const ColumnPtr& x) {
     return out;
   }
   case feather::ColumnType::DATE: {
-    IntegerVector out = toSEXP(val);
+    // Coerce dates to double for creating R column 
+    DoubleVector out = Rf_coerceVector(toSEXP(val), REALSXP);
     out.attr("class") = "Date";
     return out;
   }
