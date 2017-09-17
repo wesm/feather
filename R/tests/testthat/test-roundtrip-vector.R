@@ -74,7 +74,6 @@ test_that("preserves NA in factor and levels", {
 
 test_that("preserves dates", {
   x <- as.Date("2010-01-01") + c(0L, 365L, NA)
-  mode(x) <- "integer"
   expect_identical(roundtrip_vector(x), x)
 })
 
