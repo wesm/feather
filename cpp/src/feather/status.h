@@ -15,6 +15,7 @@
 #ifndef FEATHER_STATUS_H_
 #define FEATHER_STATUS_H_
 
+#include <cstdio>
 #include <cstdint>
 #include <cstring>
 #include <string>
