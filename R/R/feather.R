@@ -25,12 +25,13 @@ read_feather <- function(path, columns = NULL) {
 
 #' @rdname read_feather
 #' @param x A data frame to write to disk
+#' @param description description
 #' @export
-write_feather <- function(x, path) {
+write_feather <- function(x, path, description="") {
   if (!is.data.frame(x)) {
     stop("`x` must be a data frame", call. = FALSE)
   }
-  writeFeather(x, path)
+  writeFeather(x, path, description)
   invisible(x)
 }
 

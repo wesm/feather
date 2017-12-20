@@ -7,7 +7,7 @@
 \usage{
 read_feather(path, columns = NULL)
 
-write_feather(x, path)
+write_feather(x, path, description = "")
 }
 \arguments{
 \item{path}{Path to feather file}
@@ -15,6 +15,8 @@ write_feather(x, path)
 \item{columns}{Columns to read (names or indexes). Default: Read all columns.}
 
 \item{x}{A data frame to write to disk}
+
+\item{description}{description}
 }
 \value{
 Both functions return a tibble/data frame. \code{write_feather}
@@ -27,4 +29,3 @@ Read and write feather files.
 mtcars2 <- read_feather(feather_example("mtcars.feather"))
 mtcars2
 }
-

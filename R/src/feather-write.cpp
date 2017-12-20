@@ -365,7 +365,7 @@ Status addColumn(std::unique_ptr<TableWriter>& table,
 }
 
 // [[Rcpp::export]]
-void writeFeather(DataFrame df, const std::string& path) {
+void writeFeather(DataFrame df, const std::string& path, std::string &description) {
   std::unique_ptr<TableWriter> table;
   std::string fullPath(R_ExpandFileName(path.c_str()));
 
@@ -377,6 +377,8 @@ void writeFeather(DataFrame df, const std::string& path) {
   for(int i = 0; i < df.size(); ++i) {
     stopOnFailure(addColumn(table, std::string(names[i]), df[i]));
   }
+
+  table->SetDescription(description);
 
   stopOnFailure(table->Finalize());
 }
