@@ -359,6 +359,9 @@ Status addColumn(std::unique_ptr<TableWriter>& table,
   } else if (Rf_inherits(x, "POSIXlt")) {
     stop("Can not write POSIXlt (%s). Convert to POSIXct first.", name);
     return Status::NotImplemented("");
+  } else if (Rf_inherits(x, "integer64")) {
+    stop("Can not write integer64 (%s). Not yet implemented :(", name);
+    return Status::NotImplemented("");
   } else {
     return addPrimitiveColumn(table, name, x);
   }
