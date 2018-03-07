@@ -22,6 +22,7 @@ Imports:
     hms
 Suggests:
     testthat,
-    dplyr
+    dplyr,
+    bit64
 SystemRequirements: little-endian platform
 RoxygenNote: 5.0.1
