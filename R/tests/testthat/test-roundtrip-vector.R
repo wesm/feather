@@ -15,7 +15,14 @@ test_that("preserves logical vector of length 0", {
 # Integer ----------------------------------------------------------------
 
 test_that("preserves integer values", {
-  x <- 1:10
+  x <- c(1:10, NA_integer_, 12L)
+  expect_identical(roundtrip_vector(x), x)
+})
+
+# Integer64 ---------------------------------------------------------------
+
+test_that("preserves integer64 values", {
+  x <- c(as.integer64(1:10), NA_integer64_, 12L)
   expect_identical(roundtrip_vector(x), x)
 })
 
