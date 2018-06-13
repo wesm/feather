@@ -7,7 +7,7 @@
 #' @return An object of class \code{feather}
 #' @export
 feather <- function(path) {
-  path <- enc2native(path)
+  path <- enc2native(normalizePath(path, mustWork = TRUE))
 
   openFeather(path)
 }
