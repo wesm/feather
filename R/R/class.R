@@ -107,13 +107,9 @@ dim.feather <- function(x) c(rowsFeather(x), length(x))
 as.data.frame.feather <- function(x, row.names = NULL, optional = FALSE, ...) {
   if (!is.null(row.names))
     stop("row.names must be NULL for as.data.frame.feather")
-  as.data.frame(as_data_frame(x))
+  as.data.frame(as_data_frame(x[]))
 }
 
-#' @export
-as_data_frame.feather <- function(x, ...) {
-  x[]
-}
 
 #' @export
 as.list.feather <- function(x, ...) {
