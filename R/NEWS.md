@@ -2,6 +2,8 @@
 
 * Use native routine registration
 
+* Fix test failure due to UTF-8 encoded paths on Windows.
+
 # feather 0.3.1
 
 ## Bug fixes and minor features

@@ -9,9 +9,8 @@ using namespace feather;
 
 std::unique_ptr<TableReader> openFeatherTable(const std::string& path) {
   std::unique_ptr<TableReader> table;
-  std::string fullPath(R_ExpandFileName(path.c_str()));
 
-  stopOnFailure(TableReader::OpenFile(fullPath, &table));
+  stopOnFailure(TableReader::OpenFile(path.c_str(), &table));
   return table;
 }
 
