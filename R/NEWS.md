@@ -1,5 +1,7 @@
 # feather 0.3.2
 
+* Use native routine registration
+
 # feather 0.3.1
 
 ## Bug fixes and minor features

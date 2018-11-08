@@ -2,26 +2,26 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 metadataFeather <- function(path) {
-    .Call('feather_metadataFeather', PACKAGE = 'feather', path)
+    .Call('_feather_metadataFeather', PACKAGE = 'feather', path)
 }
 
 openFeather <- function(path) {
-    .Call('feather_openFeather', PACKAGE = 'feather', path)
+    .Call('_feather_openFeather', PACKAGE = 'feather', path)
 }
 
 closeFeather <- function(feather) {
-    invisible(.Call('feather_closeFeather', PACKAGE = 'feather', feather))
+    invisible(.Call('_feather_closeFeather', PACKAGE = 'feather', feather))
 }
 
 rowsFeather <- function(feather) {
-    .Call('feather_rowsFeather', PACKAGE = 'feather', feather)
+    .Call('_feather_rowsFeather', PACKAGE = 'feather', feather)
 }
 
 coldataFeather <- function(feather, indexes) {
-    .Call('feather_coldataFeather', PACKAGE = 'feather', feather, indexes)
+    .Call('_feather_coldataFeather', PACKAGE = 'feather', feather, indexes)
 }
 
 writeFeather <- function(df, path) {
-    invisible(.Call('feather_writeFeather', PACKAGE = 'feather', df, path))
+    invisible(.Call('_feather_writeFeather', PACKAGE = 'feather', df, path))
 }
 

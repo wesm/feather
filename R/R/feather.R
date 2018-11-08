@@ -1,4 +1,4 @@
-#' @useDynLib feather
+#' @useDynLib feather, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom tibble tibble
 NULL
