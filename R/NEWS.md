@@ -1,3 +1,5 @@
+# feather 0.3.2
+
 # feather 0.3.1
 
 ## Bug fixes and minor features
