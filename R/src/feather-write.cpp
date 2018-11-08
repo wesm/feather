@@ -311,7 +311,7 @@ Status addDateColumn(std::unique_ptr<TableWriter>& table,
   // dates can be stored either as integers or doubles
   if (TYPEOF(x) != INTSXP && TYPEOF(x) != REALSXP)
     stop("%s is corrupt", name);
-  auto values = intToPrimitiveArray(Rf_coerceVector(x, INTSXP));
+  auto values = intToPrimitiveArray(as<IntegerVector>(x));
 
   return table->AppendDate(name, values);
 }

@@ -1,3 +1,11 @@
+# feather 0.3.2
+
+* Fixes for PROTECT error found by rchk.
+
+* Use native routine registration
+
+* Fix test failure due to UTF-8 encoded paths on Windows.
+
 # feather 0.3.1
 
 ## Bug fixes and minor features

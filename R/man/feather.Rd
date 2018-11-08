@@ -16,4 +16,3 @@ An object of class \code{feather}
 These functions permit using a feather dataset much like a regular
 (read-only) data frame.
 }
-

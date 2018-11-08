@@ -1,6 +1,6 @@
 Package: feather
 Title: R Bindings to the Feather 'API'
-Version: 0.3.1
+Version: 0.3.2
 Authors@R: c(
     person("Hadley", "Wickham", , "hadley@rstudio.com", role = c("aut", "cre")),
     person("RStudio", role = "cph"),
@@ -24,4 +24,4 @@ Suggests:
     testthat,
     dplyr
 SystemRequirements: little-endian platform
-RoxygenNote: 5.0.1
+RoxygenNote: 6.1.1

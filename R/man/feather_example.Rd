@@ -18,4 +18,3 @@ feather_examples()
 \code{feather_examples} gets the path of all examples
 }
 \keyword{internal}
-
