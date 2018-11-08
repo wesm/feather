@@ -27,4 +27,3 @@ Read and write feather files.
 mtcars2 <- read_feather(feather_example("mtcars.feather"))
 mtcars2
 }
-

@@ -16,4 +16,3 @@ A list with class "feather_metadata".
 Returns the dimensions, field names, and types; and optional dataset
 description.
 }
-
