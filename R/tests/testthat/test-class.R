@@ -3,8 +3,8 @@ context("class")
 mtcars.f <- feather(feather_example("mtcars.feather"))
 iris.f <- feather(feather_example("iris.feather"))
 
-mtcars.tbl <- tibble::remove_rownames(tibble::as_data_frame(mtcars))
-iris.tbl <- tibble::as_data_frame(iris)
+mtcars.tbl <- tibble::remove_rownames(tibble::as_tibble(mtcars))
+iris.tbl <- tibble::as_tibble(iris)
 
 test_that("basic access", {
   expect_equal(nrow(mtcars.f), nrow(mtcars))
@@ -25,7 +25,7 @@ test_that("basic access", {
 })
 
 test_that("coercion", {
-  expect_identical(tibble::as_data_frame(iris.f), iris.tbl)
+  expect_identical(tibble::as_tibble(iris.f), iris.tbl)
   expect_identical(as.data.frame(iris.f), iris)
   expect_identical(as.list(iris.f), as.list(iris))
 })
