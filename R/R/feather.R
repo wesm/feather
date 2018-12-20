@@ -18,9 +18,9 @@ read_feather <- function(path, columns = NULL) {
   on.exit(close(data), add = TRUE)
 
   if (is.null(columns))
-    as_data_frame(data)
+    as_tibble(data)
   else
-    as_data_frame(data[columns])
+    as_tibble(data[columns])
 }
 
 #' @rdname read_feather
