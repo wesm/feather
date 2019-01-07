@@ -1,3 +1,5 @@
+# feather (development version)
+
 # feather 0.3.2
 
 * Fixes for PROTECT error found by rchk.
