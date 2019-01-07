@@ -9,4 +9,4 @@
 
 ## Reverse dependencies
 
-There are two reverse dependencies. Neither had any R CMD check problems.
+I did not run the reverse dependency checks because this release only fixed R CMD check issues.
