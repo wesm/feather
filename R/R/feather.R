@@ -43,6 +43,7 @@ write_feather <- function(x, path) {
 #' @return A list with class "feather_metadata".
 #' @export
 feather_metadata <- function(path) {
+  path <- path.expand(path)
   metadataFeather(path)
 }
 
