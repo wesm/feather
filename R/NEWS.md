@@ -4,6 +4,8 @@
 
 * Fix warnings on CRAN due to (unused) GNU Makefiles.
 
+* Use `tibble::tibble()` in place of the deprecated `dplyr::data_frame()`.
+
 # feather 0.3.2
 
 * Fixes for PROTECT error found by rchk.

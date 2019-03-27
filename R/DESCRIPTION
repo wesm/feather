@@ -21,7 +21,6 @@ Imports:
     tibble,
     hms
 Suggests:
-    testthat,
-    dplyr
+    testthat
 SystemRequirements: little-endian platform
 RoxygenNote: 6.1.1
