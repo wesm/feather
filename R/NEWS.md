@@ -1,5 +1,9 @@
 # feather (development version)
 
+# feather 0.3.3
+
+* Added version floor to make it clear that `feather >= 0.3.2` needs `tibble >= 2.0.0`
+
 # feather 0.3.2
 
 * Fixes for PROTECT error found by rchk.

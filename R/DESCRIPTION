@@ -18,7 +18,7 @@ BugReports: https://github.com/wesm/feather/issues
 LinkingTo: Rcpp
 Imports:
     Rcpp,
-    tibble,
+    tibble (>= 2.0.0),
     hms
 Suggests:
     testthat,
