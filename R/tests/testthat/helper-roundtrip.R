@@ -1,5 +1,5 @@
 roundtrip_vector <- function(x) {
-  df <- dplyr::data_frame(x = x)
+  df <- tibble::tibble(x = x)
   roundtrip(df)$x
 }
 

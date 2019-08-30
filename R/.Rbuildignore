@@ -1,6 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^src/feather/.*\.o$
+^src/feather/Makefile$
 ^src/.*\.a$
 ^cran-comments\.md$
 ^configure.win$
