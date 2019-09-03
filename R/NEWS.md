@@ -1,3 +1,5 @@
+# feather (development version)
+
 # feather 0.3.3
 
 * `feather_metadata()` now handles paths with `~` in them.
