@@ -11,6 +11,8 @@ test_that("iris example is identical to iris data frame", {
 
 
 test_that("can read/write with utf-8 filename", {
+  skip_on_os("windows")
+
   path <- file.path(tempdir(), "\u00e5.feather") # å
   on.exit(file.remove(path))
 
