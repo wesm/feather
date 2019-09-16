@@ -1,3 +1,5 @@
+# feather (development version)
+
 # feather 0.3.5
 
 * Fixes for CRAN
