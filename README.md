@@ -35,6 +35,16 @@ Feather currently supports the following column types:
 
 All column types support NA/null values.
 
+## Installation
+
+### Python
+
+`pip install feather-format`
+
+### R
+
+`install.packages("feather")`
+
 ## Other Languages
 
 Julia: [Feather.jl](https://github.com/JuliaStats/Feather.jl)
