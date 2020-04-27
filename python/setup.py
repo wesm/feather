@@ -21,7 +21,7 @@ import os
 
 MAJOR = 0
 MINOR = 4
-MICRO = 0
+MICRO = 1
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 ISRELEASED = True
 

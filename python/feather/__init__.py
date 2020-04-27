@@ -14,6 +14,8 @@
 
 # flake8: noqa
 
-from feather.api import (read_dataframe, write_dataframe,
-                         FeatherError, FeatherReader, FeatherWriter)
+from pyarrow.feather import (read_feather as read_dataframe,  # noqa
+                             write_feather as write_dataframe,
+                             FeatherError)
+
 from feather.version import version as __version__
