@@ -86,15 +86,6 @@ test_that("preserves hms", {
   expect_identical(roundtrip_vector(x), x)
 })
 
-test_that("converts time to hms", {
-  skip("TODO(arrow): what is class='time'?")
-  x1 <- structure(1:100, class = "time")
-  x2 <- roundtrip_vector(x1)
-
-  expect_s3_class(x2, "hms")
-})
-
-
 # Timestamp/POSIXct -------------------------------------------------------
 
 test_that("preserves times", {
