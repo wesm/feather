@@ -2,8 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-..Rcheck
-cpp/src/**/*.o
+*.Rcheck
+feather_*.tar.gz
 
 # python stuff
 .cache

@@ -15,12 +15,11 @@ License: Apache License 2.0
 LazyData: true
 URL: https://github.com/wesm/feather
 BugReports: https://github.com/wesm/feather/issues
-LinkingTo: Rcpp
 Imports:
-    Rcpp,
-    tibble (>= 2.0.0),
-    hms
+    arrow (>= 0.17.0),
+    rlang
 Suggests:
-    testthat
-SystemRequirements: little-endian platform
-RoxygenNote: 6.1.1
+    hms,
+    testthat,
+    tibble
+RoxygenNote: 7.1.0

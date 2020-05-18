@@ -5,16 +5,22 @@
 \alias{write_feather}
 \title{Read and write feather files.}
 \usage{
-read_feather(path, columns = NULL)
+read_feather(path, columns = NULL, ...)
 
-write_feather(x, path)
+write_feather(x, path, version = 1, ...)
 }
 \arguments{
 \item{path}{Path to feather file}
 
 \item{columns}{Columns to read (names or indexes). Default: Read all columns.}
 
+\item{...}{Additional arguments passed to the `arrow::` functions}
+
 \item{x}{A data frame to write to disk}
+
+\item{version}{integer in `c(1, 2)` indicating the Feather format version to
+write. For compatibility, the default for `feather::write_feather()` is
+`1`.}
 }
 \value{
 Both functions return a tibble/data frame. \code{write_feather}

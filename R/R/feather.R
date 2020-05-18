@@ -1,37 +1,28 @@
-#' @useDynLib feather, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
-#' @importFrom tibble tibble
-NULL
-
 #' Read and write feather files.
 #'
 #' @param path Path to feather file
 #' @param columns Columns to read (names or indexes). Default: Read all columns.
+#' @param version integer in `c(1, 2)` indicating the Feather format version to
+#'   write. For compatibility, the default for `feather::write_feather()` is
+#'   `1`.
+#' @param ... Additional arguments passed to the `arrow::` functions
 #' @return Both functions return a tibble/data frame. \code{write_feather}
 #'   invisibly returns \code{x} (so you can use this function in a pipeline).
 #' @examples
 #' mtcars2 <- read_feather(feather_example("mtcars.feather"))
 #' mtcars2
 #' @export
-read_feather <- function(path, columns = NULL) {
-  data <- feather(path)
-  on.exit(close(data), add = TRUE)
-
-  if (is.null(columns))
-    as_tibble(data)
-  else
-    as_tibble(data[columns])
+#' @importFrom arrow read_feather write_feather
+#' @importFrom rlang !! enquo
+read_feather <- function(path, columns = NULL, ...) {
+  arrow::read_feather(path, col_select = !!enquo(columns), ...)
 }
 
 #' @rdname read_feather
 #' @param x A data frame to write to disk
 #' @export
-write_feather <- function(x, path) {
-  if (!is.data.frame(x)) {
-    stop("`x` must be a data frame", call. = FALSE)
-  }
-  writeFeather(x, path)
-  invisible(x)
+write_feather <- function(x, path, version = 1, ...) {
+  arrow::write_feather(x, path, version = version, ...)
 }
 
 #' Retrieve metadata about a feather file
@@ -42,21 +33,4 @@ write_feather <- function(x, path) {
 #' @param path Path to feather file
 #' @return A list with class "feather_metadata".
 #' @export
-feather_metadata <- function(path) {
-  path <- path.expand(path)
-  metadataFeather(path)
-}
-
-#' @export
-print.feather_metadata <- function(x, ...) {
-  cat("<Feather file>\n")
-  cat(dim_desc(x$dim), " @ ", x$path, "\n", sep = "")
-
-  names <- format(encodeString(names(x$types), quote = "'"))
-  cat(paste0("* ", names, ": ", x$types, "\n"), sep = "")
-}
-
-
-# Force import of hms package
-#' @importFrom hms hms
-NULL
+feather_metadata <- feather

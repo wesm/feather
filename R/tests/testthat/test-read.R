@@ -2,11 +2,11 @@ context("read")
 
 test_that("iris example is identical to iris data frame", {
   iris_example <- feather_example("iris.feather")
-  expect_identical(read_feather(iris_example), as_tibble(iris))
+  expect_identical(read_feather(iris_example), tibble::as_tibble(iris))
   expect_identical(read_feather(iris_example, columns = 1:3),
-                   as_tibble(iris)[1:3])
+                   tibble::as_tibble(iris)[1:3])
   expect_identical(read_feather(iris_example, columns = "Species"),
-                   as_tibble(iris)["Species"])
+                   tibble::as_tibble(iris)["Species"])
 })
 
 
