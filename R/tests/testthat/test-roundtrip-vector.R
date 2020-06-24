@@ -44,7 +44,6 @@ test_that("can have NA on end of string", {
 })
 
 test_that("always coerces to UTF-8", {
-  skip("TODO(arrow): encoding not well implemented in arrow")
   x <- iconv("é", to = "latin1")
   y <- roundtrip_vector(x)
 
@@ -74,9 +73,12 @@ test_that("preserves NA in factor and levels", {
 # Date --------------------------------------------------------------------
 
 test_that("preserves dates", {
-  x <- as.Date("2010-01-01") + c(0L, 365L, NA)
-  mode(x) <- "integer"
+  x <- as.Date("2010-01-01") + c(0, 365, NA)
   expect_identical(roundtrip_vector(x), x)
+  mode(x) <- "integer"
+  # Arrow returns dates as numeric, not integer, for better consistency with R
+  # so these are equal but not identical
+  expect_equal(roundtrip_vector(x), x)
 })
 
 # Time --------------------------------------------------------------------
