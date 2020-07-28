@@ -1,7 +1,6 @@
 #' Get path to feather example files
 #'
-#' @description
-#' \code{feather_example} gets the path of a specific example
+#' @description `feather_example` gets the path of a specific example
 #'
 #' @param x example file
 #' @export
@@ -10,8 +9,7 @@ feather_example <- function(x) {
   system.file("feather", x, mustWork = TRUE, package = "feather")
 }
 
-#' @description
-#' \code{feather_examples} gets the path of all examples
+#' @description `feather_examples` gets the path of all examples
 #'
 #' @export
 #' @rdname feather_example

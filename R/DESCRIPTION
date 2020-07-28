@@ -4,8 +4,6 @@ Version: 0.3.5.9000
 Authors@R: c(
     person("Hadley", "Wickham", , "hadley@rstudio.com", role = c("aut", "cre")),
     person("RStudio", role = "cph"),
-    person("Feather developers", role = "ctb", comment = "Bundled feather library"),
-    person("Google", role = "ctb", comment = "Bundled flatbuffers code"),
     person("LevelDB Authors", role = "ctb")
   )
 Description: Read and write feather files, a lightweight binary columnar
@@ -22,4 +20,4 @@ Suggests:
     hms,
     testthat,
     tibble
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.0.9000

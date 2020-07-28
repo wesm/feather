@@ -12,7 +12,9 @@ write_feather(x, path, version = 1, ...)
 \arguments{
 \item{path}{Path to feather file}
 
-\item{columns}{Columns to read (names or indexes). Default: Read all columns.}
+\item{columns}{Columns to read (names or indexes), or a
+[tidy selection specification][tidyselect::vars_select()]
+of columns, as used in `dplyr::select()`. Default: Read all columns.}
 
 \item{...}{Additional arguments passed to the `arrow::` functions}
 
@@ -24,7 +26,7 @@ write. For compatibility, the default for `feather::write_feather()` is
 }
 \value{
 Both functions return a tibble/data frame. \code{write_feather}
-  invisibly returns \code{x} (so you can use this function in a pipeline).
+  invisibly returns `x` (so you can use this function in a pipeline).
 }
 \description{
 Read and write feather files.
