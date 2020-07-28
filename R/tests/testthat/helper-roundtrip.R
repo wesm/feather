@@ -1,13 +1,12 @@
-roundtrip_vector <- function(x) {
+roundtrip_vector <- function(x, ...) {
   df <- tibble::tibble(x = x)
-  roundtrip(df)$x
+  roundtrip(df, ...)$x
 }
 
-roundtrip <- function(df) {
+roundtrip <- function(df, ...) {
   temp <- tempfile()
-  write_feather(df, temp)
+  write_feather(df, temp, ...)
   on.exit(unlink(temp))
 
   read_feather(temp)
 }
-

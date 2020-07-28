@@ -99,12 +99,11 @@ test_that("preserves times", {
   expect_identical(unclass(x1), unclass(x2))
 })
 
-test_that("throws error on POSIXlt", {
-  skip("TODO(arrow): implement POSIXlt in arrow, or error more usefully")
-  df <- data.frame(x = Sys.time())
-  df$x <- as.POSIXlt(df$x)
+test_that("POSIXlt works with Feather V2", {
+  x <- as.POSIXlt(Sys.time())
 
-  expect_error(roundtrip(df), "Can not write POSIXlt")
+  expect_error(roundtrip_vector(x), "Use V2 format")
+  expect_identical(roundtrip_vector(x, version = 2), x)
 })
 
 
