@@ -14,10 +14,10 @@ LazyData: true
 URL: https://github.com/wesm/feather
 BugReports: https://github.com/wesm/feather/issues
 Imports:
-    arrow (>= 0.17.0),
-    rlang
+    arrow (>= 0.17.0)
 Suggests:
     hms,
     testthat,
     tibble
 RoxygenNote: 7.1.0.9000
+Roxygen: list(markdown = TRUE)

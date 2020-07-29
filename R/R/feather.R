@@ -8,14 +8,13 @@
 #'   write. For compatibility, the default for `feather::write_feather()` is
 #'   `1`.
 #' @param ... Additional arguments passed to the `arrow::` functions
-#' @return Both functions return a tibble/data frame. \code{write_feather}
+#' @return Both functions return a tibble/data frame. `write_feather`
 #'   invisibly returns `x` (so you can use this function in a pipeline).
 #' @examples
 #' mtcars2 <- read_feather(feather_example("mtcars.feather"))
 #' mtcars2
 #' @export
 #' @importFrom arrow read_feather write_feather
-#' @importFrom rlang !! enquo
 read_feather <- function(path, columns = NULL, ...) {
   arrow::read_feather(path, col_select = {{ columns }}, ...)
 }

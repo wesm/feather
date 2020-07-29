@@ -13,8 +13,8 @@ feather_examples()
 \item{x}{example file}
 }
 \description{
-`feather_example` gets the path of a specific example
+\code{feather_example} gets the path of a specific example
 
-`feather_examples` gets the path of all examples
+\code{feather_examples} gets the path of all examples
 }
 \keyword{internal}

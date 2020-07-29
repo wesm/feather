@@ -6,3 +6,4 @@
 ^cran-comments\.md$
 ^configure.win$
 ^revdep$
+^feather_.*\.tar\.gz$

@@ -13,9 +13,15 @@ feather_metadata(path)
 \item{path}{Path to feather file}
 }
 \value{
-An `arrow::Table`
+An \link[arrow:Table]{arrow::Table}
 }
 \description{
 These functions permit using a feather dataset much like a regular
 (read-only) data frame without reading everything into R.
+}
+\details{
+They work by using \code{\link[arrow:read_feather]{arrow::read_feather()}} to read the data in as an Arrow
+Table, an efficient data structure that supports many data-frame methods.
+See the \href{https://arrow.apache.org/docs/r/}{Arrow package documentation}
+for more information.
 }

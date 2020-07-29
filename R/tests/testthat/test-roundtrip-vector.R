@@ -75,10 +75,6 @@ test_that("preserves NA in factor and levels", {
 test_that("preserves dates", {
   x <- as.Date("2010-01-01") + c(0, 365, NA)
   expect_identical(roundtrip_vector(x), x)
-  mode(x) <- "integer"
-  # Arrow returns dates as numeric, not integer, for better consistency with R
-  # so these are equal but not identical
-  expect_equal(roundtrip_vector(x), x)
 })
 
 # Time --------------------------------------------------------------------
