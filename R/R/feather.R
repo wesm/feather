@@ -17,7 +17,7 @@
 #' @importFrom arrow read_feather write_feather
 #' @importFrom rlang !! enquo
 read_feather <- function(path, columns = NULL, ...) {
-  arrow::read_feather(path, col_select = !!enquo(columns), ...)
+  arrow::read_feather(path, col_select = {{ columns }}, ...)
 }
 
 #' @rdname read_feather
