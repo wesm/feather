@@ -4,8 +4,6 @@ Version: 0.3.5.9000
 Authors@R: c(
     person("Hadley", "Wickham", , "hadley@rstudio.com", role = c("aut", "cre")),
     person("RStudio", role = "cph"),
-    person("Feather developers", role = "ctb", comment = "Bundled feather library"),
-    person("Google", role = "ctb", comment = "Bundled flatbuffers code"),
     person("LevelDB Authors", role = "ctb")
   )
 Description: Read and write feather files, a lightweight binary columnar
@@ -15,12 +13,11 @@ License: Apache License 2.0
 LazyData: true
 URL: https://github.com/wesm/feather
 BugReports: https://github.com/wesm/feather/issues
-LinkingTo: Rcpp
 Imports:
-    Rcpp,
-    tibble (>= 2.0.0),
-    hms
+    arrow (>= 0.17.0)
 Suggests:
-    testthat
-SystemRequirements: little-endian platform
-RoxygenNote: 6.1.1
+    hms,
+    testthat,
+    tibble
+RoxygenNote: 7.1.0.9000
+Roxygen: list(markdown = TRUE)

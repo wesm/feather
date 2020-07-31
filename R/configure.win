@@ -1,5 +1,0 @@
-# This script is only needed for testing on Windows
-# It is not included with CRAN releases
-rm -Rf src/feather
-rm -Rf src/flatbuffers
-cp -Rf ../cpp/src/* src/

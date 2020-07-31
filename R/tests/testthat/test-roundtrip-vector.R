@@ -73,8 +73,7 @@ test_that("preserves NA in factor and levels", {
 # Date --------------------------------------------------------------------
 
 test_that("preserves dates", {
-  x <- as.Date("2010-01-01") + c(0L, 365L, NA)
-  mode(x) <- "integer"
+  x <- as.Date("2010-01-01") + c(0, 365, NA)
   expect_identical(roundtrip_vector(x), x)
 })
 
@@ -84,14 +83,6 @@ test_that("preserves hms", {
   x <- hms::hms(1:100)
   expect_identical(roundtrip_vector(x), x)
 })
-
-test_that("converts time to hms", {
-  x1 <- structure(1:100, class = "time")
-  x2 <- roundtrip_vector(x1)
-
-  expect_s3_class(x2, "hms")
-})
-
 
 # Timestamp/POSIXct -------------------------------------------------------
 
@@ -104,11 +95,11 @@ test_that("preserves times", {
   expect_identical(unclass(x1), unclass(x2))
 })
 
-test_that("throws error on POSIXlt", {
-  df <- data.frame(x = Sys.time())
-  df$x <- as.POSIXlt(df$x)
+test_that("POSIXlt works with Feather V2", {
+  x <- as.POSIXlt(Sys.time())
 
-  expect_error(roundtrip(df), "Can not write POSIXlt")
+  expect_error(roundtrip_vector(x), "Use V2 format")
+  expect_identical(roundtrip_vector(x, version = 2), x)
 })
 
 

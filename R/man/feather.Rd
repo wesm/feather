@@ -2,17 +2,26 @@
 % Please edit documentation in R/class.R
 \name{feather}
 \alias{feather}
+\alias{feather_metadata}
 \title{Access a feather store like a data frame}
 \usage{
 feather(path)
+
+feather_metadata(path)
 }
 \arguments{
 \item{path}{Path to feather file}
 }
 \value{
-An object of class \code{feather}
+An \link[arrow:Table]{arrow::Table}
 }
 \description{
 These functions permit using a feather dataset much like a regular
-(read-only) data frame.
+(read-only) data frame without reading everything into R.
+}
+\details{
+They work by using \code{\link[arrow:read_feather]{arrow::read_feather()}} to read the data in as an Arrow
+Table, an efficient data structure that supports many data-frame methods.
+See the \href{https://arrow.apache.org/docs/r/}{Arrow package documentation}
+for more information.
 }

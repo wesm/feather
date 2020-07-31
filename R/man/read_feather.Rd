@@ -5,20 +5,28 @@
 \alias{write_feather}
 \title{Read and write feather files.}
 \usage{
-read_feather(path, columns = NULL)
+read_feather(path, columns = NULL, ...)
 
-write_feather(x, path)
+write_feather(x, path, version = 1, ...)
 }
 \arguments{
 \item{path}{Path to feather file}
 
-\item{columns}{Columns to read (names or indexes). Default: Read all columns.}
+\item{columns}{Columns to read (names or indexes), or a
+\link[tidyselect:vars_select]{tidy selection specification}
+of columns, as used in \code{dplyr::select()}. Default: Read all columns.}
+
+\item{...}{Additional arguments passed to the \verb{arrow::} functions}
 
 \item{x}{A data frame to write to disk}
+
+\item{version}{integer in \code{c(1, 2)} indicating the Feather format version to
+write. For compatibility, the default for \code{feather::write_feather()} is
+\code{1}.}
 }
 \value{
 Both functions return a tibble/data frame. \code{write_feather}
-  invisibly returns \code{x} (so you can use this function in a pipeline).
+invisibly returns \code{x} (so you can use this function in a pipeline).
 }
 \description{
 Read and write feather files.
