@@ -45,12 +45,29 @@ All column types support NA/null values.
 
 `install.packages("feather")`
 
-## Other Languages
+## Julia
 
-Julia: [Feather.jl](https://github.com/JuliaStats/Feather.jl)
+```
+julia> using Pkg
+julia> Pkg.add("Feather")
+```
 
 ## License and Copyrights
 
 This library is released under the [Apache License, Version 2.0](LICENSE.txt).
 
 See [`NOTICE`](NOTICE) for details about the library's copyright holders.
+
+## Getting started
+
+### Python
+
+To get started with the python bindings, see the [python feather documentation](https://arrow.apache.org/docs/python/feather.html)
+
+### R
+
+To get started with the R bindings, see the [R feather documentation](https://cran.r-project.org/web/packages/feather/feather.pdf)
+
+### Julia
+
+To get started with the Julia bindings see [Feather.jl](https://github.com/JuliaStats/Feather.jl)
