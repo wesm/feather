@@ -13,7 +13,7 @@ feather_metadata(path)
 \item{path}{Path to feather file}
 }
 \value{
-An \link[arrow:Table]{arrow::Table}
+An \link[arrow:Table-class]{arrow::Table}
 }
 \description{
 These functions permit using a feather dataset much like a regular

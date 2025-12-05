@@ -19,5 +19,5 @@ Suggests:
     hms,
     testthat,
     tibble
-RoxygenNote: 7.1.0.9000
+RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
