@@ -1,5 +1,3 @@
-context("roundtrip-vector")
-
 # Logical -----------------------------------------------------------------
 
 test_that("preserves three logical values", {

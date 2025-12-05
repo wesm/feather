@@ -1,11 +1,7 @@
-context("class")
-
 mtcars.f <- feather(feather_example("mtcars.feather"))
 iris.f <- feather(feather_example("iris.feather"))
 
 test_that("basic access", {
-  local_edition(3)
-
   expect_equal(nrow(mtcars.f), nrow(mtcars))
   expect_equal(ncol(mtcars.f), ncol(mtcars))
   expect_equal(dim(mtcars.f), dim(mtcars))
