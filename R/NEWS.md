@@ -1,5 +1,15 @@
 # feather (development version)
 
+This release updates `feather` to depend on the [`arrow`](https://arrow.apache.org/docs/r/) package, which is where Feather format development has moved. This resolves many bug reports and missing features from the previous implementation of Feather in R, and it brings the R package in line with the Python `feather` package, which has depended on `pyarrow` since 2017.
+
+For compatibility, `feather::write_feather()` uses V1 of the Feather specification: it is a wrapper around `arrow::write_feather(version = 1)`. Feather V2 is just the Arrow format on disk and has support for a much richer set of data types. To switch to V2, we recommend just using `arrow::write_feather()`.
+
+With these changes, most of `feather`'s APIs are preserved in spirit, but there are some noteworthy changes:
+
+* The `feather` class, which allowed for accessing data in a Feather file without reading it all into R, has been replaced by an `arrow::Table` backed by the memory-mapped Feather file. This should preserve the intent of the original implementation but with much richer functionality. One behavior change that results though is that slicing/extracting from the Table results in another arrow Table, so the data aren't pulled into a `data.frame` until you `as.data.frame()` them.
+
+* `feather_metadata` also now does the same.
+
 # feather 0.3.5
 
 * Fixes for CRAN

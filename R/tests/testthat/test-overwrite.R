@@ -1,5 +1,3 @@
-context("overwrite")
-
 test_that("can read new data", {
   path <- tempfile()
 

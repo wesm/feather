@@ -1,10 +1,5 @@
-context("class")
-
 mtcars.f <- feather(feather_example("mtcars.feather"))
 iris.f <- feather(feather_example("iris.feather"))
-
-mtcars.tbl <- tibble::remove_rownames(tibble::as_tibble(mtcars))
-iris.tbl <- tibble::as_tibble(iris)
 
 test_that("basic access", {
   expect_equal(nrow(mtcars.f), nrow(mtcars))
@@ -13,19 +8,19 @@ test_that("basic access", {
   expect_equal(dimnames(iris.f), dimnames(iris))
   expect_equal(colnames(iris.f), colnames(iris))
   expect_equal(names(iris.f), names(iris))
-  expect_identical(as.data.frame(iris.f[1:5, 1:5]), iris.tbl[1:5, 1:5])
-  expect_identical(as.data.frame(iris.f[, 1:5]), iris.tbl[, 1:5])
-  expect_identical(as.data.frame(iris.f[1:5, ]), iris.tbl[1:5, ])
-  expect_identical(as.data.frame(iris.f[1:5]), iris.tbl[1:5])
-  expect_identical(as.data.frame(iris.f[]), iris.tbl[])
-  expect_identical(as.vector(iris.f[["Species"]]), iris.tbl[["Species"]])
-  expect_identical(as.vector(iris.f[["Sepal.Length"]]), iris.tbl[["Sepal.Length"]])
-  expect_identical(as.vector(iris.f$Species), iris.tbl$Species)
-  expect_identical(as.vector(iris.f$Sepal.Width), iris.tbl$Sepal.Width)
+  expect_equal(as.data.frame(iris.f[1:5, 1:5]), iris[1:5, 1:5])
+  expect_equal(as.data.frame(iris.f[, 1:5]), iris[, 1:5])
+  expect_equal(as.data.frame(iris.f[1:5, ]), iris[1:5, ])
+  expect_equal(as.data.frame(iris.f[1:5]), iris[1:5])
+  expect_equal(as.data.frame(iris.f[]), iris[])
+  expect_equal(as.vector(iris.f[["Species"]]), iris[["Species"]])
+  expect_equal(as.vector(iris.f[["Sepal.Length"]]), iris[["Sepal.Length"]])
+  expect_equal(as.vector(iris.f$Species), iris$Species)
+  expect_equal(as.vector(iris.f$Sepal.Width), iris$Sepal.Width)
 })
 
 test_that("coercion", {
-  expect_identical(tibble::as_tibble(iris.f), iris.tbl)
-  expect_identical(as.data.frame(iris.f), iris.tbl)
+  expect_identical(tibble::as_tibble(iris.f), tibble::as_tibble(iris))
+  expect_identical(as.data.frame(iris.f), iris)
   expect_identical(as.list(iris.f), as.list(iris))
 })

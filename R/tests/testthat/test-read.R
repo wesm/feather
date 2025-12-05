@@ -1,5 +1,3 @@
-context("read")
-
 test_that("iris example is identical to iris data frame", {
   iris_example <- feather_example("iris.feather")
   expect_identical(read_feather(iris_example), tibble::as_tibble(iris))
