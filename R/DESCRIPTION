@@ -8,9 +8,7 @@ Authors@R: c(
   )
 Description: Read and write feather files, a lightweight binary columnar
     data store designed for maximum speed.
-Encoding: UTF-8
 License: Apache License 2.0
-LazyData: true
 URL: https://github.com/wesm/feather
 BugReports: https://github.com/wesm/feather/issues
 Imports:
@@ -19,5 +17,6 @@ Suggests:
     hms,
     testthat,
     tibble
-RoxygenNote: 7.3.3
+Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
