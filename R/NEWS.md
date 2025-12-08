@@ -1,3 +1,5 @@
+# feather (development version)
+
 # feather 0.4.0
 
 This release updates `feather` to depend on the [`arrow`](https://arrow.apache.org/docs/r/) package, which is where Feather format development has moved. This resolves many bug reports and missing features from the previous implementation of Feather in R, and it brings the R package in line with the Python `feather` package, which has depended on `pyarrow` since 2017.
